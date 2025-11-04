@@ -1,0 +1,45 @@
+<section class="login">
+  <h1>Connexion</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="field">
+      <label for="login">Identifiant</label>
+      <input
+        id="login"
+        type="text"
+        autocomplete="username"
+        formControlName="login"
+        [class.invalid]="form.controls.login.touched && form.controls.login.invalid"
+      />
+      @if (form.controls.login.touched && form.controls.login.hasError('required')) {
+        <p class="hint error">Identifiant requis.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="password">Mot de passe</label>
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        formControlName="password"
+        [class.invalid]="form.controls.password.touched && form.controls.password.invalid"
+      />
+      @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        <p class="hint error">Mot de passe requis.</p>
+      }
+    </div>
+
+    <button type="submit" [disabled]="form.invalid || isLoading()">
+      Se connecter
+    </button>
+  </form>
+
+  @if (isLoading()) {
+    <p class="status">Connexion en cours…</p>
+  }
+
+  @if (error()) {
+    <p class="status error">{{ error() }}</p>
+  }
+</section>

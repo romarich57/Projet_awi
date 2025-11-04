@@ -1,0 +1,26 @@
+<section class="admin">
+  <h1>Administration</h1>
+
+  @if (isLoading()) {
+    <p class="status">Chargement des utilisateurs…</p>
+  }
+
+  @if (error()) {
+    <p class="status error">{{ error() }}</p>
+  }
+
+  @if (!isLoading() && !error()) {
+    @if (users().length) {
+      <ul>
+        @for (user of users(); track user.id ?? user.login) {
+          <li>
+            <span class="login">{{ user.login }}</span>
+            <span class="role">{{ user.role }}</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="empty">Pas d'utilisateurs</p>
+    }
+  }
+</section>

@@ -1,0 +1,36 @@
+<section class="home">
+  <h1>Accueil</h1>
+
+  @if (isLoading()) {
+    <p class="status">Chargement de votre session…</p>
+  }
+
+  @if (error() && !isLoggedIn()) {
+    <p class="status error">{{ error() }}</p>
+  }
+
+  @if (isLoggedIn()) {
+    <div class="card">
+      <p>
+        Connecté en tant que
+        <strong>{{ user()?.login }}</strong>
+      </p>
+      <p>
+        Rôle :
+        <span class="role">{{ user()?.role }}</span>
+      </p>
+      <button
+        type="button"
+        (click)="logout()"
+        [disabled]="isLoading()"
+      >
+        Se déconnecter
+      </button>
+    </div>
+  } @else {
+    <div class="card">
+      <p>Vous n'êtes pas connecté.</p>
+      <a routerLink="/login">Aller à la page de connexion</a>
+    </div>
+  }
+</section>

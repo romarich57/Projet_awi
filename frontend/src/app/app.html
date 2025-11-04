@@ -1,0 +1,19 @@
+<header class="header">
+  <nav>
+    <a routerLink="/home" routerLinkActive="active">Accueil</a>
+    @if (isLoggedIn()) {
+      @if (isAdmin()) {
+        <a routerLink="/admin" routerLinkActive="active">Admin</a>
+      }
+      <span class="user">
+        {{ currentUser()?.login }}
+      </span>
+    } @else {
+      <a routerLink="/login" routerLinkActive="active">Connexion</a>
+    }
+  </nav>
+</header>
+
+<main class="layout">
+  <router-outlet />
+</main>
