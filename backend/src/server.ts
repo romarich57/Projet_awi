@@ -12,11 +12,12 @@ import authRouter from './routes/auth.js'
 import { verifyToken } from './middleware/token-management.js'
 import { requireAdmin } from './middleware/auth-admin.js'
 import { ensureAdmin } from './db/initAdmin.js'
+import { FRONTEND_ORIGINS } from './config/env.js'
 import 'dotenv/config'
 
 const app = express()
 
-// En-têtes de sécurité (exigés dans le sujet)
+// En-têtes de sécurité 
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('X-Frame-Options', 'SAMEORIGIN')
@@ -32,10 +33,14 @@ app.use(express.json())
 app.use(cookieParser())
 
 // CORS : autoriser uniquement l’URL du frontend de prod (Nginx)
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:8080'
+const allowedOrigins =
+  FRONTEND_ORIGINS.length > 0
+    ? FRONTEND_ORIGINS
+    : ['http://localhost:8080', 'https://localhost:8080']
+
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
-    if (!origin || origin === FRONTEND_URL) callback(null, true)
+    if (!origin || allowedOrigins.includes(origin)) callback(null, true)
     else callback(new Error(`Origin non autorisée: ${origin}`))
   },
   credentials: true,

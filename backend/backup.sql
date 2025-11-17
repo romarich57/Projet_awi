@@ -20,7 +20,9 @@ SET row_security = off;
 
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_login_key;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_email_key;
 ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
+DROP INDEX IF EXISTS public.idx_users_email_token;
 DROP SEQUENCE IF EXISTS public.users_id_seq;
 DROP TABLE IF EXISTS public.users;
 SET default_tablespace = '';
@@ -35,7 +37,18 @@ CREATE TABLE public.users (
     id integer NOT NULL,
     login text NOT NULL,
     password_hash text NOT NULL,
-    role text DEFAULT 'user'::text
+    role text DEFAULT 'user'::text,
+    first_name text NOT NULL,
+    last_name text NOT NULL,
+    email text NOT NULL,
+    phone text,
+    avatar_url text,
+    email_verified boolean DEFAULT false,
+    email_verification_token text,
+    email_verification_expires_at timestamp with time zone,
+    password_reset_token text,
+    password_reset_expires_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now()
 );
 
 
@@ -74,7 +87,23 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: secureapp
 --
 
-COPY public.users (id, login, password_hash, role) FROM stdin;
+COPY public.users (
+    id,
+    login,
+    password_hash,
+    role,
+    first_name,
+    last_name,
+    email,
+    phone,
+    avatar_url,
+    email_verified,
+    email_verification_token,
+    email_verification_expires_at,
+    password_reset_token,
+    password_reset_expires_at,
+    created_at
+) FROM stdin;
 \.
 
 
@@ -92,6 +121,13 @@ SELECT pg_catalog.setval('public.users_id_seq', 1, false);
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_login_key UNIQUE (login);
 
+--
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: secureapp
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
 
 --
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: secureapp
@@ -99,6 +135,13 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_users_email_token; Type: INDEX; Schema: public; Owner: secureapp
+--
+
+CREATE INDEX idx_users_email_token ON public.users USING btree (email_verification_token);
 
 
 --

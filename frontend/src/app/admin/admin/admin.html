@@ -10,12 +10,33 @@
   }
 
   @if (!isLoading() && !error()) {
+    @if (userService.mutationMessage()) {
+      <p class="status notice">{{ userService.mutationMessage() }}</p>
+    }
     @if (users().length) {
       <ul>
         @for (user of users(); track user.id ?? user.login) {
           <li>
-            <span class="login">{{ user.login }}</span>
+            <div class="identity">
+              <span class="login">{{ user.login }}</span>
+              <span class="email">{{ user.email }}</span>
+            </div>
             <span class="role">{{ user.role }}</span>
+            <span class="badge" [class.badge--warning]="!user.emailVerified">
+              @if (user.emailVerified) {
+                Vérifié
+              } @else {
+                Non vérifié
+              }
+            </span>
+            <button
+              type="button"
+              class="danger"
+              (click)="deleteUser(user.id)"
+              [disabled]="userService.isMutating()"
+            >
+              Supprimer
+            </button>
           </li>
         }
       </ul>

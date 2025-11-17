@@ -1,0 +1,63 @@
+<section class="verify-email" [class.verify-email--success]="status() === 'success'">
+  @if (status() === 'success' && verifiedUser()) {
+    <div class="success-card">
+      <h1>Compte validé ✅</h1>
+      <p>
+        Bonjour
+        <strong>{{ verifiedUser()?.firstName }} {{ verifiedUser()?.lastName }}</strong
+        >. Votre adresse
+        <span class="highlight">{{ verifiedUser()?.email }}</span>
+        est maintenant vérifiée.
+      </p>
+      <p class="message">{{ message() }}</p>
+      <a class="cta" routerLink="/login">Retourner à la connexion</a>
+      <a class="link" routerLink="/home">Aller à l'accueil</a>
+    </div>
+  } @else {
+    <h1>Vérification d'email</h1>
+    <p class="introduction">
+      @if (autoMode()) {
+        Vous êtes arrivé via le lien du mail. Nous vérifions automatiquement votre compte…
+      } @else {
+        Collez le token reçu par email ou utilisez directement le lien contenu dans le message.
+      }
+    </p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label for="token">Token de vérification</label>
+      <div class="input-row">
+        <input
+          id="token"
+          type="text"
+          formControlName="token"
+          placeholder="collez ici le token reçu"
+          autocomplete="one-time-code"
+          [readonly]="autoMode() && status() === 'loading'"
+          [class.invalid]="form.controls.token.touched && form.controls.token.invalid"
+        />
+        <button type="submit" [disabled]="form.invalid || status() === 'loading'">
+          Vérifier mon email
+        </button>
+      </div>
+      @if (form.controls.token.touched && form.controls.token.hasError('required')) {
+        <p class="hint error">Le token est requis.</p>
+      }
+    </form>
+
+    @if (status() === 'loading') {
+      <p class="status loading">{{ message() }}</p>
+    }
+
+    @if (status() === 'error') {
+      <div class="status error">
+        <p>{{ message() }}</p>
+        <button type="button" (click)="retry()">Réessayer</button>
+      </div>
+    }
+
+    <p class="hint">
+      Besoin d'un nouveau lien ?
+      <a routerLink="/resend-verification">Renvoyer un email de vérification</a>
+    </p>
+  }
+</section>

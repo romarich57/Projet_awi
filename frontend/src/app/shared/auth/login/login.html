@@ -3,16 +3,16 @@
 
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="field">
-      <label for="login">Identifiant</label>
+      <label for="identifier">Email ou pseudo</label>
       <input
-        id="login"
+        id="identifier"
         type="text"
         autocomplete="username"
-        formControlName="login"
-        [class.invalid]="form.controls.login.touched && form.controls.login.invalid"
+        formControlName="identifier"
+        [class.invalid]="form.controls.identifier.touched && form.controls.identifier.invalid"
       />
-      @if (form.controls.login.touched && form.controls.login.hasError('required')) {
-        <p class="hint error">Identifiant requis.</p>
+      @if (form.controls.identifier.touched && form.controls.identifier.hasError('required')) {
+        <p class="hint error">Email ou pseudo requis.</p>
       }
     </div>
 
@@ -35,11 +35,26 @@
     </button>
   </form>
 
-  @if (isLoading()) {
-    <p class="status">Connexion en cours…</p>
-  }
+  <footer class="login__footer">
+    @if (isLoading()) {
+      <p class="status">Connexion en cours…</p>
+    }
 
-  @if (error()) {
-    <p class="status error">{{ error() }}</p>
-  }
+    @if (error()) {
+      <p class="status error">{{ error() }}</p>
+    }
+
+    <p>
+      Pas encore de compte ?
+      <a routerLink="/register">Créer un compte</a>
+    </p>
+    <p>
+      Email de vérification pas reçu ?
+      <a routerLink="/resend-verification">Renvoyer un email</a>
+    </p>
+    <p>
+      Mot de passe oublié ?
+      <a routerLink="/forgot-password">Réinitialiser</a>
+    </p>
+  </footer>
 </section>

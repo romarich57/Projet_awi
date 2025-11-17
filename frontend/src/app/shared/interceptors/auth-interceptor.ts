@@ -7,7 +7,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
 
   // --- Ne pas intercepter les requêtes d'auth elles-mêmes ---
-  const excluded = ['/auth/login', '/auth/logout', '/auth/refresh'];
+  const excluded = [
+    '/auth/login',
+    '/auth/logout',
+    '/auth/refresh',
+    '/auth/register',
+    '/auth/verify-email',
+    '/auth/resend-verification',
+    '/auth/password/forgot',
+    '/auth/password/reset',
+  ];
   if (excluded.some((path) => req.url.includes(path))) {
     // passe directement
     return next(req);

@@ -1,7 +1,16 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { environment } from '@env/environment';
-import { catchError, finalize, map, of, tap } from 'rxjs';
+import { catchError, finalize, map, of, tap, throwError } from 'rxjs';
+import {
+  AuthLoginResponse,
+  EmailPayload,
+  MessageResponse,
+  RegisterPayload,
+  RegisterResponse,
+  ResetPasswordPayload,
+  VerifyEmailResponse,
+} from '@shared/types/auth-api';
 import { UserDto } from '@shared/types/user-dto';
 
 @Injectable({
@@ -23,14 +32,14 @@ export class AuthService {
   readonly error = this._error.asReadonly();
 
   // --- Connexion ---
-  login(login: string, password: string) {
+  login(identifier: string, password: string) {
     this._isLoading.set(true);
     this._error.set(null);
 
     this.http
-      .post<{ user: UserDto }>(
+      .post<AuthLoginResponse>(
         `${environment.apiUrl}/auth/login`,
-        { login, password },
+        { identifier, password },
         { withCredentials: true },
       )
       .pipe(
@@ -43,15 +52,9 @@ export class AuthService {
             this._currentUser.set(null);
           }
         }),
-        catchError((err) => {
+        catchError((err: HttpErrorResponse) => {
           console.error('👎 Erreur HTTP', err);
-          if (err.status === 401) {
-            this._error.set('Identifiants invalides');
-          } else if (err.status === 0) {
-            this._error.set('Serveur injoignable (vérifiez HTTPS ou CORS)');
-          } else {
-            this._error.set(`Erreur serveur (${err.status})`);
-          }
+          this._error.set(this.getServerErrorMessage(err));
           this._currentUser.set(null);
           return of(null);
         }),
@@ -87,7 +90,7 @@ export class AuthService {
 
   checkSession$() {
     return this.http
-      .get<{ user: UserDto }>(`${environment.apiUrl}/auth/whoami`, {
+      .get<AuthLoginResponse>(`${environment.apiUrl}/auth/whoami`, {
         withCredentials: true,
       })
       .pipe(
@@ -120,5 +123,89 @@ export class AuthService {
     return this.http
       .post(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true })
       .pipe(catchError(() => of(null)));
+  }
+
+  register(payload: RegisterPayload) {
+    return this.http
+      .post<RegisterResponse>(`${environment.apiUrl}/auth/register`, payload, {
+        withCredentials: true,
+      })
+      .pipe(
+        map((res) => res.message),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => new Error(this.getServerErrorMessage(err))),
+        ),
+      );
+  }
+
+  verifyEmail(token: string) {
+    return this.http
+      .get<VerifyEmailResponse>(`${environment.apiUrl}/auth/verify-email`, {
+        params: { token },
+      })
+      .pipe(
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => new Error(this.getServerErrorMessage(err))),
+        ),
+      );
+  }
+
+  resendVerificationEmail(email: string) {
+    return this.http
+      .post<MessageResponse>(
+        `${environment.apiUrl}/auth/resend-verification`,
+        { email } satisfies EmailPayload,
+        { withCredentials: true },
+      )
+      .pipe(
+        map((res) => res.message),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => new Error(this.getServerErrorMessage(err))),
+        ),
+      );
+  }
+
+  requestPasswordReset(email: string) {
+    return this.http
+      .post<MessageResponse>(
+        `${environment.apiUrl}/auth/password/forgot`,
+        { email } satisfies EmailPayload,
+        { withCredentials: true },
+      )
+      .pipe(
+        map((res) => res.message),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => new Error(this.getServerErrorMessage(err))),
+        ),
+      );
+  }
+
+  resetPassword(payload: ResetPasswordPayload) {
+    return this.http
+      .post<MessageResponse>(`${environment.apiUrl}/auth/password/reset`, payload, {
+        withCredentials: true,
+      })
+      .pipe(
+        map((res) => res.message),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => new Error(this.getServerErrorMessage(err))),
+        ),
+      );
+  }
+
+  private getServerErrorMessage(err: HttpErrorResponse) {
+    if (err.status === 0) {
+      return 'Serveur injoignable (vérifiez HTTPS ou CORS)';
+    }
+
+    if (typeof err.error === 'string' && err.error.trim().length > 0) {
+      return err.error;
+    }
+
+    if (typeof err.error === 'object' && err.error?.error) {
+      return err.error.error;
+    }
+
+    return `Erreur serveur (${err.status})`;
   }
 }

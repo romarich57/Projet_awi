@@ -1,32 +1,37 @@
 :host {
   display: block;
   min-height: 100vh;
-  background: #f5f7fa;
-  color: #0f172a;
-  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text);
 }
 
 .header {
-  background: #0f172a;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(8px);
   color: #fff;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.25);
 
   nav {
-    max-width: 960px;
+    max-width: 1040px;
     margin: 0 auto;
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.5rem;
+    flex-wrap: wrap;
   }
-}
 
-a {
-  color: inherit;
-  text-decoration: none;
-  font-weight: 600;
+  a {
+    color: #cbd5f5;
+    text-decoration: none;
+    transition: color 0.2s ease;
 
-  &.active {
-    text-decoration: underline;
+    &.active,
+    &:hover {
+      color: #fff;
+    }
   }
 }
 
@@ -37,7 +42,16 @@ a {
 }
 
 .layout {
-  max-width: 960px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
+  padding: 3rem 1.5rem 4rem;
+}
+
+@media (max-width: 640px) {
+  .user {
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
+    opacity: 0.7;
+  }
 }

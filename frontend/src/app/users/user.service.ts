@@ -17,6 +17,8 @@ export class UserService {
   readonly users = this._users.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
   readonly error = this._error.asReadonly();
+  readonly isMutating = signal(false);
+  readonly mutationMessage = signal<string | null>(null);
 
   loadAll() {
     this._isLoading.set(true);
@@ -33,6 +35,35 @@ export class UserService {
           return of([]);
         }),
         finalize(() => this._isLoading.set(false)),
+      )
+      .subscribe();
+  }
+
+  deleteUser(id: number) {
+    if (this.isMutating()) {
+      return;
+    }
+
+    this.isMutating.set(true);
+    this.mutationMessage.set(null);
+
+    this.http
+      .delete<{ message: string }>(`${environment.apiUrl}/users/${id}`, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap(() => {
+          this._users.set(this._users().filter((user) => user.id !== id));
+          this.mutationMessage.set('Utilisateur supprimé.');
+        }),
+        catchError((err) => {
+          console.error('Erreur suppression utilisateur', err);
+          this.mutationMessage.set(
+            err?.error?.error ?? 'Suppression impossible. Réessayez plus tard.',
+          );
+          return of(null);
+        }),
+        finalize(() => this.isMutating.set(false)),
       )
       .subscribe();
   }

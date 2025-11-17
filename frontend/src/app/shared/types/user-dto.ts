@@ -1,8 +1,14 @@
 export type UserRole = 'admin' | 'user';
 
 export interface UserDto {
-  id?: number;
+  id: number;
   login: string;
   role: UserRole;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  avatarUrl: string | null;
+  emailVerified: boolean;
+  createdAt: string;
 }
-
