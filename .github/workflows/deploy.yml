@@ -58,14 +58,17 @@ jobs:
           echo "VPS_HOST length: ${#VPS_HOST}"
           echo "VPS_HOST value (masked): ${VPS_HOST:0:3}...${VPS_HOST: -3}"
           echo "VPS_USER: $VPS_USER"
+          echo "Key starts with: $(echo "${{ secrets.DEPLOY_SSH_KEY }}" | head -c 30)"
+          echo "Key ends with: $(echo "${{ secrets.DEPLOY_SSH_KEY }}" | tail -c 30)"
+          echo "Key line count: $(echo "${{ secrets.DEPLOY_SSH_KEY }}" | wc -l)"
 
       - name: Configure SSH key
         run: |
-          set -eu
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           
       - name: Test SSH connection
         run: |
