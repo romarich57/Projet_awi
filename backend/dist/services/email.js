@@ -23,7 +23,7 @@ export async function sendVerificationEmail(email, token) {
     const verificationUrl = `${baseUrl}/verify-email?token=${encodeURIComponent(token)}`;
     const html = `
     <p>Bonjour,</p>
-    <p>Merci pour votre inscription sur Secure App Paiement.</p>
+    <p>Merci pour votre inscription sur SecureApp.</p>
     <p>Veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :</p>
     <p>
       <a
@@ -48,11 +48,11 @@ export async function sendVerificationEmail(email, token) {
   `;
     const transporterInstance = ensureTransporter();
     await transporterInstance.sendMail({
-        from: `"Secure App Paiement" <${SMTP_USER || 'no-reply@secure-app'}>`,
+        from: `"SecureApp" <${SMTP_USER || 'no-reply@secure-app'}>`,
         to: email,
         subject: 'Vérification de votre adresse email',
         text: `Bonjour,
-Merci pour votre inscription sur Secure App Paiement.
+Merci pour votre inscription sur SecureApp.
 Veuillez confirmer votre adresse email via ce lien (valide 24h) : ${verificationUrl}
 Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message.`,
         html,
@@ -63,7 +63,7 @@ export async function sendPasswordResetEmail(email, token) {
     const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
     const html = `
     <p>Bonjour,</p>
-    <p>Une demande de réinitialisation de mot de passe a été effectuée pour votre compte Secure App Paiement.</p>
+    <p>Une demande de réinitialisation de mot de passe a été effectuée pour votre compte SecureApp.</p>
     <p>Si vous êtes à l'origine de cette demande, cliquez sur le bouton ci-dessous (valide 1h) :</p>
     <p>
       <a
@@ -87,11 +87,11 @@ export async function sendPasswordResetEmail(email, token) {
   `;
     const transporterInstance = ensureTransporter();
     await transporterInstance.sendMail({
-        from: `"Secure App Paiement" <${SMTP_USER || 'no-reply@secure-app'}>`,
+        from: `"SecureApp" <${SMTP_USER || 'no-reply@secure-app'}>`,
         to: email,
         subject: 'Réinitialisation de mot de passe',
         text: `Bonjour,
-Une demande de réinitialisation de mot de passe a été effectuée pour votre compte Secure App Paiement.
+Une demande de réinitialisation de mot de passe a été effectuée pour votre compte SecureApp.
 Si vous êtes à l'origine de cette demande, utilisez ce lien (valide 1h) : ${resetUrl}
 Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.`,
         html,

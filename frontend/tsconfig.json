@@ -20,7 +20,8 @@
       "@auth/*": ["app/shared/auth/*"],
       "@users/*": ["app/users/*"],
       "@shared/*": ["app/shared/*"],
-      "@env/*": ["environments/*"]
+      "@env/*": ["environments/*"],
+      "@testing/*": ["testing/*"]
     }
   },
   "angularCompilerOptions": {
