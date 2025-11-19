@@ -1,3 +1,3 @@
 export const environment = {
- apiUrl: 'https://localhost:4000/api', // HTTPS local backend
+  apiUrl: '/api', // Utilise le proxy Nginx configuré dans nginx.conf
 } 

@@ -1,24 +1,86 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: secureapp_db
+    container_name: secureapp_db_dev
     restart: unless-stopped
     environment:
-      POSTGRES_USER: secureapp
-      POSTGRES_PASSWORD: secureapp
-      POSTGRES_DB: secureapp
+      POSTGRES_USER: secureapp_dev
+      POSTGRES_PASSWORD: secureapp_dev_password
+      POSTGRES_DB: secureapp_dev
     volumes:
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - db_data:/var/lib/postgresql/data
+      - db_data_dev:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    labels:
+      - "environment=development"
+      - "project=secureapp"
+    networks:
+      - secureapp_dev_network
 
   adminer:
     image: adminer
-    container_name: secureapp_adminer
+    container_name: secureapp_adminer_dev
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8081:8080"
+    labels:
+      - "environment=development"
+      - "project=secureapp"
+    networks:
+      - secureapp_dev_network
+    depends_on:
+      - db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: secureapp_backend_dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+    env_file:
+      - ./backend/.env.dev
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/certs:/app/certs:ro
+    labels:
+      - "environment=development"
+      - "project=secureapp"
+    networks:
+      - secureapp_dev_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: secureapp_frontend_dev
+    restart: unless-stopped
+    ports:
+      - "8080:443"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - ./certs:/etc/nginx/certs:ro
+    labels:
+      - "environment=development"
+      - "project=secureapp"
+    networks:
+      - secureapp_dev_network
 
 volumes:
-  db_data:
+  db_data_dev:
+    name: secureapp_db_data_dev
+
+networks:
+  secureapp_dev_network:
+    name: secureapp_dev_network
+    driver: bridge
