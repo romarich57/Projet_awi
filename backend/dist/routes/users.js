@@ -128,5 +128,22 @@ router.get('/:id', requireAdmin, async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
+router.delete('/:id', requireAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: 'Identifiant invalide' });
+    }
+    try {
+        const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1', [id]);
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Utilisateur introuvable' });
+        }
+        res.json({ message: 'Utilisateur supprimé' });
+    }
+    catch (err) {
+        console.error('Erreur suppression utilisateur', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 export default router;
 //# sourceMappingURL=users.js.map

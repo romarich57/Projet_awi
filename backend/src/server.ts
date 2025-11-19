@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import http from 'node:http'
 import https from 'node:https'
 import express from 'express'
 import cors from 'cors'
@@ -14,6 +15,10 @@ import { requireAdmin } from './middleware/auth-admin.js'
 import { ensureAdmin } from './db/initAdmin.js'
 import { FRONTEND_ORIGINS } from './config/env.js'
 import 'dotenv/config'
+
+const PORT = Number(process.env.PORT ?? 4000)
+const HOST = process.env.HOST ?? '0.0.0.0'
+const HTTPS_ENABLED = process.env.HTTPS_ENABLED !== 'false'
 
 const app = express()
 
@@ -60,18 +65,33 @@ app.use('/api/admin', verifyToken, requireAdmin, (_req, res) => {
 // HTTPS (certificats mkcert montés en volume dans /app/certs)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const certsDir = path.resolve(__dirname, '../certs')
-const key = fs.readFileSync(path.join(certsDir, 'localhost-key.pem'))
-const cert = fs.readFileSync(path.join(certsDir, 'localhost.pem'))
+const certsDir = process.env.CERTS_DIR
+  ? path.resolve(process.env.CERTS_DIR)
+  : path.resolve(__dirname, '../certs')
+const httpsKeyPath = process.env.HTTPS_KEY_PATH ?? path.join(certsDir, 'localhost-key.pem')
+const httpsCertPath = process.env.HTTPS_CERT_PATH ?? path.join(certsDir, 'localhost.pem')
+
+const createHttpsOptions = () => ({
+  key: fs.readFileSync(httpsKeyPath),
+  cert: fs.readFileSync(httpsCertPath),
+})
 
 // Démarrage
 ;(async () => {
   // Création/validation du compte admin requise au démarrage
   await ensureAdmin()
 
-  https.createServer({ key, cert }, app).listen(4000, () => {
-    console.log('👍 Serveur API démarré sur https://localhost:4000')
-  })
+  const onReady = () => {
+    const scheme = HTTPS_ENABLED ? 'https' : 'http'
+    const hostToLog = HOST === '0.0.0.0' ? '0.0.0.0' : HOST
+    console.log(`👍 Serveur API démarré sur ${scheme}://${hostToLog}:${PORT}`)
+  }
+
+  if (HTTPS_ENABLED) {
+    https.createServer(createHttpsOptions(), app).listen(PORT, HOST, onReady)
+  } else {
+    http.createServer(app).listen(PORT, HOST, onReady)
+  }
 })().catch((err) => {
   console.error('❌ Erreur au démarrage du serveur :', err)
   process.exit(1)
