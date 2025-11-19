@@ -57,9 +57,7 @@ jobs:
         run: |
           set -eu
           install -m 700 -d ~/.ssh
-          cat <<'KEY' > ~/.ssh/id_rsa
-${{ secrets.DEPLOY_SSH_KEY }}
-KEY
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
 
