@@ -53,6 +53,12 @@ jobs:
       - name: Checkout (for reference)
         uses: actions/checkout@v4
 
+      - name: Debug secrets
+        run: |
+          echo "VPS_HOST length: ${#VPS_HOST}"
+          echo "VPS_HOST value (masked): ${VPS_HOST:0:3}...${VPS_HOST: -3}"
+          echo "VPS_USER: $VPS_USER"
+
       - name: Configure SSH key
         run: |
           set -eu
