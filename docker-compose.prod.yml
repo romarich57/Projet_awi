@@ -11,6 +11,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-secureapp}
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-secureapp}']
       interval: 10s
