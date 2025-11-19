@@ -64,9 +64,4 @@ jobs:
       - name: Deploy application
         run: |
           set -eu
-          ssh "$VPS_USER@$VPS_HOST" <<'SSH'
-            set -euo pipefail
-            cd /home/ubuntu/Projet_awi
-            git pull origin main
-            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
-SSH
+          ssh "$VPS_USER@$VPS_HOST" "set -euo pipefail && cd /home/ubuntu/Projet_awi && git pull origin main && docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build"
