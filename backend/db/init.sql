@@ -15,3 +15,12 @@ CREATE TABLE IF NOT EXISTS users (
  password_reset_expires_at TIMESTAMP,
  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Réinitialiser la séquence pour garantir que le premier utilisateur ait l'id 1
+-- Cette opération est idempotente et ne fait rien si des données existent déjà
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM users LIMIT 1) THEN
+    ALTER SEQUENCE users_id_seq RESTART WITH 1;
+  END IF;
+END $$;

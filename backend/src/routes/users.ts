@@ -171,9 +171,23 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ error: 'Identifiant invalide' })
   }
+  
+  // Protection du super admin initial (id=1)
+  if (id === 1) {
+    return res
+      .status(403)
+      .json({ error: 'Impossible de supprimer le compte super administrateur initial' })
+  }
+  
+  const currentUserId = Number(req.user?.id)
+  if (currentUserId === id) {
+    return res
+      .status(403)
+      .json({ error: 'Impossible de supprimer votre propre compte' })
+  }
 
   try {
-    const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1', [id])
+    const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1 AND id <> 1 AND id <> $2', [id, currentUserId])
     if (rowCount === 0) {
       return res.status(404).json({ error: 'Utilisateur introuvable' })
     }
