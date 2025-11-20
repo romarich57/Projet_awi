@@ -3,16 +3,16 @@ import pool from './database.js'
 import { ADMIN_EMAIL } from '../config/env.js'
 
 export async function ensureAdmin(): Promise<void> {
-  const login = process.env.ADMIN_LOGIN
-  const password = process.env.ADMIN_PASSWORD 
+  const login = process.env.ADMIN_LOGIN ?? 'admin'
+  const password = process.env.ADMIN_PASSWORD ?? 'adminadmin'
   const role = 'admin'
-  const firstName = process.env.ADMIN_FIRST_NAME 
-  const lastName = process.env.ADMIN_LAST_NAME 
-  const phone = process.env.ADMIN_PHONE 
-  const avatarUrl = process.env.ADMIN_AVATAR_URL 
+  const firstName = process.env.ADMIN_FIRST_NAME ?? 'Admin'
+  const lastName = process.env.ADMIN_LAST_NAME ?? 'Account'
+  const phone = process.env.ADMIN_PHONE ?? null
+  const avatarUrl = process.env.ADMIN_AVATAR_URL ?? null
   const email = ADMIN_EMAIL
 
-  const passwordHash = await bcrypt.hash(password || '', 10)
+  const passwordHash = await bcrypt.hash(password, 10)
 
   await pool.query(
     `
