@@ -1,0 +1,111 @@
+<div class = "festival-form">
+    <h2>Ajouter un nouveau festival</h2>
+    <form [formGroup]="festivalForm" (ngSubmit)="submit()">
+        <div>
+            <label for="name">Nom du festival:</label>
+            <input id="name" formControlName="name" />
+            @if (festivalForm.controls['name'].errors?.['required']){
+                <small>Le nom est requis.</small>
+            }
+            @if (festivalForm.controls['name'].errors?.['minlength']){
+                <small>Le nom doit contenir au moins 2 caractères.</small>
+            }
+            @if (festivalForm.controls['name'].errors?.['maxlength']){
+                <small>Le nom ne peut pas dépasser 100 caractères.</small>
+            }
+        </div>
+        <div>
+            <label for="stock_tables_standard">Tables standard:</label>
+            <input id="stock_tables_standard" type="number" formControlName="stock_tables_standard" />
+            @if (festivalForm.controls['stock_tables_standard'].errors?.['required']){
+                <small>Le nombre de tables standard est requis.</small>
+            }
+        </div>
+        <div>
+            <label for="stock_tables_grande">Tables grandes:</label>
+            <input id="stock_tables_grande" type="number" formControlName="stock_tables_grande" />
+            @if (festivalForm.controls['stock_tables_grande'].errors?.['required']){
+                <small>Le nombre de tables grandes est requis.</small>
+            }
+        </div>
+        <div>
+            <label for="stock_tables_mairie">Tables mairie:</label>
+            <input id="stock_tables_mairie" type="number" formControlName="stock_tables_mairie" />
+            @if (festivalForm.controls['stock_tables_mairie'].errors?.['required']){
+                <small>Le nombre de tables mairie est requis.</small>
+            }
+        </div>
+        <div>
+            <label for="stock_chaises">Chaises:</label>
+            <input id="stock_chaises" type="number" formControlName="stock_chaises" />
+            @if (festivalForm.controls['stock_chaises'].errors?.['required']){
+                <small>Le nombre de chaises est requis.</small>
+            }
+        </div>
+        <div>
+            <label for="start_date">Date de début:</label>
+            <input id="start_date" type="date" formControlName="start_date" />
+            @if (festivalForm.controls['start_date'].errors?.['required']){
+                <small>La date de début est requise.</small>
+            }
+        </div>
+        <div>
+            <label for="end_date">Date de fin:</label>
+            <input id="end_date" type="date" formControlName="end_date" />
+            @if (festivalForm.controls['end_date'].errors?.['required']){
+                <small>La date de fin est requise.</small>
+            }
+        </div>
+
+        <div formArrayName="zones_tarifaires">
+            <h3>Zones Tarifaires</h3>
+            @for(zone of zonesFormArray.controls; track $index) {
+                <div [formGroupName]="$index" class="zone-tarifaire">
+                    <div class="zone-header">
+                        <h4>Zone {{ $index + 1 }}</h4>
+                        @if (zonesFormArray.length > 1) {
+                            <button type="button" class="remove-zone" (click)="removeZone($index)">
+                                ❌ Supprimer
+                            </button>
+                        }
+                    </div>
+                    
+                    <div>
+                        <label for="zone-name-{{$index}}">Nom de la zone:</label>
+                        <input id="zone-name-{{$index}}" formControlName="name" />
+                        @if (zone.get('name')?.errors?.['required'] && zone.get('name')?.touched){
+                            <small>Le nom de la zone est requis.</small>
+                        }
+                    </div>
+                    
+                    <div>
+                        <label for="zone-nb-tables-{{$index}}">Nombre de tables:</label>
+                        <input id="zone-nb-tables-{{$index}}" type="number" formControlName="nb_tables" />
+                        @if (zone.get('nb_tables')?.errors?.['required'] && zone.get('nb_tables')?.touched){
+                            <small>Le nombre de tables est requis.</small>
+                        }
+                        @if (zone.get('nb_tables')?.errors?.['min'] && zone.get('nb_tables')?.touched){
+                            <small>Le nombre minimum de tables est 1.</small>
+                        }
+                    </div>
+                    
+                    <div>
+                        <label for="zone-price-per-table-{{$index}}">Prix par table:</label>
+                        <input id="zone-price-per-table-{{$index}}" type="number" step="0.01" formControlName="price_per_table" />
+                        @if (zone.get('price_per_table')?.errors?.['required'] && zone.get('price_per_table')?.touched){
+                            <small>Le prix par table est requis.</small>
+                        }
+                        @if (zone.get('price_per_table')?.errors?.['min'] && zone.get('price_per_table')?.touched){
+                            <small>Le prix doit être supérieur ou égal à 0.</small>
+                        }
+                    </div>
+                </div>
+            }
+            <button type="button" class="add-zone" (click)="addZone()">
+                ➕ Ajouter une zone tarifaire
+            </button>
+        </div>
+        <button type="submit" [disabled]="festivalForm.invalid">Ajouter le festival</button>
+
+    </form>
+</div>

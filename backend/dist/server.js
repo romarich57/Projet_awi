@@ -10,9 +10,13 @@ import cookieParser from 'cookie-parser';
 import publicRouter from './routes/public.js';
 import usersRouter from './routes/users.js';
 import authRouter from './routes/auth.js';
+import festivalRouter from './routes/festival.js';
+import zoneTarifaireRouter from './routes/zoneTarifaire.js';
+import workflowRouter from './routes/workflow.js';
 import { verifyToken } from './middleware/token-management.js';
 import { requireAdmin } from './middleware/auth-admin.js';
 import { ensureAdmin } from './db/initAdmin.js';
+import { ensureFestivals } from './db/initFestivals.js';
 import { FRONTEND_ORIGINS } from './config/env.js';
 import 'dotenv/config';
 const PORT = Number(process.env.PORT ?? 4000);
@@ -52,6 +56,9 @@ app.use(cors(corsOptions));
 app.use('/api/public', publicRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', verifyToken, usersRouter);
+app.use('/api/festivals', verifyToken, festivalRouter);
+app.use('/api/zones-tarifaires', zoneTarifaireRouter);
+app.use('/api/workflow', workflowRouter);
 app.use('/api/admin', verifyToken, requireAdmin, (_req, res) => {
     res.json({ message: 'Bienvenue admin' });
 });
@@ -70,6 +77,7 @@ const createHttpsOptions = () => ({
 (async () => {
     // Création/validation du compte admin requise au démarrage
     await ensureAdmin();
+    await ensureFestivals();
     const onReady = () => {
         const scheme = HTTPS_ENABLED ? 'https' : 'http';
         const hostToLog = HOST === '0.0.0.0' ? '0.0.0.0' : HOST;

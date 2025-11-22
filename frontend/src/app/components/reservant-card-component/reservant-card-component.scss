@@ -1,0 +1,47 @@
+.reservant-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #3498db;
+  }
+  
+  h2 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+    transition: color 0.3s ease;
+  }
+  
+  p {
+    color: #5a6c7d;
+    margin: 0.5rem 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .reservant-card {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    
+    h2 {
+      font-size: 1.2rem;
+    }
+    
+    p {
+      font-size: 0.9rem;
+    }
+  }
+}

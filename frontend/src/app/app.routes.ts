@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { AdminComponent } from '@app/admin/admin/admin';
 import { adminGuard } from '@app/admin/admin-guard';
-import { HomeComponent } from '@app/home/home';
+import { FestivalListComponent } from '@app/components/festival-list-component/festival-list-component';
 import { authGuard } from '@auth/auth-guard';
 import { LoginComponent } from '@auth/login/login';
 import { RegisterComponent } from '@auth/register/register';
@@ -9,6 +9,8 @@ import { VerifyEmailComponent } from '@auth/verify-email/verify-email';
 import { ResendVerificationComponent } from '@auth/resend-verification/resend-verification';
 import { ForgotPasswordComponent } from '@auth/forgot-password/forgot-password';
 import { ResetPasswordComponent } from '@auth/reset-password/reset-password';
+import { ReservationDashbordComponent } from '@app/components/reservation-dashbord-component/reservation-dashbord-component';
+import { HomeComponent } from './components/home/home';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Connexion' },
@@ -29,7 +31,24 @@ export const routes: Routes = [
     component: ResetPasswordComponent,
     title: 'Réinitialiser mon mot de passe',
   },
-  { path: 'home', component: HomeComponent, canActivate: [authGuard], title: 'Accueil' },
+  {
+    path: 'festivals',
+    component: FestivalListComponent,
+    canActivate: [authGuard],
+    title: 'Festivals',
+  },
+  {
+    path: 'home',
+    component: HomeComponent,
+    canActivate: [authGuard],
+    title: 'Profil',
+  },
+  {
+    path: 'dashboard',
+    component: ReservationDashbordComponent,
+    canActivate: [authGuard],
+    title: 'Dashboard',
+  },
   {
     path: 'admin',
     component: AdminComponent,

@@ -1,0 +1,28 @@
+<div class="dashboard-container">
+    <a routerLink="/home">← Retour à l'accueil</a>
+
+    <h1>Dashboard des Réservations</h1>
+    
+    @if (festivalState.currentFestival()) {
+        <h2>Festival: {{ festivalState.currentFestival()?.name }}</h2>
+        <p>Tables standard: {{ festivalState.currentFestival()?.stock_tables_standard }} | 
+           Tables grandes: {{ festivalState.currentFestival()?.stock_tables_grande }} | 
+           Tables mairie: {{ festivalState.currentFestival()?.stock_tables_mairie }} | 
+           Chaises: {{ festivalState.currentFestival()?.stock_chaises }}</p>
+        <div class="reservation-list">
+            @if (reservants().length > 0) {
+                @for(reservant of reservants(); track reservant.id) {
+                    <app-reservant-card-component
+                        [reservant]="reservant"
+                    ></app-reservant-card-component>
+                }
+            } @else {
+                <p>Aucun réservant trouvé pour ce festival.</p>
+            }
+        </div>
+    } @else {
+        <div class="no-festival">
+            <p>Veuillez sélectionner un festival depuis la page d'accueil pour voir les réservations.</p>
+        </div>
+    }
+</div>

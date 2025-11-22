@@ -1,0 +1,23 @@
+<h1>Liste des festivals :</h1>
+
+
+
+@if(!showForm()){
+    <button class="form-btn" (click)="toggleForm()">Ajouter un nouveau festival</button>
+}
+@else {
+    <button class="form-btn" (click)="toggleForm()">Annuler</button>
+    <app-festival-form-component
+        (festivalSubmit)="addFestival($event)"
+        (zoneSubmit)="addZoneTarifaire($event, $event.festival_id)"
+    ></app-festival-form-component>
+
+}
+
+<div class="festival-list">
+    @for(festival of festivals(); track festival.id) {
+        <app-festival-card-component
+            [festival]="festival"
+        ></app-festival-card-component>
+    }
+</div>
