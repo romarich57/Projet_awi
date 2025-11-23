@@ -29,14 +29,17 @@
                 Non vérifié
               }
             </span>
-            <button
-              type="button"
-              class="danger"
-              (click)="deleteUser(user.id)"
-              [disabled]="userService.isMutating()"
-            >
-              Supprimer
-            </button>
+            @if(user.role !== 'admin') {
+              <button
+                type="button"
+                class="danger"
+                (click)="deleteUser(user.id)"
+                [disabled]="userService.isMutating()"
+              >
+                Supprimer
+              </button>
+            }
+
           </li>
         }
       </ul>
