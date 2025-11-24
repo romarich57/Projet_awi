@@ -1,7 +1,10 @@
 <header class="header">
   <nav>
-    <a routerLink="/home" routerLinkActive="active">Accueil</a>
+    <a routerLink="/festivals" routerLinkActive="active">Festivals</a>
+    
     @if (isLoggedIn()) {
+      <a routerLink="/home" routerLinkActive="active">Profil</a>
+      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
       @if (isAdmin()) {
         <a routerLink="/admin" routerLinkActive="active">Admin</a>
       }

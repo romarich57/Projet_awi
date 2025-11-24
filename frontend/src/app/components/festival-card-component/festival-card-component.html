@@ -1,0 +1,12 @@
+<div (click)="onFestivalClick()" class="festival-card-container">
+
+    <div class="festival-card" [class.selected]="isSelected()"> 
+        <h2>{{ festival().name }}</h2>
+        <p>Tables: {{ festival().stock_tables_standard + festival().stock_tables_grande + festival().stock_tables_mairie }} | Chaises: {{ festival().stock_chaises }}</p>
+        <p>Date de début : {{ festival().start_date | date: 'longDate'}}</p>
+        <p>Date de fin : {{ festival().end_date | date: 'longDate'}}</p>
+    </div>
+
+
+</div>
+

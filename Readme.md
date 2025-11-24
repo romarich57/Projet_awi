@@ -3,7 +3,7 @@
 ## Démarrage
 Depuis la racine du projet :
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.dev.yml up -d --build
 docker compose -f docker-compose.prod.yml ps
 ```
 ## Identifiants de connexion
