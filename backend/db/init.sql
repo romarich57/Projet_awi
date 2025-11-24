@@ -6,6 +6,8 @@ CREATE TYPE workflow_enum AS ENUM (
     'Facture', 'Facture_payee'
 );
 
+CREATE TYPE table_type_enum AS ENUM ('standard', 'grande', 'mairie');
+
 CREATE TABLE IF NOT EXISTS users (
  id SERIAL PRIMARY KEY,
  login TEXT UNIQUE NOT NULL,
