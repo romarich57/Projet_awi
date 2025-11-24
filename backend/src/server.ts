@@ -17,6 +17,7 @@ import { verifyToken } from './middleware/token-management.js'
 import { requireAdmin } from './middleware/auth-admin.js'
 import { ensureAdmin } from './db/initAdmin.js'
 import { ensureFestivals } from './db/initFestivals.js'
+import { runMigrations } from './db/migrations.js'
 import { FRONTEND_ORIGINS } from './config/env.js'
 import 'dotenv/config'
 
@@ -85,6 +86,9 @@ const createHttpsOptions = () => ({
 
 // Démarrage
 ;(async () => {
+  // Exécution des migrations de la base de données
+  await runMigrations()
+  
   // Création/validation du compte admin requise au démarrage
   await ensureAdmin()
   await ensureFestivals()
