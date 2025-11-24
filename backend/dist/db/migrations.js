@@ -1,13 +1,10 @@
 import pool from './database.js';
-
 export async function runMigrations() {
-  const client = await pool.connect();
-  
-  try {
-    console.log('🔄 Exécution des migrations de la base de données...');
-
-    // Migration 002: Ajout du type table_type_enum
-    await client.query(`
+    const client = await pool.connect();
+    try {
+        console.log('🔄 Exécution des migrations de la base de données...');
+        // Migration 002: Ajout du type table_type_enum
+        await client.query(`
       DO $$ BEGIN
         CREATE TYPE table_type_enum AS ENUM ('standard', 'grande', 'mairie');
       EXCEPTION
@@ -15,10 +12,9 @@ export async function runMigrations() {
           RAISE NOTICE 'Type table_type_enum existe déjà, passage...';
       END $$;
     `);
-    console.log('✅ Type table_type_enum vérifié/créé');
-
-    // S'assurer que la table festival existe (certains environnements n'ont pas appliqué init.sql)
-    await client.query(`
+        console.log('✅ Type table_type_enum vérifié/créé');
+        // S'assurer que la table festival existe (certains environnements n'ont pas appliqué init.sql)
+        await client.query(`
       CREATE TABLE IF NOT EXISTS festival (
         id SERIAL PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
@@ -30,10 +26,9 @@ export async function runMigrations() {
         stock_chaises INTEGER NOT NULL DEFAULT 0
       );
     `);
-    console.log('✅ Table festival vérifiée/créée');
-
-    // Table zone_tarifaire liée à festival
-    await client.query(`
+        console.log('✅ Table festival vérifiée/créée');
+        // Table zone_tarifaire liée à festival
+        await client.query(`
       CREATE TABLE IF NOT EXISTS zone_tarifaire (
         id SERIAL PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
@@ -45,13 +40,10 @@ export async function runMigrations() {
         UNIQUE(festival_id, name)
       );
     `);
-    await client.query(
-      `UPDATE zone_tarifaire SET nb_tables_available = nb_tables WHERE nb_tables_available IS NULL;`,
-    );
-    console.log('✅ Table zone_tarifaire vérifiée/créée');
-
-    // Créer la table jeux_alloues si elle n'existe pas
-    await client.query(`
+        await client.query(`UPDATE zone_tarifaire SET nb_tables_available = nb_tables WHERE nb_tables_available IS NULL;`);
+        console.log('✅ Table zone_tarifaire vérifiée/créée');
+        // Créer la table jeux_alloues si elle n'existe pas
+        await client.query(`
       CREATE TABLE IF NOT EXISTS jeux_alloues (
         id SERIAL PRIMARY KEY,
         game_id INTEGER REFERENCES games(id),
@@ -62,10 +54,9 @@ export async function runMigrations() {
         taille_table_requise table_type_enum NOT NULL DEFAULT 'standard'
       );
     `);
-    console.log('✅ Table jeux_alloues vérifiée/créée');
-
-    // Créer la table reservation_zones_tarifaires si elle n'existe pas
-    await client.query(`
+        console.log('✅ Table jeux_alloues vérifiée/créée');
+        // Créer la table reservation_zones_tarifaires si elle n'existe pas
+        await client.query(`
       CREATE TABLE IF NOT EXISTS reservation_zones_tarifaires (
         reservation_id INTEGER REFERENCES reservation(id),
         zone_tarifaire_id INTEGER REFERENCES zone_tarifaire(id),
@@ -73,13 +64,15 @@ export async function runMigrations() {
         PRIMARY KEY (reservation_id, zone_tarifaire_id)
       );
     `);
-    console.log('✅ Table reservation_zones_tarifaires vérifiée/créée');
-
-    console.log('✅ Toutes les migrations ont été appliquées avec succès');
-  } catch (error) {
-    console.error('❌ Erreur lors de l\'exécution des migrations:', error);
-    throw error;
-  } finally {
-    client.release();
-  }
+        console.log('✅ Table reservation_zones_tarifaires vérifiée/créée');
+        console.log('✅ Toutes les migrations ont été appliquées avec succès');
+    }
+    catch (error) {
+        console.error('❌ Erreur lors de l\'exécution des migrations:', error);
+        throw error;
+    }
+    finally {
+        client.release();
+    }
 }
+//# sourceMappingURL=migrations.js.map
