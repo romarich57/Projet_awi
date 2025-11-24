@@ -32,6 +32,101 @@ export async function runMigrations() {
     `);
     console.log('✅ Table festival vérifiée/créée');
 
+    // Types et tables de base pour les réservations (rattrapage si init.sql non appliqué)
+    await client.query(`
+      DO $$ BEGIN
+        CREATE TYPE role_enum AS ENUM ('normal', 'organizer', 'super-organizer', 'admin');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+    `);
+
+    await client.query(`
+      DO $$ BEGIN
+        CREATE TYPE workflow_enum AS ENUM (
+          'Pas_de_contact', 'Contact_pris', 'Discussion_en_cours',
+          'Sera_absent', 'Considere_absent', 'Reservation_confirmee',
+          'Facture', 'Facture_payee'
+        );
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        login TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role role_enum DEFAULT 'normal',
+        first_name TEXT,
+        last_name TEXT,
+        email TEXT UNIQUE NOT NULL,
+        phone TEXT,
+        avatar_url TEXT,
+        email_verified BOOLEAN DEFAULT FALSE,
+        email_verification_token TEXT,
+        email_verification_expires_at TIMESTAMP,
+        password_reset_token TEXT,
+        password_reset_expires_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS editor (
+        id SERIAL PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        website TEXT,
+        description TEXT
+      );
+    `);
+
+    await client.query(`
+      DO $$ BEGIN
+        CREATE TYPE reservant_type_enum AS ENUM ('editeur', 'prestataire', 'boutique', 'animateur', 'association');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS reservant (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        type reservant_type_enum NOT NULL,
+        editor_id INTEGER REFERENCES editor(id),
+        phone_number TEXT,
+        address TEXT,
+        siret TEXT,
+        notes TEXT
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS contact (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone_number TEXT NOT NULL,
+        job_title TEXT NOT NULL,
+        editor_id INTEGER REFERENCES editor(id),
+        reservant_id INTEGER REFERENCES reservant(id),
+        priority INTEGER NOT NULL,
+        CONSTRAINT contact_entity_check CHECK (
+          (editor_id IS NOT NULL AND reservant_id IS NULL) OR
+          (editor_id IS NULL AND reservant_id IS NOT NULL)
+        )
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS games (
+        id SERIAL PRIMARY KEY,
+        title TEXT UNIQUE NOT NULL,
+        type TEXT NOT NULL,
+        editor_id INTEGER REFERENCES editor(id) ON DELETE RESTRICT,
+        min_age INTEGER NOT NULL,
+        authors TEXT NOT NULL
+      );
+    `);
+
     // Table zone_tarifaire liée à festival
     await client.query(`
       CREATE TABLE IF NOT EXISTS zone_tarifaire (
@@ -49,6 +144,48 @@ export async function runMigrations() {
       `UPDATE zone_tarifaire SET nb_tables_available = nb_tables WHERE nb_tables_available IS NULL;`,
     );
     console.log('✅ Table zone_tarifaire vérifiée/créée');
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS zone_plan (
+        id SERIAL PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        festival_id INTEGER REFERENCES festival(id),
+        id_zone_tarifaire INTEGER REFERENCES zone_tarifaire(id),
+        nb_tables INTEGER NOT NULL
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS suivi_workflow (
+        id SERIAL PRIMARY KEY,
+        reservant_id INTEGER NOT NULL REFERENCES reservant(id),
+        festival_id INTEGER NOT NULL REFERENCES festival(id),
+        state workflow_enum NOT NULL DEFAULT 'Pas_de_contact',
+        liste_jeux_demandee BOOLEAN NOT NULL DEFAULT false,
+        liste_jeux_obtenue BOOLEAN NOT NULL DEFAULT false,
+        jeux_recus BOOLEAN NOT NULL DEFAULT false,
+        presentera_jeux BOOLEAN NOT NULL DEFAULT true,
+        UNIQUE(reservant_id, festival_id)
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS reservation (
+        id SERIAL PRIMARY KEY,
+        reservant_id INTEGER REFERENCES reservant(id),
+        festival_id INTEGER REFERENCES festival(id),
+        workflow_id INTEGER REFERENCES suivi_workflow(id),
+        start_price NUMERIC NOT NULL,
+        table_discount_offered NUMERIC NOT NULL,
+        direct_discount NUMERIC NOT NULL,
+        nb_prises INTEGER NOT NULL,
+        date_facturation DATE,
+        final_price NUMERIC NOT NULL,
+        statut_paiment TEXT CHECK (statut_paiment IN ('non_payé', 'payé')) NOT NULL DEFAULT 'non_payé',
+        note TEXT,
+        UNIQUE(reservant_id, festival_id)
+      );
+    `);
 
     // Créer la table jeux_alloues si elle n'existe pas
     await client.query(`
