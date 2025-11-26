@@ -1,0 +1,81 @@
+<div class="edit-page">
+  <a class="back-link" routerLink="/reservants">Retour a la liste</a>
+
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Edition</p>
+      <h1>Modifier le reservant</h1>
+      <p class="subtitle">Mettre a jour les informations de contact et d'identite.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="ghost" (click)="cancel()">Annuler</button>
+      <button type="submit" class="primary" (click)="onSubmit()">Sauvegarder</button>
+    </div>
+  </header>
+
+  @if (reservant() || !isEditContext) {
+    <form class="form-card" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="grid">
+        <label class="field">
+          <span>Nom *</span>
+          <input type="text" formControlName="name" placeholder="Nom du reservant" />
+          @if (controlError('name', 'required')) {
+            <small class="error">Le nom est requis.</small>
+          }
+        </label>
+
+        <label class="field">
+          <span>Email</span>
+          <input type="email" formControlName="email" placeholder="email@exemple.com" />
+          @if (controlError('email', 'email')) {
+            <small class="error">Email invalide.</small>
+          }
+        </label>
+
+        <label class="field">
+          <span>Type *</span>
+          <select formControlName="type">
+            <option value="">Choisir un type</option>
+            <option value="editeur">Editeur</option>
+            <option value="prestataire">Prestataire</option>
+            <option value="boutique">Boutique</option>
+            <option value="animateur">Animateur</option>
+            <option value="association">Association</option>
+          </select>
+          @if (controlError('type', 'required')) {
+            <small class="error">Le type est requis.</small>
+          }
+        </label>
+
+        <label class="field">
+          <span>Telephone</span>
+          <input type="text" formControlName="phone_number" placeholder="06..." />
+        </label>
+
+        <label class="field">
+          <span>Adresse</span>
+          <input type="text" formControlName="address" placeholder="Adresse complete" />
+        </label>
+
+        <label class="field">
+          <span>Siret</span>
+          <input type="text" formControlName="siret" placeholder="Numero SIRET" />
+        </label>
+
+        <label class="field full">
+          <span>Notes</span>
+          <textarea rows="3" formControlName="notes" placeholder="Notes internes"></textarea>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="ghost" (click)="cancel()">Annuler</button>
+        <button type="submit" class="primary">Sauvegarder</button>
+      </div>
+    </form>
+  } @else {
+    <div class="form-card empty">
+      <p>Chargement du reservant...</p>
+    </div>
+  }
+</div>

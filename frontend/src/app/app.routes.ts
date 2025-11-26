@@ -10,6 +10,9 @@ import { ResendVerificationComponent } from '@auth/resend-verification/resend-ve
 import { ForgotPasswordComponent } from '@auth/forgot-password/forgot-password';
 import { ResetPasswordComponent } from '@auth/reset-password/reset-password';
 import { ReservationDashbordComponent } from '@app/components/reservation-dashbord-component/reservation-dashbord-component';
+import { ReservantsListComponent } from '@app/components/reservants-list-component/reservants-list-component';
+import { ReservantCardComponent } from '@app/components/reservant-card-component/reservant-card-component';
+import { ReservantFormComponent } from '@app/components/reservant-form-component/reservant-form-component';
 import { HomeComponent } from './components/home/home';
 
 export const routes: Routes = [
@@ -48,6 +51,30 @@ export const routes: Routes = [
     component: ReservationDashbordComponent,
     canActivate: [authGuard],
     title: 'Dashboard',
+  },
+  {
+    path: 'reservants',
+    component: ReservantsListComponent,
+    canActivate: [authGuard],
+    title: 'Réservants',
+  },
+  {
+    path: 'reservants/new',
+    component: ReservantFormComponent,
+    canActivate: [authGuard],
+    title: 'Créer un réservant',
+  },
+  {
+    path: 'reservants/:id/edit',
+    component: ReservantFormComponent,
+    canActivate: [authGuard],
+    title: 'Modifier un réservant',
+  },
+  {
+    path: 'reservants/:id',
+    component: ReservantCardComponent,
+    canActivate: [authGuard],
+    title: 'Réservant',
   },
   {
     path: 'admin',

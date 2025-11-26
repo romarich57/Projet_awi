@@ -13,6 +13,7 @@ import authRouter from './routes/auth.js'
 import festivalRouter from './routes/festival.js'
 import zoneTarifaireRouter from './routes/zoneTarifaire.js'
 import workflowRouter from './routes/workflow.js'
+import reservantRouter from './routes/reservant.js'
 import { verifyToken } from './middleware/token-management.js'
 import { requireAdmin } from './middleware/auth-admin.js'
 import { ensureAdmin } from './db/initAdmin.js'
@@ -66,6 +67,7 @@ app.use('/api/users', verifyToken, usersRouter)
 app.use('/api/festivals', verifyToken, festivalRouter)
 app.use('/api/zones-tarifaires', zoneTarifaireRouter)
 app.use('/api/workflow', workflowRouter)
+app.use('/api/reservant', verifyToken, reservantRouter)
 app.use('/api/admin', verifyToken, requireAdmin, (_req, res) => {
   res.json({ message: 'Bienvenue admin' })
 })
@@ -84,27 +86,27 @@ const createHttpsOptions = () => ({
   cert: fs.readFileSync(httpsCertPath),
 })
 
-// Démarrage
-;(async () => {
-  // Exécution des migrations de la base de données
-  await runMigrations()
-  
-  // Création/validation du compte admin requise au démarrage
-  await ensureAdmin()
-  await ensureFestivals()
+  // Démarrage
+  ; (async () => {
+    // Exécution des migrations de la base de données
+    await runMigrations()
 
-  const onReady = () => {
-    const scheme = HTTPS_ENABLED ? 'https' : 'http'
-    const hostToLog = HOST === '0.0.0.0' ? '0.0.0.0' : HOST
-    console.log(`👍 Serveur API démarré sur ${scheme}://${hostToLog}:${PORT}`)
-  }
+    // Création/validation du compte admin requise au démarrage
+    await ensureAdmin()
+    await ensureFestivals()
 
-  if (HTTPS_ENABLED) {
-    https.createServer(createHttpsOptions(), app).listen(PORT, HOST, onReady)
-  } else {
-    http.createServer(app).listen(PORT, HOST, onReady)
-  }
-})().catch((err) => {
-  console.error('❌ Erreur au démarrage du serveur :', err)
-  process.exit(1)
-})
+    const onReady = () => {
+      const scheme = HTTPS_ENABLED ? 'https' : 'http'
+      const hostToLog = HOST === '0.0.0.0' ? '0.0.0.0' : HOST
+      console.log(`👍 Serveur API démarré sur ${scheme}://${hostToLog}:${PORT}`)
+    }
+
+    if (HTTPS_ENABLED) {
+      https.createServer(createHttpsOptions(), app).listen(PORT, HOST, onReady)
+    } else {
+      http.createServer(app).listen(PORT, HOST, onReady)
+    }
+  })().catch((err) => {
+    console.error('❌ Erreur au démarrage du serveur :', err)
+    process.exit(1)
+  })

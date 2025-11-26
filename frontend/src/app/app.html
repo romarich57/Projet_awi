@@ -1,19 +1,20 @@
 <header class="header">
   <nav>
     <a routerLink="/festivals" routerLinkActive="active">Festivals</a>
-    
+
     @if (isLoggedIn()) {
-      <a routerLink="/home" routerLinkActive="active">Profil</a>
-      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-      @if (isAdmin()) {
-        <a routerLink="/admin" routerLinkActive="active">Admin</a>
-      }
-      <span class="user">
-        {{ currentUser()?.login }}
-      </span>
+    <a routerLink="/home" routerLinkActive="active">Profil</a>
+    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+    <a routerLink="/reservants" routerLinkActive="active">Réservants</a>
+    @if (isAdmin()) {
+    <a routerLink="/admin" routerLinkActive="active">Admin</a>
+    }
+    <span class="user">
+      {{ currentUser()?.login }}
+    </span>
     } @else {
-      <a routerLink="/login" routerLinkActive="active">Connexion</a>
-      <a routerLink="/register" routerLinkActive="active">Inscription</a>
+    <a routerLink="/login" routerLinkActive="active">Connexion</a>
+    <a routerLink="/register" routerLinkActive="active">Inscription</a>
     }
   </nav>
 </header>

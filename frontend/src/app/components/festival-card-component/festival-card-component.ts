@@ -1,9 +1,10 @@
-import { Component, inject, input, output } from '@angular/core';
-import {FestivalDto} from "../../types/festival-dto";
+import { Component, ChangeDetectionStrategy, inject, input, output } from '@angular/core';
+import { FestivalDto } from "../../types/festival-dto";
 import { DatePipe } from '@angular/common';
 import { FestivalState } from '../../stores/festival-state';
 @Component({
   selector: 'app-festival-card-component',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DatePipe],
   templateUrl: './festival-card-component.html',
@@ -26,7 +27,7 @@ export class FestivalCardComponent {
   onFestivalClick(): void {
     const festival = this.festival();
     this.festivaStore.setCurrentFestival(festival);
-    if (festival.id !== undefined){
+    if (festival.id !== undefined) {
       this.select.emit(festival.id);
     }
   }

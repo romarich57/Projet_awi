@@ -1,5 +1,52 @@
-<div class="reservant-card">
-  <h2>{{ reservant()?.name }}</h2>
-  <p>Email: {{ reservant()?.email }}</p>
-  <p>Type: {{ reservant()?.type }}</p>
+<div class="reservant-card-page" [class.page]="isPageContext">
+  @if (isPageContext) {
+  <a class="back-link" routerLink="/reservants">Retour a la liste</a>
+  }
+
+  @if (reservant(); as reservantData) {
+  <section class="card hero">
+    <div class="hero-main">
+      <p class="eyebrow">Reservant</p>
+      <h1>{{ reservantData.name }}</h1>
+      <div class="meta">
+        <span class="badge">{{ typeLabel(reservantData.type) }}</span>
+        <span class="contact">{{ displayValue(reservantData.email) }}</span>
+      </div>
+    </div>
+    @if (isPageContext) {
+    <div class="hero-actions">
+      <button class="primary" [routerLink]="['/reservants', reservantData.id, 'edit']">
+        Modifier les informations
+      </button>
+    </div>
+    }
+  </section>
+
+  <section class="card info-grid">
+    <div class="info">
+      <span class="label">Email</span>
+      <span class="value">{{ displayValue(reservantData.email) }}</span>
+    </div>
+    <div class="info">
+      <span class="label">Telephone</span>
+      <span class="value">{{ displayValue(reservantData.phone_number) }}</span>
+    </div>
+    <div class="info">
+      <span class="label">Adresse</span>
+      <span class="value">{{ displayValue(reservantData.address) }}</span>
+    </div>
+    <div class="info">
+      <span class="label">Siret</span>
+      <span class="value">{{ displayValue(reservantData.siret) }}</span>
+    </div>
+    <div class="info full">
+      <span class="label">Notes</span>
+      <span class="value">{{ displayValue(reservantData.notes) }}</span>
+    </div>
+  </section>
+  } @else {
+  <section class="card empty">
+    <p>Reservant introuvable ou en cours de chargement.</p>
+  </section>
+  }
 </div>

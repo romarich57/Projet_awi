@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FestivalCardComponent } from '../festival-card-component/festival-card-component';
 import { FestivalService } from '../../services/festival-service';
@@ -9,6 +9,7 @@ import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
 @Component({
   selector: 'app-festival-list-component',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FestivalCardComponent, FestivalFormComponent],
   templateUrl: './festival-list-component.html',
   styleUrl: './festival-list-component.scss',
