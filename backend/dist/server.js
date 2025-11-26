@@ -14,6 +14,7 @@ import festivalRouter from './routes/festival.js';
 import zoneTarifaireRouter from './routes/zoneTarifaire.js';
 import workflowRouter from './routes/workflow.js';
 import reservantRouter from './routes/reservant.js';
+import zonePlanRouter from './routes/zonePlan.js';
 import { verifyToken } from './middleware/token-management.js';
 import { requireAdmin } from './middleware/auth-admin.js';
 import { ensureAdmin } from './db/initAdmin.js';
@@ -62,6 +63,7 @@ app.use('/api/festivals', verifyToken, festivalRouter);
 app.use('/api/zones-tarifaires', zoneTarifaireRouter);
 app.use('/api/workflow', workflowRouter);
 app.use('/api/reservant', verifyToken, reservantRouter);
+app.use('/api/zone-plan', zonePlanRouter);
 app.use('/api/admin', verifyToken, requireAdmin, (_req, res) => {
     res.json({ message: 'Bienvenue admin' });
 });
