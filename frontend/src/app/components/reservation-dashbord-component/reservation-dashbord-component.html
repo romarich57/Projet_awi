@@ -9,6 +9,21 @@
            Tables grandes: {{ festivalState.currentFestival()?.stock_tables_grande }} | 
            Tables mairie: {{ festivalState.currentFestival()?.stock_tables_mairie }} | 
            Chaises: {{ festivalState.currentFestival()?.stock_chaises }}</p>
+
+        
+
+        @if (showReservationForm()) {
+            <app-reservation-form-component
+                [festivalName]="festivalState.currentFestival()?.name"
+                [festivalId]="festivalState.currentFestival()?.id"
+                (closeForm)="showReservationForm.set(false)"
+            ></app-reservation-form-component>
+        }
+        @else {
+            <button class="new-reservation-button" (click)="openReservationForm()">Nouvelle Réservation</button>
+        }
+
+
         <div class="reservation-list">
             @if (reservants().length > 0) {
                 @for(reservant of reservants(); track reservant.id) {

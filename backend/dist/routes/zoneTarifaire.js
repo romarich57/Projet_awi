@@ -36,5 +36,38 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur', details: err instanceof Error ? err.message : 'Erreur inconnue' });
     }
 });
+//suppression d'une zone tarifaire par ID
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rowCount } = await pool.query('DELETE FROM zone_tarifaire WHERE id = $1', [id]);
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Zone tarifaire non trouvée' });
+        }
+        res.json({ message: 'Zone tarifaire supprimée' });
+    }
+    catch (err) {
+        console.error('Erreur lors de la suppression de la zone tarifaire:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+//mise à jour d'une zone tarifaire par ID
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, nb_tables, price_per_table, nb_tables_available, m2_price } = req.body;
+    try {
+        const { rowCount } = await pool.query(`UPDATE zone_tarifaire
+             SET name = $1, nb_tables = $2, price_per_table = $3, nb_tables_available = $4, m2_price = $5
+             WHERE id = $6`, [name, nb_tables, price_per_table, nb_tables_available, m2_price, id]);
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Zone tarifaire non trouvée' });
+        }
+        res.json({ message: 'Zone tarifaire mise à jour' });
+    }
+    catch (err) {
+        console.error('Erreur lors de la mise à jour de la zone tarifaire:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 export default router;
 //# sourceMappingURL=zoneTarifaire.js.map

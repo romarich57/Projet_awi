@@ -2,16 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { WorkflowService } from './workflow-service';
+import { ReservationService } from './reservation.service';
 
-describe('WorkflowService', () => {
-  let service: WorkflowService;
+describe('ReservationService', () => {
+  let service: ReservationService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
-    service = TestBed.inject(WorkflowService);
+    service = TestBed.inject(ReservationService);
   });
 
   it('should be created', () => {

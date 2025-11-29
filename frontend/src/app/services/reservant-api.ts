@@ -14,20 +14,20 @@ export class ReservantApiService {
 
 
   list(): Observable<ReservantDto[]> {
-    return this.http.get<ReservantDto[]>(this.reservantApiUrl);
+    return this.http.get<ReservantDto[]>(this.reservantApiUrl, { withCredentials: true });
   }
 
   getbyid(id: number): Observable<ReservantDto> {
-    return this.http.get<ReservantDto>(this.reservantApiUrl + '/' + id);
+    return this.http.get<ReservantDto>(this.reservantApiUrl + '/' + id, { withCredentials: true });
   }
   create(reservant: ReservantDto): Observable<ReservantDto> {
-    return this.http.post<ReservantDto>(this.reservantApiUrl, reservant);
+    return this.http.post<ReservantDto>(this.reservantApiUrl, reservant, { withCredentials: true });
   }
   update(reservant: ReservantDto): Observable<ReservantDto> {
-    return this.http.put<ReservantDto>(this.reservantApiUrl + '/' + reservant.id, reservant);
+    return this.http.put<ReservantDto>(this.reservantApiUrl + '/' + reservant.id, reservant, { withCredentials: true });
   }
   delete(reservant: ReservantDto): Observable<ReservantDto> {
-    return this.http.delete<ReservantDto>(this.reservantApiUrl + '/' + reservant.id);
+    return this.http.delete<ReservantDto>(this.reservantApiUrl + '/' + reservant.id, { withCredentials: true });
   }
 
 }
