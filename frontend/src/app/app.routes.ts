@@ -14,6 +14,8 @@ import { ReservantsListComponent } from '@app/components/reservants-list-compone
 import { ReservantCardComponent } from '@app/components/reservant-card-component/reservant-card-component';
 import { ReservantFormComponent } from '@app/components/reservant-form-component/reservant-form-component';
 import { HomeComponent } from './components/home/home';
+import { ReservationDetailComponent } from './components/reservation-detail-component/reservation-detail-component';
+import { ReservationDetailsPage } from './components/reservation-details-page/reservation-details-page';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Connexion' },
@@ -81,6 +83,12 @@ export const routes: Routes = [
     component: AdminComponent,
     canActivate: [authGuard, adminGuard],
     title: 'Administration',
+  },
+  {
+    path: 'reservation-details-page/:id',
+    component: ReservationDetailsPage,
+    canActivate: [authGuard],
+    title: 'Détails de la réservation'
   },
   { path: '', pathMatch: 'full', redirectTo: 'home' },
   { path: '**', redirectTo: 'home' },

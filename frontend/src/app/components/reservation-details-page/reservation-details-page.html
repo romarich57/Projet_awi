@@ -1,0 +1,36 @@
+<div class="reservation-details-page">
+  <!-- En-tête avec navigation -->
+  <div class="page-header">
+    <a routerLink="/dashboard" class="back-link">← Retour au dashboard</a>
+    <h1>Détails de la réservation #{{ reservationId() }}</h1>
+  </div>
+
+  <!-- Contenu principal -->
+  @if (reservationId()) {
+    <div class="details-container">
+      
+      <!-- Section Détails de la réservation -->
+      <div class="reservation-section">
+        <h2>Informations de la réservation</h2>
+        <app-reservation-detail-component
+          [reservationId]="reservationId()">
+        </app-reservation-detail-component>
+      </div>
+
+      <!-- Section Workflow -->
+      <div class="workflow-section">
+        <h2>Suivi du workflow</h2>
+        <app-workflow-component
+          [reservationId]="reservationId()">
+        </app-workflow-component>
+      </div>
+
+    </div>
+  }
+  @else {
+    <div class="error-container">
+      <p>ID de réservation manquant.</p>
+      <a routerLink="/dashboard" class="back-btn">Retour au dashboard</a>
+    </div>
+  }
+</div>

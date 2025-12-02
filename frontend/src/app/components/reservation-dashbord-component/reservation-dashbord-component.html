@@ -1,5 +1,5 @@
 <div class="dashboard-container">
-    <a routerLink="/home">← Retour à l'accueil</a>
+    <a routerLink="/festivals">← Retour à la liste des festivals</a>
 
     <h1>Dashboard des Réservations</h1>
     
@@ -11,7 +11,7 @@
            Chaises: {{ festivalState.currentFestival()?.stock_chaises }}</p>
 
         
-
+    
         @if (showReservationForm()) {
             <app-reservation-form-component
                 [festivalName]="festivalState.currentFestival()?.name"
@@ -24,18 +24,57 @@
         }
 
 
+        <section class="toolbar">
+            <label class="field">
+                <span>Type</span>
+                <select [value]="typeFilter()" (change)="setTypeFilter($any($event.target).value)">
+                    <option value="all">Tous les types</option>
+                    <option value="editeur">Editeur</option>
+                    <option value="prestataire">Prestataire</option>
+                    <option value="boutique">Boutique</option>
+                    <option value="animateur">Animateur</option>
+                    <option value="association">Association</option>
+                </select>
+            </label>
+
+            <label class="field">
+                <span>Trier par</span>
+                <select [value]="sortKey()" (change)="setSortKey($any($event.target).value)">
+                    <option value="name-asc">Nom (A -> Z)</option>
+                    <option value="name-desc">Nom (Z -> A)</option>
+                </select>
+            </label>
+        </section>
+
         <div class="reservation-list">
-            @if (reservants().length > 0) {
-                @for(reservant of reservants(); track reservant.id) {
-                    <app-reservant-card-component
-                        [reservant]="reservant"
-                    ></app-reservant-card-component>
+            @if (reservationsView().length > 0) {
+                <div class="grid-table">
+                    <div class="grid-header">
+                        <div>Reservant</div>    
+                        <div>Type</div>
+                        <div>Statut de la Réservation</div>
+                        <div>Voir Détails</div>
+                    </div>
+                </div>
+
+                <!-- pour chaque reservant du festival courant, on affiche sson nom, son type, le statut de sa réservation et un bouton pour voir les détails -->
+                @for(reservation of reservationsView(); track reservation.id) {
+                    <div class="reservation-item">
+                        <div>{{ reservation.reservant_name }}</div>
+                        <div>{{ reservation.reservant_type }}</div>
+                        <div>{{ reservation.workflow_state }}</div>
+                        <div>
+                            <button (click)="viewReservationDetails(reservation.id)">Voir Détails</button>
+                        </div>
+                    </div>
+                    
                 }
             } @else {
-                <p>Aucun réservant trouvé pour ce festival.</p>
+                <p>Aucune réservation trouvée pour ce festival.</p>
             }
         </div>
-    } @else {
+    } 
+    @else {
         <div class="no-festival">
             <p>Veuillez sélectionner un festival depuis la page d'accueil pour voir les réservations.</p>
         </div>
