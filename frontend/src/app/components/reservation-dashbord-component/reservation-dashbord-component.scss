@@ -76,10 +76,6 @@ p {
   }
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
 // Messages vides
 .empty-state {
@@ -97,22 +93,6 @@ p {
   }
 }
 
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  h2 {
-    font-size: 1.5rem;
-  }
-  
-  .reservation-list {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 0 0.5rem;
-  }
-}
 
 .new-reservation-button {
   display: inline-block;
@@ -174,21 +154,13 @@ p {
   transition: background-color 0.2s ease;
   background: white;
   
-  &:hover {
-    background-color: #f8f9fa;
-  }
+}
   
-  &:last-child {
-    border-bottom: none;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-  }
-  
-  &:first-child {
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-  }
-  
+.reservation-list {
+  border-radius: 8px;
+}
+
+
 // Styles pour les cellules des lignes de réservation
 .reservation-list .reservation-item div {
   padding: 14px 12px;
@@ -202,76 +174,52 @@ p {
     border-right: none;
     justify-content: center;
   }
+  
     
-    // Style pour le statut workflow
-    &:nth-child(3) {
-      .status-workflow {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        text-transform: capitalize;
-        
-      }
-    }
-    
-    button {
-      background: #3498db;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      
-      &:hover {
-        background: #2980b9;
-      }
-    }
-  }
-}
-
-// Responsive pour la grid
-@media (max-width: 1024px) {
-  .grid-table .grid-header,
-  .reservation-list .reservation-item {
-    grid-template-columns: 1.5fr 1fr 1.5fr 1fr;
+  button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
     font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
     
-    div {
-      padding: 10px 8px;
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .grid-table .grid-header,
-  .reservation-list .reservation-item {
-    grid-template-columns: 1fr;
-    
-    div {
-      padding: 8px 12px;
-      border-right: none;
-      border-bottom: 1px solid #eee;
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      &::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #666;
-        margin-right: 8px;
-        min-width: 80px;
-        display: inline-block;
-      }
+    &:hover {
+      background: #2980b9;
     }
   }
   
-  .grid-table .grid-header {
-    display: none;
-  }
+}
+
+
+
+.toolbar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  background: #0b4f6c10;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.field select {
+  min-width: 200px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 0.55rem 0.75rem;
+  background: #fff;
+  font-weight: 500;
+  color: #0f172a;
 }
