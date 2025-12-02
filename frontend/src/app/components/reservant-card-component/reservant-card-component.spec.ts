@@ -16,10 +16,18 @@ class ReservantStoreMock {
       address: 'Rue Test',
       siret: '123',
       notes: 'note',
+      workflow_state: 'Pas_de_contact'
     },
   ]);
 
   loadById = jasmine.createSpy('loadById');
+  contacts = signal([]);
+  contactTimeline = signal([]);
+  loadContacts = jasmine.createSpy('loadContacts');
+  loadContactTimeline = jasmine.createSpy('loadContactTimeline');
+  changeWorkflowState = jasmine.createSpy('changeWorkflowState');
+  updateWorkflowFlags = jasmine.createSpy('updateWorkflowFlags');
+  addContactEvent = jasmine.createSpy('addContactEvent');
 }
 
 describe('ReservantCardComponent', () => {
@@ -37,7 +45,7 @@ describe('ReservantCardComponent', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '5' }) } } },
       ],
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(ReservantCardComponent);
     component = fixture.componentInstance;

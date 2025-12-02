@@ -1,15 +1,8 @@
 export interface ContactDto {
-    id : number;
-    id_reservant : number;
-    nomcontact : string;
-    prenomcontact : string;
-    emailcontact : string;
-    phonecontact : string;
-    datecontact : string;
-    important : boolean;
-    notecontact : string;
-    
-    
+  id?: number;
+  name: string;
+  email: string;
+  phone_number: string;
+  job_title: string;
+  priority: number;
 }
-
-    
