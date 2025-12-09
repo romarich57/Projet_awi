@@ -75,8 +75,17 @@ export async function runMigrations() {
         name TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         website TEXT,
-        description TEXT
+        description TEXT,
+        logo_url TEXT,
+        is_exhibitor BOOLEAN NOT NULL DEFAULT false,
+        is_distributor BOOLEAN NOT NULL DEFAULT false
       );
+    `);
+    await client.query(`
+      ALTER TABLE editor
+        ADD COLUMN IF NOT EXISTS logo_url TEXT,
+        ADD COLUMN IF NOT EXISTS is_exhibitor BOOLEAN NOT NULL DEFAULT false,
+        ADD COLUMN IF NOT EXISTS is_distributor BOOLEAN NOT NULL DEFAULT false;
     `);
 
     await client.query(`
@@ -123,8 +132,27 @@ export async function runMigrations() {
         type TEXT NOT NULL,
         editor_id INTEGER REFERENCES editor(id) ON DELETE RESTRICT,
         min_age INTEGER NOT NULL,
-        authors TEXT NOT NULL
+        authors TEXT NOT NULL,
+        min_players INTEGER,
+        max_players INTEGER,
+        prototype BOOLEAN NOT NULL DEFAULT false,
+        duration_minutes INTEGER,
+        theme TEXT,
+        description TEXT,
+        image_url TEXT,
+        rules_video_url TEXT
       );
+    `);
+    await client.query(`
+      ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS min_players INTEGER,
+        ADD COLUMN IF NOT EXISTS max_players INTEGER,
+        ADD COLUMN IF NOT EXISTS prototype BOOLEAN NOT NULL DEFAULT false,
+        ADD COLUMN IF NOT EXISTS duration_minutes INTEGER,
+        ADD COLUMN IF NOT EXISTS theme TEXT,
+        ADD COLUMN IF NOT EXISTS description TEXT,
+        ADD COLUMN IF NOT EXISTS image_url TEXT,
+        ADD COLUMN IF NOT EXISTS rules_video_url TEXT;
     `);
 
     // Table zone_tarifaire liée à festival
@@ -196,8 +224,29 @@ export async function runMigrations() {
         zone_plan_id INTEGER REFERENCES zone_plan(id),
         nb_tables_occupees NUMERIC NOT NULL,
         nb_exemplaires NUMERIC NOT NULL,
-        taille_table_requise table_type_enum NOT NULL DEFAULT 'standard'
+        taille_table_requise table_type_enum NOT NULL DEFAULT 'standard',
+        UNIQUE (reservation_id, game_id)
       );
+    `);
+    await client.query(`
+      ALTER TABLE jeux_alloues
+        DROP CONSTRAINT IF EXISTS jeux_alloues_game_id_fkey;
+      ALTER TABLE jeux_alloues
+        ADD CONSTRAINT jeux_alloues_game_id_fkey
+        FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE RESTRICT;
+    `);
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conname = 'jeux_alloues_reservation_id_game_id_key'
+        ) THEN
+          ALTER TABLE jeux_alloues
+            ADD CONSTRAINT jeux_alloues_reservation_id_game_id_key UNIQUE (reservation_id, game_id);
+        END IF;
+      END $$;
     `);
     console.log('✅ Table jeux_alloues vérifiée/créée');
 
@@ -211,6 +260,23 @@ export async function runMigrations() {
       );
     `);
     console.log('✅ Table reservation_zones_tarifaires vérifiée/créée');
+
+    // Mécanismes et liaisons
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS mechanism(
+        id SERIAL PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        description TEXT
+      );
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS game_mechanism(
+        game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+        mechanism_id INTEGER NOT NULL REFERENCES mechanism(id) ON DELETE CASCADE,
+        PRIMARY KEY (game_id, mechanism_id)
+      );
+    `);
+    console.log('✅ Tables mechanism et game_mechanism vérifiées/créées');
 
     console.log('✅ Toutes les migrations ont été appliquées avec succès');
   } catch (error) {

@@ -41,12 +41,149 @@
       <p class="label">Suivi des jeux</p>
       @for (flag of workflowFlags; track flag.key) {
       <label class="flag-toggle">
-        <input
-          type="checkbox"
-          [checked]="workflowFlagValue(reservantData, flag.key)"
+        <input type="checkbox" [checked]="workflowFlagValue(reservantData, flag.key)"
           (change)="onWorkflowFlagToggle(flag.key, $any($event.target).checked)" />
         <span>{{ flag.label }}</span>
       </label>
+      }
+    </div>
+  </section>
+  }
+
+  @if (isPageContext) {
+  <section class="card allocations">
+    <div class="alloc-header">
+      <div>
+        <p class="eyebrow">Jeux de ce réservant</p>
+        <h2>Gestion des jeux</h2>
+        <p class="muted">Saisissez l'ID du festival pour charger ou éditer les jeux (pas de festival courant
+          automatique).</p>
+      </div>
+      <div class="festival-picker">
+        <label>
+          <span>Festival ID</span>
+          <input type="number" min="1" [(ngModel)]="selectedFestival" name="festival-id" />
+        </label>
+        <button class="primary" type="button" (click)="loadAllocatedGames()">
+          Charger
+        </button>
+      </div>
+    </div>
+
+    @if (allocationsError()) {
+    <p class="error">{{ allocationsError() }}</p>
+    }
+
+    <div class="allocation-form">
+      <div class="game-search">
+        <label>
+          <span>Filtrer le catalogue</span>
+          <input type="text" name="game-search" placeholder="Titre du jeu" [(ngModel)]="gameSearch" />
+        </label>
+        <label>
+          <span>Jeu du catalogue</span>
+          <select name="game-id" size="6" [(ngModel)]="allocationForm.game_id">
+            <option value="" disabled>Choisir un jeu</option>
+            @for (game of filteredGames; track game.id) {
+            <option [value]="game.id">
+              {{ game.title }} — {{ game.type }} ({{ game.min_age }}+)
+            </option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="allocation-fields">
+        <label>
+          <span>Exemplaires</span>
+          <input type="number" min="1" [(ngModel)]="allocationForm.nb_exemplaires" />
+        </label>
+        <label>
+          <span>Tables occupées</span>
+          <input type="number" min="1" [(ngModel)]="allocationForm.nb_tables_occupees" />
+        </label>
+        <label>
+          <span>Taille table</span>
+          <select [(ngModel)]="allocationForm.taille_table_requise">
+            <option value="standard">Standard</option>
+            <option value="grande">Grande</option>
+            <option value="mairie">Mairie</option>
+          </select>
+        </label>
+        <label>
+          <span>Zone plan (optionnel)</span>
+          <input type="number" min="1" [(ngModel)]="allocationForm.zone_plan_id" />
+        </label>
+        <button class="primary" type="button" (click)="addAllocation()" [disabled]="allocationsLoading()">
+          Ajouter
+        </button>
+      </div>
+    </div>
+
+    <div class="allocation-list">
+      @if (allocationsLoading()) {
+      <p class="muted">Chargement des jeux alloués...</p>
+      }
+      @if (allocatedGames().length === 0 && !allocationsLoading()) {
+      <p class="muted">Aucun jeu alloué pour ce festival.</p>
+      }
+      @if (allocatedGames().length > 0) {
+      <table>
+        <thead>
+          <tr>
+            <th>Jeu</th>
+            <th>Exemplaires</th>
+            <th>Tables</th>
+            <th>Taille</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (allocation of allocatedGames(); track allocation.allocation_id) {
+          <tr>
+            <td>
+              <div class="title">{{ allocation.title }}</div>
+              <div class="muted">{{ allocation.type }} · {{ allocation.editor_name || 'Éditeur inconnu' }}</div>
+            </td>
+            <td>
+              @if (editingAllocationId === allocation.allocation_id) {
+              <input type="number" min="1" [(ngModel)]="allocationEditForm.nb_exemplaires" />
+              } @else {
+              {{ allocation.nb_exemplaires }}
+              }
+            </td>
+            <td>
+              @if (editingAllocationId === allocation.allocation_id) {
+              <input type="number" min="1" [(ngModel)]="allocationEditForm.nb_tables_occupees" />
+              } @else {
+              {{ allocation.nb_tables_occupees }}
+              }
+            </td>
+            <td>
+              @if (editingAllocationId === allocation.allocation_id) {
+              <select [(ngModel)]="allocationEditForm.taille_table_requise">
+                <option value="standard">Standard</option>
+                <option value="grande">Grande</option>
+                <option value="mairie">Mairie</option>
+              </select>
+              } @else {
+              {{ allocation.taille_table_requise }}
+              }
+            </td>
+            <td class="actions">
+              @if (editingAllocationId === allocation.allocation_id) {
+              <button class="primary" type="button" (click)="submitAllocationUpdate()">Valider</button>
+              <button class="ghost" type="button" (click)="cancelAllocationEdit()">Annuler</button>
+              } @else {
+              <button class="ghost" type="button" (click)="startEditAllocation(allocation)">Modifier</button>
+              <button class="ghost danger" type="button" (click)="deleteAllocation(allocation.allocation_id)">
+                Retirer
+              </button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
       }
     </div>
   </section>
@@ -135,7 +272,7 @@
         @for (contact of contacts(); track contact.id) {
         <li>
           {{ contact.name }} - {{ contact.email }}
-          <button class="ghost danger" type="button" (click)="deleteContact(contact.id)">
+          <button class="ghost danger" type="button" (click)="contact.id && deleteContact(contact.id)">
             Supprimer
           </button>
         </li>

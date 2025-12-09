@@ -14,6 +14,9 @@ import { ReservantsListComponent } from '@app/components/reservants-list-compone
 import { ReservantCardComponent } from '@app/components/reservant-card-component/reservant-card-component';
 import { ReservantFormComponent } from '@app/components/reservant-form-component/reservant-form-component';
 import { HomeComponent } from './components/home/home';
+import { GamesPageComponent } from './components/games-page/games-page';
+import { GameEditPageComponent } from './components/game-edit-page/game-edit-page';
+import { GameCreatePageComponent } from './components/game-create-page/game-create-page';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Connexion' },
@@ -75,6 +78,24 @@ export const routes: Routes = [
     component: ReservantCardComponent,
     canActivate: [authGuard],
     title: 'Réservant',
+  },
+  {
+    path: 'games',
+    component: GamesPageComponent,
+    canActivate: [authGuard],
+    title: 'Jeux',
+  },
+  {
+    path: 'games/new',
+    component: GameCreatePageComponent,
+    canActivate: [authGuard],
+    title: 'Créer un jeu',
+  },
+  {
+    path: 'games/:id/edit',
+    component: GameEditPageComponent,
+    canActivate: [authGuard],
+    title: 'Modifier un jeu',
   },
   {
     path: 'admin',

@@ -273,5 +273,41 @@ router.post('/:id/contacts/events', async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
+// Suppression d'un contact (R2)
+router.delete('/:id/contacts/:contactId', async (req, res) => {
+    const { id, contactId } = req.params;
+    try {
+        // Vérifier que le contact appartient bien au réservant
+        const { rowCount } = await pool.query('DELETE FROM contact WHERE id = $1 AND reservant_id = $2', [contactId, id]);
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Contact introuvable pour ce réservant' });
+        }
+        res.json({ message: 'Contact supprimé' });
+    }
+    catch (err) {
+        console.error('Erreur lors de la suppression du contact:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+// Suppression d'un événement de contact (timeline) (R2)
+router.delete('/:id/contacts/events/:eventId', async (req, res) => {
+    const { id, eventId } = req.params;
+    try {
+        // Vérifier que l'événement appartient bien au réservant
+        const { rows } = await pool.query(`SELECT sc.id
+             FROM suivi_contact sc
+             JOIN suivi_workflow sw ON sc.workflow_id = sw.id
+             WHERE sc.id = $1 AND sw.reservant_id = $2`, [eventId, id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Evénement de contact introuvable pour ce réservant' });
+        }
+        await pool.query('DELETE FROM suivi_contact WHERE id = $1', [eventId]);
+        res.json({ message: 'Evénement supprimé' });
+    }
+    catch (err) {
+        console.error('Erreur lors de la suppression d\'un événement de contact:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 export default router;
 //# sourceMappingURL=reservant.js.map

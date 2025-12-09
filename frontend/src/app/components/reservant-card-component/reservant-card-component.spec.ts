@@ -4,6 +4,8 @@ import { ReservantCardComponent } from './reservant-card-component';
 import { ReservantStore } from '../../stores/reservant.store';
 import { signal } from '@angular/core';
 import { ReservantDto } from '../../types/reservant-dto';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 class ReservantStoreMock {
   reservants = signal<ReservantDto[]>([
@@ -40,6 +42,8 @@ describe('ReservantCardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ReservantCardComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([]),
         { provide: ReservantStore, useValue: store },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '5' }) } } },

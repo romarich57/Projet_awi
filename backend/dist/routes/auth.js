@@ -135,6 +135,7 @@ router.post('/register', async (req, res) => {
         const tokenHash = hashVerificationToken(token);
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
         const client = await pool.connect();
+        let emailSent = true;
         try {
             await client.query('BEGIN');
             await client.query(`
@@ -164,7 +165,6 @@ router.post('/register', async (req, res) => {
                 tokenHash,
                 expiresAt,
             ]);
-            await sendVerificationEmail(payload.email, token);
             await client.query('COMMIT');
         }
         catch (error) {
@@ -178,8 +178,18 @@ router.post('/register', async (req, res) => {
         finally {
             client.release();
         }
+        try {
+            await sendVerificationEmail(payload.email, token);
+        }
+        catch (emailError) {
+            emailSent = false;
+            console.error("Erreur lors de l'envoi de l'email de vérification", emailError);
+        }
         res.status(201).json({
-            message: 'Compte créé. Veuillez vérifier votre email pour activer votre compte.',
+            message: emailSent
+                ? 'Compte créé. Veuillez vérifier votre email pour activer votre compte.'
+                : "Compte créé mais l'email de vérification n'a pas pu être envoyé. Vous pourrez le renvoyer depuis la page de connexion.",
+            emailSent,
         });
     }
     catch (error) {

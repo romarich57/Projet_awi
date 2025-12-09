@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --pretty false --noEmit",
-    "test": "npm run build && node --test dist/**/*.test.js"
+    "test": "npm run build && node --test dist/**/*.test.js",
+    "seed:uc-r4": "tsx src/db/seed-uc-r4.ts"
   },
   "keywords": [],
   "author": "",

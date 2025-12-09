@@ -5,6 +5,8 @@ import { ReservantWorkflowApi } from '../../services/reservant-workflow-api';
 import { ActivatedRoute } from '@angular/router';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 describe('ReservantCardComponent - Additional Tests', () => {
     let component: ReservantCardComponent;
@@ -51,6 +53,8 @@ describe('ReservantCardComponent - Additional Tests', () => {
         await TestBed.configureTestingModule({
             imports: [ReservantCardComponent],
             providers: [
+                provideHttpClient(),
+                provideHttpClientTesting(),
                 { provide: ReservantStore, useClass: MockReservantStore },
                 { provide: ReservantWorkflowApi, useValue: workflowApiMock },
                 { provide: ActivatedRoute, useValue: routeMock }

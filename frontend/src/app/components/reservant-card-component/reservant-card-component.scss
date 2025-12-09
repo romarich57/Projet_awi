@@ -308,6 +308,73 @@ button:disabled {
   text-align: center;
 }
 
+.allocations .alloc-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.allocations .festival-picker {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.allocations label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.allocations input,
+.allocations select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.allocation-form {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.allocation-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.allocation-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.allocation-list th,
+.allocation-list td {
+  text-align: left;
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.allocation-list .actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.error {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 @media (max-width: 720px) {
   .hero {
     flex-direction: column;

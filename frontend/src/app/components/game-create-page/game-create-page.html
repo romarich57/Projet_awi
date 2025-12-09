@@ -1,0 +1,102 @@
+<section class="card header">
+  <div>
+    <p class="eyebrow">Créer un jeu</p>
+    <h1>Nouveau jeu</h1>
+    <p class="muted">Ajouter un jeu au catalogue maître.</p>
+  </div>
+  <div class="actions">
+    <a class="ghost" routerLink="/games">← Retour à la liste</a>
+  </div>
+</section>
+
+<section class="card form-card">
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <form class="grid" (ngSubmit)="save()">
+    <div class="full preview">
+      <div class="game-avatar" [class.fallback]="!formData.image_url">
+        @if (formData.image_url) {
+          <img [src]="formData.image_url" [alt]="formData.title" loading="lazy" />
+        } @else {
+          <span>{{ formData.title.charAt(0) || '?' }}</span>
+        }
+      </div>
+      <div class="muted">Aperçu de l'image (image_url)</div>
+    </div>
+
+    <label>
+      <span>Titre *</span>
+      <input type="text" name="title" [(ngModel)]="formData.title" required />
+    </label>
+    <label>
+      <span>Type *</span>
+      <input type="text" name="type" [(ngModel)]="formData.type" required />
+    </label>
+    <label>
+      <span>Éditeur *</span>
+      <select name="editor" [(ngModel)]="formData.editor_id" required>
+        <option value="" disabled>Choisir un éditeur</option>
+        @for (editor of editors(); track editor.id) {
+          <option [value]="editor.id">{{ editor.name }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      <span>Âge minimum *</span>
+      <input type="number" name="age" min="0" [(ngModel)]="formData.min_age" required />
+    </label>
+    <label>
+      <span>Joueurs min</span>
+      <input type="number" name="min_players" min="1" [(ngModel)]="formData.min_players" />
+    </label>
+    <label>
+      <span>Joueurs max</span>
+      <input type="number" name="max_players" min="1" [(ngModel)]="formData.max_players" />
+    </label>
+    <label>
+      <span>Auteurs *</span>
+      <input type="text" name="authors" [(ngModel)]="formData.authors" required />
+    </label>
+    <label class="checkbox">
+      <input type="checkbox" name="prototype" [(ngModel)]="formData.prototype" />
+      <span>Prototype</span>
+    </label>
+    <label>
+      <span>Durée (minutes)</span>
+      <input type="number" name="duration" min="0" [(ngModel)]="formData.duration_minutes" />
+    </label>
+    <label>
+      <span>Thème</span>
+      <input type="text" name="theme" [(ngModel)]="formData.theme" />
+    </label>
+    <label>
+      <span>Description</span>
+      <textarea name="description" rows="3" [(ngModel)]="formData.description"></textarea>
+    </label>
+    <label>
+      <span>Image (URL)</span>
+      <input type="url" name="image_url" [(ngModel)]="formData.image_url" />
+    </label>
+    <label>
+      <span>Vidéo des règles (URL)</span>
+      <input type="url" name="rules_video_url" [(ngModel)]="formData.rules_video_url" />
+    </label>
+    <label class="full">
+      <span>Mécanismes</span>
+      <select multiple name="mechanisms" [(ngModel)]="formData.mechanismIds" size="6">
+        @for (m of mechanisms(); track m.id) {
+          <option [value]="m.id">{{ m.name }}</option>
+        }
+      </select>
+    </label>
+
+    <div class="actions full">
+      <button type="submit" class="primary strong" [disabled]="saving()">
+        Créer le jeu
+      </button>
+      <a class="ghost" routerLink="/games">Annuler</a>
+    </div>
+  </form>
+</section>
