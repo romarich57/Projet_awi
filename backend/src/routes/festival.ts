@@ -75,7 +75,7 @@ router.get('/:id', async (req, res) => {
 
 // Création d'un nouveau festival
 router.post('/', async (req, res) => {
-    const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date} = req.body
+    const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date } = req.body
     if (!name || !start_date || !end_date) {
         return res.status(400).json({ error: 'Champs obligatoires manquants' })
     }
@@ -97,7 +97,7 @@ router.post('/', async (req, res) => {
 // Mise à jour d'un festival par ID
 router.put('/:id', async (req, res) => {
     const { id } = req.params
-    const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date} = req.body
+    const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date } = req.body
     try {
         const { rowCount } = await pool.query(
             `UPDATE festival
@@ -294,5 +294,20 @@ router.post('/:festivalId/reservants/:reservantId/games', async (req, res) => {
         client.release();
     }
 });
+
+// Suppression d'un festival par ID
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params
+    try {
+        const { rowCount } = await pool.query('DELETE FROM festival WHERE id = $1', [id])
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Festival non trouvé' })
+        }
+        res.json({ message: 'Festival supprimé' })
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ error: 'Erreur serveur' })
+    }
+})
 
 export default router

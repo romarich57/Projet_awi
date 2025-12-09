@@ -17,6 +17,8 @@ import { HomeComponent } from './components/home/home';
 import { GamesPageComponent } from './components/games-page/games-page';
 import { GameEditPageComponent } from './components/game-edit-page/game-edit-page';
 import { GameCreatePageComponent } from './components/game-create-page/game-create-page';
+import { ReservationDetailComponent } from './components/reservation-detail-component/reservation-detail-component';
+import { ReservationDetailsPage } from './components/reservation-details-page/reservation-details-page';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Connexion' },
@@ -102,6 +104,12 @@ export const routes: Routes = [
     component: AdminComponent,
     canActivate: [authGuard, adminGuard],
     title: 'Administration',
+  },
+  {
+    path: 'reservation-details-page/:id',
+    component: ReservationDetailsPage,
+    canActivate: [authGuard],
+    title: 'Détails de la réservation'
   },
   { path: '', pathMatch: 'full', redirectTo: 'home' },
   { path: '**', redirectTo: 'home' },
