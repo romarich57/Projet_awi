@@ -104,7 +104,7 @@ describe('GamesPageComponent', () => {
     expect(component.ageLabel(games[0])).toBe('8+');
 
     expect(component.durationLabel(games[0])).toBe('');
-    component.visibleColumns.duration = true;
+    component.visibleColumns['duration'] = true;
     expect(component.durationLabel(games[0])).toBe('90 min');
 
     expect(component.descriptionSnippet({ ...games[1], description: 'abc' })).toBe('abc');

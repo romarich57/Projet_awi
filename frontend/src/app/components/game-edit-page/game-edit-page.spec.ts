@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -54,7 +54,6 @@ describe('GameEditPageComponent', () => {
         { provide: GameApiService, useValue: gameApiSpy },
         { provide: EditorApiService, useValue: editorApiSpy },
         { provide: ActivatedRoute, useValue: routeStub },
-        provideRouter([]),
       ],
     }).compileComponents();
 
@@ -63,10 +62,12 @@ describe('GameEditPageComponent', () => {
 
     fixture = TestBed.createComponent(GameEditPageComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should create and load the game', () => {
+  it('should create and load the game', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
     expect(component).toBeTruthy();
     expect(gameApiSpy.listMechanisms).toHaveBeenCalled();
     expect(editorApiSpy.list).toHaveBeenCalled();
@@ -74,9 +75,12 @@ describe('GameEditPageComponent', () => {
     expect(component.gameTitle()).toBe(game.title);
     expect(component.formData.title).toBe(game.title);
     expect(component.formData.mechanismIds).toEqual([1]);
-  });
+  }));
 
-  it('should update the game and navigate away on save', () => {
+  it('should update the game and navigate away on save', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
     component.formData = {
       title: ' Updated ',
       type: ' Card ',
@@ -95,6 +99,7 @@ describe('GameEditPageComponent', () => {
     };
 
     component.save();
+    tick();
 
     expect(gameApiSpy.update).toHaveBeenCalledWith(42, {
       title: 'Updated',
@@ -114,5 +119,6 @@ describe('GameEditPageComponent', () => {
     });
     expect(router.navigate).toHaveBeenCalledWith(['/games']);
     expect(component.saving()).toBeFalse();
-  });
+  }));
 });
+
