@@ -1,0 +1,123 @@
+.reservation-details-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+
+    .back-link {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1.1rem;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    h1 {
+      color: #2c3e50;
+      font-size: 2rem;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  .details-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+
+    .reservation-section,
+    .workflow-section {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      
+      h2 {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #3498db;
+      }
+    }
+  }
+
+  .loading-container {
+    text-align: center;
+    padding: 4rem 2rem;
+    
+    p {
+      font-size: 1.2rem;
+      color: #7f8c8d;
+    }
+  }
+
+  .error-container {
+    text-align: center;
+    padding: 4rem 2rem;
+    
+    p {
+      font-size: 1.2rem;
+      color: #e74c3c;
+      margin-bottom: 2rem;
+    }
+    
+    .back-btn {
+      display: inline-block;
+      background: #3498db;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      
+      &:hover {
+        background: #2980b9;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .reservation-details-page {
+    padding: 1.5rem;
+    
+    .details-container {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .reservation-details-page {
+    padding: 1rem;
+    
+    .reservation-section,
+    .workflow-section {
+      padding: 1.5rem;
+    }
+  }
+}

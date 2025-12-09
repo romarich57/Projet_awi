@@ -1,0 +1,165 @@
+<div class="reservation-form">
+    <h2>Nouvelle Réservation</h2>
+    @if (festivalName()) {
+        <h3>Festival: {{ festivalName() }}</h3>
+    }
+    
+    @if (showSuccessMessage) {
+        <div class="success-message">
+            <p>✅ Réservation créée avec succès!</p>
+        </div>
+    } @else {
+        <form [formGroup]="reservationForm" (ngSubmit)="onSubmit()">
+            <!-- Choix du mode de réservant -->
+            <div class="form-card">
+                <h4>Réservant</h4>
+                
+                <!-- Sélecteur de mode -->
+                <div class="mode-selector">
+                    <label class="radio-option">
+                        <input 
+                            type="radio" 
+                            value="new"
+                            formControlName="reservant_mode"
+                            (change)="onModeChange()"
+                        >
+                        <span>Créer un nouveau réservant</span>
+                    </label>
+                    <label class="radio-option">
+                        <input 
+                            type="radio" 
+                            value="existing"
+                            formControlName="reservant_mode"
+                            (change)="onModeChange()"
+                        >
+                        <span>Choisir un réservant existant</span>
+                    </label>
+                </div>
+
+                <!-- Sélection d'un réservant existant -->
+                @if (isExistingMode) {
+                    <div class="existing-reservant-section">
+                        @if (loadingReservants) {
+                            <p>Chargement des réservants...</p>
+                        } @else {
+                            <label class="field full">
+                                <span>Sélectionner un réservant *</span>
+                                <select formControlName="existing_reservant_id">
+                                    <option value="">-- Choisir un réservant --</option>
+                                    @for (reservant of existingReservants; track reservant.id) {
+                                        <option [value]="reservant.id">
+                                            {{ reservant.name }} ({{ reservant.type }}) - {{ reservant.email }}
+                                        </option>
+                                    }
+                                </select>
+                                @if (reservationForm.get('existing_reservant_id')?.touched && reservationForm.get('existing_reservant_id')?.errors) {
+                                    <small class="error">Veuillez sélectionner un réservant</small>
+                                }
+                            </label>
+                        }
+                    </div>
+                }
+
+                <!-- Création d'un nouveau réservant -->
+                @if (!isExistingMode) {
+                    <div class="new-reservant-section">
+                        <div class="grid">
+                            <label class="field">
+                                <span>Nom du réservant *</span>
+                                <input 
+                                    type="text" 
+                                    formControlName="reservant_name" 
+                                    placeholder="Nom ou raison sociale"
+                                >
+                                @if (reservationForm.get('reservant_name')?.touched && reservationForm.get('reservant_name')?.errors) {
+                                    <small class="error">Le nom est requis</small>
+                                }
+                            </label>
+
+                            <label class="field">
+                                <span>Email *</span>
+                                <input 
+                                    type="email" 
+                                    formControlName="reservant_email" 
+                                    placeholder="email@example.com"
+                                >
+                                @if (reservationForm.get('reservant_email')?.touched && reservationForm.get('reservant_email')?.errors) {
+                                    <small class="error">Un email valide est requis</small>
+                                }
+                            </label>
+
+                            <label class="field">
+                                <span>Type de réservant *</span>
+                                <select formControlName="reservant_type">
+                                    <option value="editeur">Éditeur</option>
+                                    <option value="prestataire">Prestataire</option>
+                                    <option value="boutique">Boutique</option>
+                                    <option value="animateur">Animateur</option>
+                                    <option value="association">Association</option>
+                                </select>
+                            </label>
+
+                            <label class="field">
+                                <span>Téléphone</span>
+                                <input 
+                                    type="tel" 
+                                    formControlName="phone_number" 
+                                    placeholder="0123456789"
+                                >
+                            </label>
+
+                            <label class="field full">
+                                <span>Adresse</span>
+                                <textarea 
+                                    formControlName="address" 
+                                    placeholder="Adresse complète"
+                                    rows="3"
+                                ></textarea>
+                            </label>
+
+                            <label class="field">
+                                <span>SIRET</span>
+                                <input 
+                                    type="text" 
+                                    formControlName="siret" 
+                                    placeholder="12345678901234"
+                                >
+                            </label>
+                        </div>
+                    </div>
+                }
+
+                <!-- Notes (disponible dans tous les modes) -->
+                <div class="notes-section">
+                    <label class="field full">
+                        <span>Notes</span>
+                        <textarea 
+                            formControlName="note" 
+                            placeholder="Informations complémentaires sur la réservation"
+                            rows="3"
+                        ></textarea>
+                    </label>
+                </div>
+                
+                <p class="info-text">Les prix seront définis à 0 par défaut et pourront être modifiés ultérieurement.</p>
+            </div>
+
+
+
+
+
+            <div class="form-actions">
+                <button type="button" class="cancel-btn" (click)="cancel()" [disabled]="isSubmitting">
+                    Annuler
+                </button>
+                <button type="submit" class="submit-btn" [disabled]="isSubmitting || reservationForm.invalid">
+                    @if (isSubmitting) {
+                        Création en cours...
+                    } @else {
+                        Créer la réservation
+                    }
+                </button>
+            </div>
+        </form>
+    }
+</div>
