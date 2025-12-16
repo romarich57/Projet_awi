@@ -26,7 +26,7 @@ export class ReservantFormComponent implements OnInit {
 
   readonly form = this.fb.nonNullable.group({
     name: this.fb.control<string>('', { validators: [Validators.required] }),
-    email: this.fb.control<string>('', { validators: [Validators.email] }),
+    email: this.fb.control<string>('', { validators: [Validators.required, Validators.email] }),
     type: this.fb.control<ReservantDto['type'] | ''>('', { validators: [Validators.required] }),
     phone_number: this.fb.control<string>(''),
     address: this.fb.control<string>(''),
@@ -83,6 +83,7 @@ export class ReservantFormComponent implements OnInit {
         address: value.address || undefined,
         siret: value.siret || undefined,
         notes: value.notes || undefined,
+        workflow_state: 'Pas_de_contact' // Default workflow state for new reservants
       };
 
       this.reservantStore.create(payload as ReservantDto);
@@ -92,6 +93,7 @@ export class ReservantFormComponent implements OnInit {
     }
 
     // Mode édition
+    const currentReservant = this.reservant();
     const payload: ReservantDto = {
       id: this.reservantId,
       name: value.name || '',
@@ -101,6 +103,7 @@ export class ReservantFormComponent implements OnInit {
       address: value.address || undefined,
       siret: value.siret || undefined,
       notes: value.notes || undefined,
+      workflow_state: currentReservant?.workflow_state || 'Pas_de_contact' // Preserve existing workflow state
     };
 
     this.reservantStore.update(payload).subscribe({

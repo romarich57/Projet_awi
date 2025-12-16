@@ -43,7 +43,10 @@ CREATE TABLE IF NOT EXISTS Editor(
     name TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     website TEXT,
-    description TEXT
+    description TEXT,
+    logo_url TEXT,
+    is_exhibitor BOOLEAN NOT NULL DEFAULT false,
+    is_distributor BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Table des Réservants (entités qui réservent des espaces)
@@ -83,7 +86,27 @@ CREATE TABLE IF NOT EXISTS games(
     type TEXT NOT NULL,
     editor_id INTEGER REFERENCES Editor(id) ON DELETE RESTRICT,
     min_age INTEGER NOT NULL,
-    authors TEXT NOT NULL
+    authors TEXT NOT NULL,
+    min_players INTEGER,
+    max_players INTEGER,
+    prototype BOOLEAN NOT NULL DEFAULT false,
+    duration_minutes INTEGER,
+    theme TEXT,
+    description TEXT,
+    image_url TEXT,
+    rules_video_url TEXT
+);
+
+CREATE TABLE IF NOT EXISTS mechanism(
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS game_mechanism(
+    game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    mechanism_id INTEGER NOT NULL REFERENCES mechanism(id) ON DELETE CASCADE,
+    PRIMARY KEY (game_id, mechanism_id)
 );
 
 CREATE TABLE IF NOT EXISTS zone_tarifaire(
@@ -151,12 +174,13 @@ CREATE TABLE IF NOT EXISTS suivi_contact (
 
 CREATE TABLE IF NOT EXISTS jeux_alloues (
     id SERIAL PRIMARY KEY,
-    game_id INTEGER REFERENCES games(id),
+    game_id INTEGER REFERENCES games(id) ON DELETE RESTRICT,
     reservation_id INTEGER REFERENCES reservation(id),
     zone_plan_id INTEGER REFERENCES zone_plan(id),
     nb_tables_occupees NUMERIC NOT NULL,
     nb_exemplaires NUMERIC NOT NULL,
-    taille_table_requise table_type_enum NOT NULL DEFAULT 'standard'
+    taille_table_requise table_type_enum NOT NULL DEFAULT 'standard',
+    UNIQUE (reservation_id, game_id)
 );
 
 -- Nouvelle table de liaison pour les réservations et zones tarifaires

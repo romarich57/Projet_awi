@@ -4,6 +4,8 @@ import { ReservantCardComponent } from './reservant-card-component';
 import { ReservantStore } from '../../stores/reservant.store';
 import { signal } from '@angular/core';
 import { ReservantDto } from '../../types/reservant-dto';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 class ReservantStoreMock {
   reservants = signal<ReservantDto[]>([
@@ -16,10 +18,18 @@ class ReservantStoreMock {
       address: 'Rue Test',
       siret: '123',
       notes: 'note',
+      workflow_state: 'Pas_de_contact'
     },
   ]);
 
   loadById = jasmine.createSpy('loadById');
+  contacts = signal([]);
+  contactTimeline = signal([]);
+  loadContacts = jasmine.createSpy('loadContacts');
+  loadContactTimeline = jasmine.createSpy('loadContactTimeline');
+  changeWorkflowState = jasmine.createSpy('changeWorkflowState');
+  updateWorkflowFlags = jasmine.createSpy('updateWorkflowFlags');
+  addContactEvent = jasmine.createSpy('addContactEvent');
 }
 
 describe('ReservantCardComponent', () => {
@@ -32,12 +42,14 @@ describe('ReservantCardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ReservantCardComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([]),
         { provide: ReservantStore, useValue: store },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '5' }) } } },
       ],
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(ReservantCardComponent);
     component = fixture.componentInstance;

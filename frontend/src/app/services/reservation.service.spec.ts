@@ -9,12 +9,20 @@ describe('ReservationService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        ReservationService
+      ]
     });
     service = TestBed.inject(ReservationService);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('should have http client injected', () => {
+    expect(service.http).toBeDefined();
   });
 });

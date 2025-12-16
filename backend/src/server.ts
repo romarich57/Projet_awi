@@ -14,6 +14,10 @@ import festivalRouter from './routes/festival.js'
 import zoneTarifaireRouter from './routes/zoneTarifaire.js'
 import reservationRouter from './routes/reservation.js'
 import reservantRouter from './routes/reservant.js'
+import gamesRouter from './routes/games.js'
+import mechanismsRouter from './routes/mechanisms.js'
+import allocatedGamesRouter from './routes/allocatedGames.js'
+import editorRouter from './routes/editor.js'
 import zonePlanRouter from './routes/zonePlan.js'
 import { verifyToken } from './middleware/token-management.js'
 import { requireAdmin } from './middleware/auth-admin.js'
@@ -44,7 +48,7 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
 
-// CORS : autoriser uniquement l’URL du frontend de prod (Nginx)
+// CORS : autoriser uniquement l'URL du frontend de prod (Nginx)
 const allowedOrigins =
   FRONTEND_ORIGINS.length > 0
     ? FRONTEND_ORIGINS
@@ -69,6 +73,10 @@ app.use('/api/festivals', verifyToken, festivalRouter)
 app.use('/api/zones-tarifaires', verifyToken, zoneTarifaireRouter)
 app.use('/api/reservation', verifyToken, reservationRouter)
 app.use('/api/reservant', verifyToken, reservantRouter)
+app.use('/api/games', verifyToken, gamesRouter)
+app.use('/api/mechanisms', verifyToken, mechanismsRouter)
+app.use('/api/jeux_alloues', verifyToken, allocatedGamesRouter)
+app.use('/api/editors', verifyToken, editorRouter)
 app.use('/api/zone-plan', verifyToken, zonePlanRouter)
 app.use('/api/admin', verifyToken, requireAdmin, (_req, res) => {
   res.json({ message: 'Bienvenue admin' })

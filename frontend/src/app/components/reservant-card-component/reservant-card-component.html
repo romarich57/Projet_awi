@@ -22,6 +22,267 @@
     }
   </section>
 
+  @if (isPageContext) {
+  <section class="card workflow">
+    <div class="workflow-row">
+      <span class="label">Etat actuel</span>
+      <span class="value">{{ workflowStateLabel(reservantData.workflow_state) }}</span>
+    </div>
+    <div class="workflow-row">
+      <label for="workflow-state">Changer l'etat</label>
+      <select id="workflow-state" [value]="reservantData.workflow_state"
+        (change)="onWorkflowStateChange($any($event.target).value)">
+        @for (state of workflowStates; track state.value) {
+        <option [value]="state.value">{{ state.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="workflow-flags">
+      <p class="label">Suivi des jeux</p>
+      @for (flag of workflowFlags; track flag.key) {
+      <label class="flag-toggle">
+        <input type="checkbox" [checked]="workflowFlagValue(reservantData, flag.key)"
+          (change)="onWorkflowFlagToggle(flag.key, $any($event.target).checked)" />
+        <span>{{ flag.label }}</span>
+      </label>
+      }
+    </div>
+  </section>
+  }
+
+  @if (isPageContext) {
+  <section class="card allocations">
+    <div class="alloc-header">
+      <div>
+        <p class="eyebrow">Jeux de ce réservant</p>
+        <h2>Gestion des jeux</h2>
+        <p class="muted">Saisissez l'ID du festival pour charger ou éditer les jeux (pas de festival courant
+          automatique).</p>
+      </div>
+      <div class="festival-picker">
+        <label>
+          <span>Festival ID</span>
+          <input type="number" min="1" [(ngModel)]="selectedFestival" name="festival-id" />
+        </label>
+        <button class="primary" type="button" (click)="loadAllocatedGames()">
+          Charger
+        </button>
+      </div>
+    </div>
+
+    @if (allocationsError()) {
+    <p class="error">{{ allocationsError() }}</p>
+    }
+
+    <div class="allocation-form">
+      <div class="game-search">
+        <label>
+          <span>Filtrer le catalogue</span>
+          <input type="text" name="game-search" placeholder="Titre du jeu" [(ngModel)]="gameSearch" />
+        </label>
+        <label>
+          <span>Jeu du catalogue</span>
+          <select name="game-id" size="6" [(ngModel)]="allocationForm.game_id">
+            <option value="" disabled>Choisir un jeu</option>
+            @for (game of filteredGames; track game.id) {
+            <option [value]="game.id">
+              {{ game.title }} — {{ game.type }} ({{ game.min_age }}+)
+            </option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="allocation-fields">
+        <label>
+          <span>Exemplaires</span>
+          <input type="number" min="1" [(ngModel)]="allocationForm.nb_exemplaires" />
+        </label>
+        <label>
+          <span>Tables occupées</span>
+          <input type="number" min="1" [(ngModel)]="allocationForm.nb_tables_occupees" />
+        </label>
+        <label>
+          <span>Taille table</span>
+          <select [(ngModel)]="allocationForm.taille_table_requise">
+            <option value="standard">Standard</option>
+            <option value="grande">Grande</option>
+            <option value="mairie">Mairie</option>
+          </select>
+        </label>
+        <label>
+          <span>Zone plan (optionnel)</span>
+          <input type="number" min="1" [(ngModel)]="allocationForm.zone_plan_id" />
+        </label>
+        <button class="primary" type="button" (click)="addAllocation()" [disabled]="allocationsLoading()">
+          Ajouter
+        </button>
+      </div>
+    </div>
+
+    <div class="allocation-list">
+      @if (allocationsLoading()) {
+      <p class="muted">Chargement des jeux alloués...</p>
+      }
+      @if (allocatedGames().length === 0 && !allocationsLoading()) {
+      <p class="muted">Aucun jeu alloué pour ce festival.</p>
+      }
+      @if (allocatedGames().length > 0) {
+      <table>
+        <thead>
+          <tr>
+            <th>Jeu</th>
+            <th>Exemplaires</th>
+            <th>Tables</th>
+            <th>Taille</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (allocation of allocatedGames(); track allocation.allocation_id) {
+          <tr>
+            <td>
+              <div class="title">{{ allocation.title }}</div>
+              <div class="muted">{{ allocation.type }} · {{ allocation.editor_name || 'Éditeur inconnu' }}</div>
+            </td>
+            <td>
+              @if (editingAllocationId === allocation.allocation_id) {
+              <input type="number" min="1" [(ngModel)]="allocationEditForm.nb_exemplaires" />
+              } @else {
+              {{ allocation.nb_exemplaires }}
+              }
+            </td>
+            <td>
+              @if (editingAllocationId === allocation.allocation_id) {
+              <input type="number" min="1" [(ngModel)]="allocationEditForm.nb_tables_occupees" />
+              } @else {
+              {{ allocation.nb_tables_occupees }}
+              }
+            </td>
+            <td>
+              @if (editingAllocationId === allocation.allocation_id) {
+              <select [(ngModel)]="allocationEditForm.taille_table_requise">
+                <option value="standard">Standard</option>
+                <option value="grande">Grande</option>
+                <option value="mairie">Mairie</option>
+              </select>
+              } @else {
+              {{ allocation.taille_table_requise }}
+              }
+            </td>
+            <td class="actions">
+              @if (editingAllocationId === allocation.allocation_id) {
+              <button class="primary" type="button" (click)="submitAllocationUpdate()">Valider</button>
+              <button class="ghost" type="button" (click)="cancelAllocationEdit()">Annuler</button>
+              } @else {
+              <button class="ghost" type="button" (click)="startEditAllocation(allocation)">Modifier</button>
+              <button class="ghost danger" type="button" (click)="deleteAllocation(allocation.allocation_id)">
+                Retirer
+              </button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      }
+    </div>
+  </section>
+  }
+
+  @if (isPageContext) {
+  <section class="card contacts">
+    <div class="contact-header">
+      <h2>Contacts</h2>
+      <p class="label">Historique des echanges</p>
+    </div>
+    @if (contactTimeline().length > 0) {
+    <ul class="timeline">
+      @for (entry of contactTimeline(); track entry.id) {
+      <li>
+        <div class="timeline-date">{{ entry.dateContact | date: 'shortDate' }}</div>
+        <div class="timeline-body">
+          <div class="timeline-title">{{ entry.contactName }}</div>
+          <div class="timeline-meta">
+            <span>{{ entry.contactEmail }}</span> ·
+            <span>{{ entry.contactJobTitle }}</span> ·
+            <span>Priorite {{ entry.contactPriority }}</span>
+          </div>
+        </div>
+        <button class="ghost danger" type="button" (click)="deleteContactEvent(entry.id)">
+          Supprimer
+        </button>
+      </li>
+      }
+    </ul>
+    } @else {
+    <p class="muted">Aucun contact enregistre pour le moment.</p>
+    }
+
+    <div class="contact-form">
+      <h3>Creer un contact</h3>
+      <div class="form-row">
+        <label>Nom</label>
+        <input type="text" [(ngModel)]="contactForm.name" name="contact-name" />
+      </div>
+      <div class="form-row">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="contactForm.email" name="contact-email" />
+      </div>
+      <div class="form-row">
+        <label>Telephone</label>
+        <input type="text" [(ngModel)]="contactForm.phone_number" name="contact-phone" />
+      </div>
+      <div class="form-row">
+        <label>Fonction / Type</label>
+        <input type="text" [(ngModel)]="contactForm.job_title" name="contact-job" />
+      </div>
+      <div class="form-row">
+        <label>Priorite</label>
+        <input type="number" [(ngModel)]="contactForm.priority" name="contact-priority" min="1" />
+      </div>
+      <button class="ghost" type="button" (click)="createContact()">
+        Ajouter le contact
+      </button>
+    </div>
+
+    <div class="contact-form">
+      <h3>Ajouter un contact</h3>
+      <div class="form-row">
+        <label for="contact-select">Contact</label>
+        <select id="contact-select" (change)="onSelectContact($event)">
+          <option value="">Selectionner un contact</option>
+          @for (contact of contacts(); track contact.id) {
+          <option [value]="contact.id">{{ contact.name }} (Prio {{ contact.priority }})</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="contact-date">Date</label>
+        <input id="contact-date" type="date" [value]="contactDate" (change)="onContactDateChange($event)" />
+      </div>
+      <button class="primary" type="button" (click)="addContactEvent()" [disabled]="!selectedContactId">
+        Enregistrer le contact
+      </button>
+    </div>
+
+    @if (contacts().length > 0) {
+    <div class="contact-list">
+      <h3>Contacts existants</h3>
+      <ul>
+        @for (contact of contacts(); track contact.id) {
+        <li>
+          {{ contact.name }} - {{ contact.email }}
+          <button class="ghost danger" type="button" (click)="contact.id && deleteContact(contact.id)">
+            Supprimer
+          </button>
+        </li>
+        }
+      </ul>
+    </div>
+    }
+  </section>
+  }
+
   <section class="card info-grid">
     <div class="info">
       <span class="label">Email</span>
