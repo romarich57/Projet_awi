@@ -30,6 +30,11 @@ export class AuthService {
   readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
   readonly isLoading = this._isLoading.asReadonly();
   readonly error = this._error.asReadonly();
+  readonly isOrganizer = computed(() => {
+    const role = this.currentUser()?.role;
+    return role === 'organizer' || role === 'super-organizer' || role === 'admin';
+  });
+  readonly isSuperOrganizer = computed(() => this.currentUser()?.role === 'super-organizer' || this.isAdmin());
 
   // --- Connexion ---
   login(identifier: string, password: string) {

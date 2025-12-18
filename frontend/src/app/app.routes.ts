@@ -19,6 +19,7 @@ import { GameEditPageComponent } from './components/game-edit-page/game-edit-pag
 import { GameCreatePageComponent } from './components/game-create-page/game-create-page';
 import { ReservationDetailComponent } from './components/reservation-detail-component/reservation-detail-component';
 import { ReservationDetailsPage } from './components/reservation-details-page/reservation-details-page';
+import { roleGuard } from './guards/role-guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Connexion' },
@@ -60,7 +61,8 @@ export const routes: Routes = [
   {
     path: 'reservants',
     component: ReservantsListComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin', 'super-organizer', 'organizer'] },
     title: 'Réservants',
   },
   {
@@ -102,7 +104,8 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: AdminComponent,
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin'] },
     title: 'Administration',
   },
   {

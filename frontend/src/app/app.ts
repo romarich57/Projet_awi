@@ -24,7 +24,8 @@ export class AppComponent {
 
   readonly isLoggedIn = this.auth.isLoggedIn;
   readonly isAdmin = this.auth.isAdmin;
-  
+  readonly isOrganizer = this.auth.isOrganizer;
+  readonly isSuperOrganizer = this.auth.isSuperOrganizer;
   readonly currentUser = this.auth.currentUser;
 
   constructor() {
