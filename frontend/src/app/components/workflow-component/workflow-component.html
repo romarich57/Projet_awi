@@ -1,1 +1,34 @@
-<p>workflow-component works!</p>
+<div class="workflow-state">
+    <h3>État de la réservation</h3>
+    <!-- Affichage des informations du workflow -->
+    @if (workflow()) {
+        <select class="workflow-steps" [value]="workflow()!.etatcourant" (change)="onStateChange($event)">
+            <option value="Pas_de_contact">Pas de contact</option>
+            <option value="Contact_pris">Contact pris</option>
+            <option value="Discussion_en_cours">Discussion en cours</option>
+            <option value="Reservation_confirmee">Réservation confirmée</option>
+            <option value="Facture">Facturé</option>
+            <option value="Facture_payee">Facture payée</option>
+        </select>
+
+        <h3>Presence et reception des jeux</h3>
+        <div class="game-presence">
+            <label>
+                <input type="checkbox" [checked]="workflow()!.liste_jeux_demandee" (change)="onCheckboxChange('liste_jeux_demandee', $event)" />
+                Liste jeux demandées
+            </label>
+            <label>
+                <input type="checkbox" [checked]="workflow()!.liste_jeux_obtenue" (change)="onCheckboxChange('liste_jeux_obtenue', $event)" />
+                Liste jeux obtenus
+            </label>
+            <label>
+                <input type="checkbox" [checked]="workflow()!.jeux_recus" (change)="onCheckboxChange('jeux_recus', $event)" />
+                Jeux recus
+            </label>
+            <label>
+                <input type="checkbox" [checked]="workflow()!.presentera_jeux" (change)="onCheckboxChange('presentera_jeux', $event)" />
+                Présentera jeux au festival ?
+            </label>
+        </div>
+    }
+</div>

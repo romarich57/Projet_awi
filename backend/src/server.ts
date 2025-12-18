@@ -19,6 +19,7 @@ import mechanismsRouter from './routes/mechanisms.js'
 import allocatedGamesRouter from './routes/allocatedGames.js'
 import editorRouter from './routes/editor.js'
 import zonePlanRouter from './routes/zonePlan.js'
+import workflowRouter from './routes/workflow.js'
 import { verifyToken } from './middleware/token-management.js'
 import { requireAdmin } from './middleware/auth-admin.js'
 import { ensureAdmin } from './db/initAdmin.js'
@@ -78,6 +79,7 @@ app.use('/api/mechanisms', verifyToken, mechanismsRouter)
 app.use('/api/jeux_alloues', verifyToken, allocatedGamesRouter)
 app.use('/api/editors', verifyToken, editorRouter)
 app.use('/api/zone-plan', verifyToken, zonePlanRouter)
+app.use('/api/workflow', verifyToken, workflowRouter)
 app.use('/api/admin', verifyToken, requireAdmin, (_req, res) => {
   res.json({ message: 'Bienvenue admin' })
 })
