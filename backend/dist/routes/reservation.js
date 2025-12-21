@@ -27,7 +27,7 @@ router.get('/reservations/:festivalId', async (req, res) => {
     const { festivalId } = req.params;
     try {
         const { rows } = await pool.query(`SELECT 
-                r.id, r.start_price, r.final_price, r.statut_paiement,
+                r.id, r.start_price, r.final_price, r.statut_paiment,
                 r.date_facturation, r.note, r.nb_prises,
                 res.name as reservant_name, res.email as reservant_email,
                 res.type as reservant_type, res.phone_number, res.address,
@@ -75,8 +75,8 @@ router.get('/:festivalId', async (req, res) => {
 // Créer une nouvelle réservation avec réservant (création automatique si n'existe pas)
 router.post('/reservation', async (req, res) => {
     const { reservant_name, reservant_email, reservant_type, festival_id, editor_name, editor_email, // Optionnels pour les réservants de type 'éditeur'
-    start_price, nb_prises, final_price, table_discount_offered = 0, direct_discount = 0, note, phone_number, address, siret, zones_tarifaires = [] // Nouvelle structure pour les zones tarifaires
-     } = req.body;
+        start_price, nb_prises, final_price, table_discount_offered = 0, direct_discount = 0, note, phone_number, address, siret, zones_tarifaires = [] // Nouvelle structure pour les zones tarifaires
+    } = req.body;
     if (!reservant_name || !reservant_email || !reservant_type || !festival_id || start_price === undefined || nb_prises === undefined || final_price === undefined) {
         return res.status(400).json({ error: 'Champs obligatoires manquants' });
     }

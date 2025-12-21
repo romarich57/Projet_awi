@@ -6,7 +6,7 @@ const router = Router();
 // Route pour consulter le stock disponible d'un festival
 router.get('/stock/:festivalId', async (req, res) => {
     const { festivalId } = req.params;
-    
+
     try {
         const { rows } = await pool.query(
             `SELECT 
@@ -21,7 +21,7 @@ router.get('/stock/:festivalId', async (req, res) => {
              ORDER BY zt.name`,
             [festivalId]
         );
-        
+
         res.json(rows);
     } catch (err) {
         console.error('Erreur lors de la récupération du stock:', err);
@@ -35,7 +35,7 @@ router.get('/reservations/:festivalId', async (req, res) => {
     try {
         const { rows } = await pool.query(
             `SELECT 
-                r.id, r.start_price, r.final_price, r.statut_paiement,
+                r.id, r.start_price, r.final_price, r.statut_paiment,
                 r.date_facturation, r.note, r.nb_prises,
                 res.name as reservant_name, res.email as reservant_email,
                 res.type as reservant_type, res.phone_number, res.address,
@@ -90,7 +90,7 @@ router.get('/:festivalId', async (req, res) => {
 
 // Créer une nouvelle réservation avec réservant (création automatique si n'existe pas)
 router.post('/reservation', async (req, res) => {
-    const { 
+    const {
         reservant_name, reservant_email, reservant_type, festival_id,
         editor_name, editor_email, // Optionnels pour les réservants de type 'éditeur'
         start_price, nb_prises, final_price,
@@ -167,8 +167,8 @@ router.post('/reservation', async (req, res) => {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING *`,
             [reservantId, festival_id, workflowId,
-             start_price, table_discount_offered, direct_discount,
-             nb_prises, final_price, note]
+                start_price, table_discount_offered, direct_discount,
+                nb_prises, final_price, note]
         );
 
         const reservationId = reservationResult.rows[0].id;
@@ -181,23 +181,23 @@ router.post('/reservation', async (req, res) => {
                     `SELECT nb_tables_available FROM zone_tarifaire WHERE id = $1 FOR UPDATE`,
                     [zone.zone_tarifaire_id]
                 );
-                
+
                 if (stockCheck.rows.length === 0) {
                     throw new Error(`Zone tarifaire ${zone.zone_tarifaire_id} introuvable`);
                 }
-                
+
                 const stockDisponible = stockCheck.rows[0].nb_tables_available;
                 if (stockDisponible < zone.nb_tables_reservees) {
                     throw new Error(`Stock insuffisant pour la zone tarifaire ${zone.zone_tarifaire_id}. Disponible: ${stockDisponible}, Demandé: ${zone.nb_tables_reservees}`);
                 }
-                
+
                 // Insérer la réservation de zone tarifaire
                 await client.query(
                     `INSERT INTO reservation_zones_tarifaires (reservation_id, zone_tarifaire_id, nb_tables_reservees)
                      VALUES ($1, $2, $3)`,
                     [reservationId, zone.zone_tarifaire_id, zone.nb_tables_reservees]
                 );
-                
+
                 // Mettre à jour le stock disponible
                 await client.query(
                     `UPDATE zone_tarifaire 
@@ -227,9 +227,9 @@ router.post('/reservation', async (req, res) => {
             [reservationResult.rows[0].id]
         );
 
-        res.status(201).json({ 
-            message: 'Réservation créée avec succès', 
-            reservation: completeResult.rows[0] 
+        res.status(201).json({
+            message: 'Réservation créée avec succès',
+            reservation: completeResult.rows[0]
         });
 
     } catch (err) {
@@ -249,7 +249,7 @@ router.put('/reservation/:id', async (req, res) => {
         table_discount_offered, direct_discount,
         note, zones_tarifaires = []
     } = req.body;
-    
+
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -260,7 +260,7 @@ router.put('/reservation/:id', async (req, res) => {
              WHERE reservation_id = $1`,
             [id]
         );
-        
+
         // 2. Restaurer le stock des anciennes zones
         for (const oldZone of oldZones.rows) {
             await client.query(
@@ -270,13 +270,13 @@ router.put('/reservation/:id', async (req, res) => {
                 [oldZone.nb_tables_reservees, oldZone.zone_tarifaire_id]
             );
         }
-        
+
         // 3. Supprimer les anciennes associations
         await client.query(
             `DELETE FROM reservation_zones_tarifaires WHERE reservation_id = $1`,
             [id]
         );
-        
+
         // 4. Mettre à jour la réservation
         const updateResult = await client.query(
             `UPDATE reservation
@@ -292,7 +292,7 @@ router.put('/reservation/:id', async (req, res) => {
                 table_discount_offered, direct_discount,
                 note, id]
         );
-        
+
         // 5. Ajouter les nouvelles zones et décrémenter le stock
         for (const zone of zones_tarifaires) {
             // Vérifier le stock disponible
@@ -300,23 +300,23 @@ router.put('/reservation/:id', async (req, res) => {
                 `SELECT nb_tables_available FROM zone_tarifaire WHERE id = $1 FOR UPDATE`,
                 [zone.zone_tarifaire_id]
             );
-            
+
             if (stockCheck.rows.length === 0) {
                 throw new Error(`Zone tarifaire ${zone.zone_tarifaire_id} introuvable`);
             }
-            
+
             const stockDisponible = stockCheck.rows[0].nb_tables_available;
             if (stockDisponible < zone.nb_tables_reservees) {
                 throw new Error(`Stock insuffisant pour la zone tarifaire ${zone.zone_tarifaire_id}. Disponible: ${stockDisponible}, Demandé: ${zone.nb_tables_reservees}`);
             }
-            
+
             // Insérer la nouvelle réservation de zone
             await client.query(
                 `INSERT INTO reservation_zones_tarifaires (reservation_id, zone_tarifaire_id, nb_tables_reservees)
                  VALUES ($1, $2, $3)`,
                 [id, zone.zone_tarifaire_id, zone.nb_tables_reservees]
             );
-            
+
             // Décrémenter le stock
             await client.query(
                 `UPDATE zone_tarifaire 
@@ -331,9 +331,9 @@ router.put('/reservation/:id', async (req, res) => {
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Erreur lors de la mise à jour de la réservation:', err);
-        res.status(500).json({ 
-            error: 'Erreur serveur', 
-            details: err instanceof Error ? err.message : 'Erreur inconnue' 
+        res.status(500).json({
+            error: 'Erreur serveur',
+            details: err instanceof Error ? err.message : 'Erreur inconnue'
         });
     } finally {
         client.release();
@@ -343,11 +343,11 @@ router.put('/reservation/:id', async (req, res) => {
 // Supprimer une réservation et restaurer le stock
 router.delete('/reservation/:id', async (req, res) => {
     const { id } = req.params;
-    
+
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        
+
         // 1. Récupérer les zones tarifaires de la réservation pour restaurer le stock
         const zonesToRestore = await client.query(
             `SELECT zone_tarifaire_id, nb_tables_reservees 
@@ -355,7 +355,7 @@ router.delete('/reservation/:id', async (req, res) => {
              WHERE reservation_id = $1`,
             [id]
         );
-        
+
         // 2. Restaurer le stock des zones tarifaires
         for (const zone of zonesToRestore.rows) {
             await client.query(
@@ -365,35 +365,35 @@ router.delete('/reservation/:id', async (req, res) => {
                 [zone.nb_tables_reservees, zone.zone_tarifaire_id]
             );
         }
-        
+
         // 3. Supprimer les associations zones tarifaires
         await client.query(
             `DELETE FROM reservation_zones_tarifaires WHERE reservation_id = $1`,
             [id]
         );
-        
+
         // 4. Supprimer la réservation
         const deleteResult = await client.query(
             `DELETE FROM reservation WHERE id = $1 RETURNING *`,
             [id]
         );
-        
+
         if (deleteResult.rows.length === 0) {
             throw new Error('Réservation introuvable');
         }
-        
+
         await client.query('COMMIT');
-        res.json({ 
-            message: 'Réservation supprimée avec succès', 
-            reservation: deleteResult.rows[0] 
+        res.json({
+            message: 'Réservation supprimée avec succès',
+            reservation: deleteResult.rows[0]
         });
-        
+
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Erreur lors de la suppression de la réservation:', err);
-        res.status(500).json({ 
-            error: 'Erreur serveur', 
-            details: err instanceof Error ? err.message : 'Erreur inconnue' 
+        res.status(500).json({
+            error: 'Erreur serveur',
+            details: err instanceof Error ? err.message : 'Erreur inconnue'
         });
     } finally {
         client.release();
