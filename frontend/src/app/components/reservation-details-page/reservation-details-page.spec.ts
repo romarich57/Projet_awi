@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { ReservationDetailsPage } from './reservation-details-page';
 
@@ -12,6 +14,8 @@ describe('ReservationDetailsPage', () => {
     await TestBed.configureTestingModule({
       imports: [ReservationDetailsPage],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: ActivatedRoute,
           useValue: {
@@ -21,7 +25,7 @@ describe('ReservationDetailsPage', () => {
         }
       ]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(ReservationDetailsPage);
     component = fixture.componentInstance;
