@@ -9,6 +9,6 @@ export interface ReservationDto {
     nb_prises: number;
     date_facturation?: string;
     final_price: number;
-    statut_paiment: 'non_payé' | 'payé';
+    statut_paiement: 'non_payé' | 'payé';
     note?: string;
 }

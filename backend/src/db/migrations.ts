@@ -2,7 +2,7 @@ import pool from './database.js';
 
 export async function runMigrations() {
   const client = await pool.connect();
-  
+
   try {
     console.log('🔄 Exécution des migrations de la base de données...');
 
@@ -209,7 +209,7 @@ export async function runMigrations() {
         nb_prises INTEGER NOT NULL,
         date_facturation DATE,
         final_price NUMERIC NOT NULL,
-        statut_paiment TEXT CHECK (statut_paiment IN ('non_payé', 'payé')) NOT NULL DEFAULT 'non_payé',
+        statut_paiement TEXT CHECK (statut_paiement IN ('non_payé', 'payé')) NOT NULL DEFAULT 'non_payé',
         note TEXT,
         UNIQUE(reservant_id, festival_id)
       );

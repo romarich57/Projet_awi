@@ -27,7 +27,7 @@ router.get('/reservations/:festivalId', async (req, res) => {
     const { festivalId } = req.params;
     try {
         const { rows } = await pool.query(`SELECT 
-                r.id, r.start_price, r.final_price, r.statut_paiment,
+                r.id, r.start_price, r.final_price, r.statut_paiement,
                 r.date_facturation, r.note, r.nb_prises,
                 res.name as reservant_name, res.email as reservant_email,
                 res.type as reservant_type, res.phone_number, res.address,
