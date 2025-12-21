@@ -1,4 +1,4 @@
-CREATE TYPE role_enum AS ENUM ('normal', 'organizer', 'super-organizer', 'admin');
+CREATE TYPE role_enum AS ENUM ('visiteur', 'benevole', 'organizer', 'super-organizer', 'admin');
 
 CREATE TYPE workflow_enum AS ENUM (
     'Pas_de_contact', 'Contact_pris', 'Discussion_en_cours', 
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
  id SERIAL PRIMARY KEY,
  login TEXT UNIQUE NOT NULL,
  password_hash TEXT NOT NULL,
- role role_enum DEFAULT 'normal',
+ role role_enum DEFAULT 'visiteur',
  first_name TEXT,
  last_name TEXT,
  email TEXT UNIQUE NOT NULL,

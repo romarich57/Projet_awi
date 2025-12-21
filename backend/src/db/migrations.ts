@@ -35,7 +35,7 @@ export async function runMigrations() {
     // Types et tables de base pour les réservations (rattrapage si init.sql non appliqué)
     await client.query(`
       DO $$ BEGIN
-        CREATE TYPE role_enum AS ENUM ('normal', 'organizer', 'super-organizer', 'admin');
+        CREATE TYPE role_enum AS ENUM ('visiteur', 'benevole', 'organizer', 'super-organizer', 'admin');
       EXCEPTION WHEN duplicate_object THEN NULL; END $$;
     `);
 
@@ -54,7 +54,7 @@ export async function runMigrations() {
         id SERIAL PRIMARY KEY,
         login TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        role role_enum DEFAULT 'normal',
+        role role_enum DEFAULT 'visiteur',
         first_name TEXT,
         last_name TEXT,
         email TEXT UNIQUE NOT NULL,

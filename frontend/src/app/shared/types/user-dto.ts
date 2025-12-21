@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'normal' | 'organizer' | 'super-organizer';
+export type UserRole = 'admin' | 'visiteur' | 'benevole' | 'organizer' | 'super-organizer';
 
 export interface UserDto {
   id: number;
