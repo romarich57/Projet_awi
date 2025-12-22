@@ -1,12 +1,14 @@
 import { WritableSignal, signal } from '@angular/core';
 import { of } from 'rxjs';
-import { UserDto } from '@shared/types/user-dto';
+import { UserDto } from '@app/types/user-dto';
 
 export interface AuthServiceMock {
   readonly isLoading: WritableSignal<boolean>;
   readonly error: WritableSignal<string | null>;
   readonly isLoggedIn: WritableSignal<boolean>;
   readonly isAdmin: WritableSignal<boolean>;
+  readonly isOrganizer: WritableSignal<boolean>;
+  readonly isSuperOrganizer: WritableSignal<boolean>;
   readonly currentUser: WritableSignal<UserDto | null>;
   login: jasmine.Spy;
   logout: jasmine.Spy;
@@ -28,6 +30,8 @@ export function createAuthServiceMock(
     error: signal<string | null>(null),
     isLoggedIn: signal(false),
     isAdmin: signal(false),
+    isOrganizer: signal(false),
+    isSuperOrganizer: signal(false),
     currentUser: signal<UserDto | null>(null),
     login: jasmine.createSpy('login'),
     logout: jasmine.createSpy('logout'),

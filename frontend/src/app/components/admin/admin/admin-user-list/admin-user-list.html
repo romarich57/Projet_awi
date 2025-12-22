@@ -1,0 +1,82 @@
+<section class="admin">
+    <header class="admin__header">
+        <div class="admin__intro">
+            <p class="admin__eyebrow">Administration</p>
+            <h1>Gestion des utilisateurs</h1>
+        </div>
+    </header>
+
+    <app-admin-user-filter [searchQuery]="searchQuery()" [roleFilter]="roleFilter()" [statusFilter]="statusFilter()"
+        [sortKey]="sortKey()" [sortDirection]="sortDirection()" (searchQueryChange)="onSearchQueryChange($event)"
+        (roleFilterChange)="onRoleFilterChange($event)" (statusFilterChange)="onStatusFilterChange($event)"
+        (sortKeyChange)="onSortKeyChange($event)" (sortDirectionChange)="onSortDirectionChange($event)"
+        (resetFiltersEvent)="onResetFilters()">
+    </app-admin-user-filter>
+
+    @if (isLoading()) {
+    <p class="status">Chargement des utilisateurs…</p>
+    }
+
+    @if (error()) {
+    <p class="status status--error">{{ error() }}</p>
+    }
+
+    @if (!isLoading() && !error()) {
+    @if (mutationMessage()) {
+    <p class="status" [class.status--success]="mutationStatus() === 'success'"
+        [class.status--error]="mutationStatus() === 'error'">
+        {{ mutationMessage() }}
+    </p>
+    }
+
+    <div class="stats-grid">
+        <div class="stats-box stats-box--primary">
+            <span class="stats-box__value">{{ totalUsers() }}</span>
+            <span class="stats-box__label">Utilisateurs</span>
+        </div>
+        <div class="stats-box stats-box--success">
+            <span class="stats-box__value">{{ verifiedUsers() }}</span>
+            <span class="stats-box__label">Vérifiés</span>
+        </div>
+        <div class="stats-box stats-box--admin">
+            <span class="stats-box__value">{{ adminUsers() }}</span>
+            <span class="stats-box__label">Admins</span>
+        </div>
+    </div>
+
+    <div class="admin__content">
+        <section class="panel panel--list">
+            <div class="panel__header">
+                <div class="panel__title">
+                    <h2>Utilisateurs</h2>
+                    <span class="panel__meta">{{ totalUsers() }} utilisateur(s)</span>
+                </div>
+                <a class="primary" [routerLink]="['/admin/users/new']">Creer un utilisateur</a>
+            </div>
+            <p class="panel__hint">Cliquez sur un utilisateur pour ouvrir sa fiche.</p>
+            @if (filteredUsers().length) {
+            <ul class="user-list">
+                @for (user of filteredUsers(); track user.id) {
+                <li class="user-list__item">
+                    <div class="user-card">
+                        <a class="user-card__link" [routerLink]="['/admin/users', user.id]">
+                            <div class="user-card__main">
+                                <span class="user-card__login">{{ user.login }}</span>
+                                <span class="user-card__name">{{ user.firstName }} {{ user.lastName }}</span>
+                                <span class="user-card__email">{{ user.email }}</span>
+                            </div>
+                        </a>
+                        <app-admin-user-crud [user]="user" [isMutating]="isMutating()" [pendingRoles]="pendingRoles()"
+                            (roleChanged)="onRoleChanged($event)" (userDeleted)="onUserDeleted($event)">
+                        </app-admin-user-crud>
+                    </div>
+                </li>
+                }
+            </ul>
+            } @else {
+            <p class="empty">Aucun utilisateur ne correspond aux filtres.</p>
+            }
+        </section>
+    </div>
+    }
+</section>

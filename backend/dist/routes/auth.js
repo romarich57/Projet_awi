@@ -151,7 +151,7 @@ router.post('/register', async (req, res) => {
           email_verification_token,
           email_verification_expires_at
         ) VALUES (
-          $1, $2, 'normal', $3, $4, $5, $6, $7, FALSE, $8, $9
+          $1, $2, 'visiteur', $3, $4, $5, $6, $7, FALSE, $8, $9
         )
       `, [
                 payload.login,

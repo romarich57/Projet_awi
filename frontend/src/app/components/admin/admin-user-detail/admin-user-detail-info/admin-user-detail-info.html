@@ -1,0 +1,42 @@
+<section class="detail-card">
+    <div class="detail-grid">
+        <div>
+            <span class="detail-label">Identifiant</span>
+            <span class="detail-value">{{ user().login }}</span>
+        </div>
+        <div>
+            <span class="detail-label">Nom</span>
+            <span class="detail-value">{{ user().firstName }} {{ user().lastName }}</span>
+        </div>
+        <div>
+            <span class="detail-label">Role</span>
+            <span class="detail-value">{{ roleLabels[user().role] }}</span>
+        </div>
+        <div>
+            <span class="detail-label">Email</span>
+            <span class="detail-value">{{ user().email }}</span>
+        </div>
+        <div>
+            <span class="detail-label">Telephone</span>
+            <span class="detail-value">{{ user().phone || 'Non renseigne' }}</span>
+        </div>
+        <div class="avatar-display">
+            <span class="detail-label">Avatar</span>
+            <img [src]="getAvatarUrl(user().avatarUrl)" alt="Avatar" class="avatar-image" />
+        </div>
+        <div>
+            <span class="detail-label">Email verifie</span>
+            <span class="detail-value">
+                @if (user().emailVerified) {
+                Oui
+                } @else {
+                Non
+                }
+            </span>
+        </div>
+        <div>
+            <span class="detail-label">Creation</span>
+            <span class="detail-value">{{ user().createdAt | date: 'mediumDate' }}</span>
+        </div>
+    </div>
+</section>

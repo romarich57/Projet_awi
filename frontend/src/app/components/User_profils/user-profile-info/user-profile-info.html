@@ -1,0 +1,47 @@
+<section class="info-card">
+  <div class="info-header">
+    <img [src]="getAvatarUrl(user().avatarUrl)" alt="Avatar" class="info-avatar" />
+    <div class="info-identity">
+      <span class="info-name">{{ user().firstName }} {{ user().lastName }}</span>
+      <span class="info-login">@{{ user().login }}</span>
+    </div>
+  </div>
+
+  <dl class="info-grid">
+    <div>
+      <dt>Email</dt>
+      <dd>{{ user().email }}</dd>
+    </div>
+    <div>
+      <dt>Téléphone</dt>
+      <dd>{{ user().phone || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Rôle</dt>
+      <dd>{{ roleLabels[user().role] }}</dd>
+    </div>
+    <div>
+      <dt>Statut email</dt>
+      <dd>
+        <span class="badge" [class.badge--warning]="!user().emailVerified">
+          @if (user().emailVerified) {
+            Vérifié
+          } @else {
+            Non vérifié
+          }
+        </span>
+      </dd>
+    </div>
+    <div>
+      <dt>Création</dt>
+      <dd>{{ user().createdAt | date: 'mediumDate' }}</dd>
+    </div>
+  </dl>
+
+  @if (!user().emailVerified) {
+    <p class="info-warning">
+      Votre adresse email n'est pas vérifiée.
+      <a routerLink="/verify-email">Vérifier maintenant</a>.
+    </p>
+  }
+</section>

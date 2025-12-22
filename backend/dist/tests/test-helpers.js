@@ -44,7 +44,7 @@ export async function createTestUser(overrides = {}) {
     RETURNING id, login, email, role, first_name, last_name, email_verified`, [
         login,
         passwordHash,
-        overrides.role || 'normal',
+        overrides.role || 'visiteur',
         overrides.firstName || 'Test',
         overrides.lastName || 'User',
         email,

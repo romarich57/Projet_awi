@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AuthService } from '@auth/auth.service';
+import { AuthService } from '@services/auth.service';
 import { createAuthServiceMock } from '@testing/mocks/auth-service.mock';
 import { AppComponent } from './app';
 

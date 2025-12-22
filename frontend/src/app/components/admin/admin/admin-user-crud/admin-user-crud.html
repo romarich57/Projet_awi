@@ -1,0 +1,24 @@
+<div class="user-card__actions">
+    <span class="badge" [class.badge--warning]="!user().emailVerified">
+        @if (user().emailVerified) {
+        Verifie
+        } @else {
+        Non verifie
+        }
+    </span>
+    <label class="role-control">
+        <span>Role</span>
+        <select [value]="user().role" (change)="updateUserRole($event)" [disabled]="isMutating()">
+            @for (role of roleOptions; track role) {
+            <option [value]="role" [selected]="role === user().role">{{ roleLabels[role] }}</option>
+            }
+        </select>
+    </label>
+    @if (user().role !== 'admin') {
+    <button type="button" class="danger" (click)="deleteUser($event)" [disabled]="isMutating()">
+        Supprimer
+    </button>
+    } @else {
+    <span class="admin-badge">Compte admin</span>
+    }
+</div>

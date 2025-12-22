@@ -1,0 +1,97 @@
+.user-card__actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.role-control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-width: 140px;
+    max-width: 140px;
+}
+
+.role-control select {
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text);
+    width: 100%;
+}
+
+.badge {
+    border-radius: 999px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.75rem;
+    background: #ecfdf3;
+    color: #027a48;
+    min-width: 80px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.badge--warning {
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.danger {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: rgba(185, 28, 28, 0.35);
+    min-width: 110px;
+    text-align: center;
+    border-radius: 0.65rem;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #0b57d0;
+    background: #e8f0fe;
+    border: 1px solid rgba(11, 87, 208, 0.25);
+    border-radius: 0.65rem;
+    padding: 0.55rem 0.85rem;
+    min-width: 110px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+    .user-card__actions {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+    }
+
+    .role-control {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .role-control select {
+        width: 100%;
+    }
+
+    .badge,
+    .danger,
+    .admin-badge {
+        flex: 1;
+        min-width: auto;
+    }
+}

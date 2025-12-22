@@ -1,0 +1,22 @@
+<section class="admin-create">
+    <header class="admin-create__header">
+        <button type="button" class="ghost" (click)="goBack()">Retour</button>
+    </header>
+
+    <div class="admin-create__title">
+        <p class="admin-create__eyebrow">Administration</p>
+        <h1>Creer un utilisateur</h1>
+    </div>
+
+    @if (mutationMessage()) {
+    <p class="status" [class.status--success]="mutationStatus() === 'success'"
+        [class.status--error]="mutationStatus() === 'error'">
+        {{ mutationMessage() }}
+    </p>
+    }
+
+    <app-admin-user-create-crud [createForm]="createForm" [isMutating]="isMutating()" [isUploading]="isUploading()"
+        [uploadError]="uploadError()" [selectedFile]="selectedFile()" [avatarPreview]="avatarPreview()"
+        (fileSelected)="onFileSelected($event)" (avatarRemoved)="removeAvatar()" (formSubmitted)="submit()">
+    </app-admin-user-create-crud>
+</section>

@@ -1,0 +1,40 @@
+<div class="admin__toolbar">
+    <label class="field">
+        <span>Recherche</span>
+        <input type="search" [value]="searchQuery()" (input)="updateSearch($event)"
+            placeholder="Nom, email, identifiant" />
+    </label>
+    <label class="field">
+        <span>Role</span>
+        <select [value]="roleFilter()" (change)="updateRoleFilter($event)">
+            <option value="all">Tous les roles</option>
+            @for (role of roleOptions; track role) {
+            <option [value]="role">{{ roleLabels[role] }}</option>
+            }
+        </select>
+    </label>
+    <label class="field">
+        <span>Statut email</span>
+        <select [value]="statusFilter()" (change)="updateStatusFilter($event)">
+            @for (status of statusOptions; track status.value) {
+            <option [value]="status.value">{{ status.label }}</option>
+            }
+        </select>
+    </label>
+    <label class="field">
+        <span>Tri</span>
+        <select [value]="sortKey()" (change)="updateSortKey($event)">
+            @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+            }
+        </select>
+    </label>
+    <button type="button" class="ghost" (click)="toggleSortDirection()">
+        @if (sortDirection() === 'asc') {
+        Ascendant
+        } @else {
+        Descendant
+        }
+    </button>
+    <button type="button" class="ghost" (click)="resetFilters()">Reinitialiser</button>
+</div>

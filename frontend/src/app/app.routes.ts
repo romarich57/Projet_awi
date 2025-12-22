@@ -1,8 +1,11 @@
 import { Routes } from '@angular/router';
-import { AdminComponent } from '@app/admin/admin/admin';
-import { adminGuard } from '@app/admin/admin-guard';
+import { AdminUserListComponent } from '@app/components/admin/admin/admin-user-list/admin-user-list';
+import { AdminUserCreateFormComponent } from '@app/components/admin/admin-user-create/admin-user-create-form/admin-user-create-form';
+import { AdminUserDetailPageComponent } from '@app/components/admin/admin-user-detail/admin-user-detail-page/admin-user-detail-page';
+
+import { adminGuard } from '@app/guards/admin/admin-guard';
 import { FestivalListComponent } from '@app/components/festival-list-component/festival-list-component';
-import { authGuard } from '@auth/auth-guard';
+import { authGuard } from '@app/guards/auth/auth-guard';
 import { LoginComponent } from '@auth/login/login';
 import { RegisterComponent } from '@auth/register/register';
 import { VerifyEmailComponent } from '@auth/verify-email/verify-email';
@@ -19,6 +22,7 @@ import { GameEditPageComponent } from './components/game-edit-page/game-edit-pag
 import { GameCreatePageComponent } from './components/game-create-page/game-create-page';
 import { ReservationDetailComponent } from './components/reservation-detail-component/reservation-detail-component';
 import { ReservationDetailsPage } from './components/reservation-details-page/reservation-details-page';
+import { UserProfilePageComponent } from './components/User_profils/user-profile-page/user-profile-page';
 import { roleGuard } from './guards/role-guard';
 
 export const routes: Routes = [
@@ -50,7 +54,13 @@ export const routes: Routes = [
     path: 'home',
     component: HomeComponent,
     canActivate: [authGuard],
-    title: 'Profil',
+    title: 'Accueil',
+  },
+  {
+    path: 'profile',
+    component: UserProfilePageComponent,
+    canActivate: [authGuard],
+    title: 'Mon compte',
   },
   {
     path: 'dashboard',
@@ -102,8 +112,22 @@ export const routes: Routes = [
     title: 'Modifier un jeu',
   },
   {
+    path: 'admin/users/new',
+    component: AdminUserCreateFormComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin'] },
+    title: 'Creer un utilisateur',
+  },
+  {
+    path: 'admin/users/:id',
+    component: AdminUserDetailPageComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin'] },
+    title: 'Utilisateur',
+  },
+  {
     path: 'admin',
-    component: AdminComponent,
+    component: AdminUserListComponent,
     canActivate: [authGuard, roleGuard],
     data: { roles: ['admin'] },
     title: 'Administration',

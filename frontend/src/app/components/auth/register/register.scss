@@ -1,0 +1,159 @@
+.register {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid #d0d7de;
+  border-radius: 0.75rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.introduction {
+  margin: 0;
+  color: #4a5568;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-weight: 600;
+  }
+
+  input {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #d0d7de;
+    border-radius: 0.4rem;
+    font: inherit;
+
+    &.invalid {
+      border-color: #d14343;
+    }
+  }
+}
+
+button[type='submit'] {
+  align-self: flex-start;
+  padding: 0.65rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: #0b57d0;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.status {
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+
+  &.success {
+    background: #ecfdf3;
+    color: #027a48;
+  }
+
+  &.error {
+    background: #fef3f2;
+    color: #b42318;
+  }
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: #4a5568;
+
+  &.error {
+    color: #b42318;
+  }
+}
+
+.avatar-field {
+  grid-column: 1 / -1;
+}
+
+.avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.avatar-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #d0d7de;
+  background: #f3f4f6;
+}
+
+.avatar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-input-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d0d7de;
+  background: #fff;
+  color: #333;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #0b57d0;
+  }
+}
+
+.btn-ghost {
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d0d7de;
+  background: transparent;
+  color: #4a5568;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+.upload-status {
+  font-size: 0.8rem;
+  color: #0b57d0;
+  font-style: italic;
+}

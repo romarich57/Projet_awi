@@ -1,0 +1,83 @@
+<form class="form" [formGroup]="createForm()" (ngSubmit)="submit()">
+    <div class="form-grid">
+        <label class="field">
+            <span>Identifiant</span>
+            <input type="text" formControlName="login" />
+            @if (createForm().get('login')?.invalid && (createForm().get('login')?.dirty ||
+            createForm().get('login')?.touched)) {
+            <span class="field__error">Identifiant requis (min 3).</span>
+            }
+        </label>
+        <label class="field">
+            <span>Mot de passe</span>
+            <input type="password" formControlName="password" />
+            @if (createForm().get('password')?.invalid && (createForm().get('password')?.dirty ||
+            createForm().get('password')?.touched)) {
+            <span class="field__error">Mot de passe requis (min 8).</span>
+            }
+        </label>
+        <label class="field">
+            <span>Prenom</span>
+            <input type="text" formControlName="firstName" />
+            @if (createForm().get('firstName')?.invalid && (createForm().get('firstName')?.dirty ||
+            createForm().get('firstName')?.touched)) {
+            <span class="field__error">Prenom requis.</span>
+            }
+        </label>
+        <label class="field">
+            <span>Nom</span>
+            <input type="text" formControlName="lastName" />
+            @if (createForm().get('lastName')?.invalid && (createForm().get('lastName')?.dirty ||
+            createForm().get('lastName')?.touched)) {
+            <span class="field__error">Nom requis.</span>
+            }
+        </label>
+        <label class="field">
+            <span>Email</span>
+            <input type="email" formControlName="email" />
+            @if (createForm().get('email')?.invalid && (createForm().get('email')?.dirty ||
+            createForm().get('email')?.touched)) {
+            <span class="field__error">Email invalide.</span>
+            }
+        </label>
+        <label class="field">
+            <span>Telephone</span>
+            <input type="text" formControlName="phone" />
+        </label>
+        <div class="field avatar-field">
+            <span>Avatar (optionnel)</span>
+            <div class="avatar-upload">
+                <img [src]="avatarPreview()" alt="Avatar preview" class="avatar-preview" />
+                <div class="avatar-actions">
+                    <label class="file-input-label">
+                        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp"
+                            (change)="onFileSelected($event)" class="file-input" />
+                        Choisir une image
+                    </label>
+                    @if (selectedFile()) {
+                    <button type="button" class="ghost" (click)="removeAvatar()">Supprimer</button>
+                    }
+                </div>
+                @if (uploadError()) {
+                <span class="field__error">{{ uploadError() }}</span>
+                }
+                @if (isUploading()) {
+                <span class="upload-status">Upload en cours...</span>
+                }
+            </div>
+        </div>
+        <label class="field">
+            <span>Role</span>
+            <select formControlName="role">
+                @for (role of roleOptions; track role) {
+                <option [value]="role">{{ roleLabels[role] }}</option>
+                }
+            </select>
+        </label>
+    </div>
+    <div class="form-actions">
+        <button type="submit" [disabled]="createForm().invalid || isMutating()">
+            Creer l'utilisateur
+        </button>
+    </div>
+</form>

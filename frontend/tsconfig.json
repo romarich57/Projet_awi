@@ -16,12 +16,24 @@
     "module": "preserve",
     "baseUrl": "./src",
     "paths": {
-      "@app/*": ["app/*"],
-      "@auth/*": ["app/shared/auth/*"],
-      "@users/*": ["app/users/*"],
-      "@shared/*": ["app/shared/*"],
-      "@env/*": ["environments/*"],
-      "@testing/*": ["testing/*"]
+      "@app/*": [
+        "app/*"
+      ],
+      "@auth/*": [
+        "app/components/auth/*"
+      ],
+      "@users/*": [
+        "app/users/*"
+      ],
+      "@services/*": [
+        "app/services/*"
+      ],
+      "@env/*": [
+        "environments/*"
+      ],
+      "@testing/*": [
+        "testing/*"
+      ]
     }
   },
   "angularCompilerOptions": {

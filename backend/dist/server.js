@@ -20,6 +20,7 @@ import allocatedGamesRouter from './routes/allocatedGames.js';
 import editorRouter from './routes/editor.js';
 import zonePlanRouter from './routes/zonePlan.js';
 import workflowRouter from './routes/workflow.js';
+import uploadRouter from './routes/upload.js';
 import { verifyToken } from './middleware/token-management.js';
 import { requireAdmin } from './middleware/auth-admin.js';
 import { ensureAdmin } from './db/initAdmin.js';
@@ -30,6 +31,8 @@ import 'dotenv/config';
 const PORT = Number(process.env.PORT ?? 4000);
 const HOST = process.env.HOST ?? '0.0.0.0';
 const HTTPS_ENABLED = process.env.HTTPS_ENABLED !== 'false';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app = express();
 // En-têtes de sécurité 
 app.use((_req, res, next) => {
@@ -44,6 +47,9 @@ app.use((_req, res, next) => {
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
+// Servir les fichiers statiques (avatars uploadés)
+const uploadsPath = path.resolve(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath));
 // CORS : autoriser uniquement l'URL du frontend de prod (Nginx)
 const allowedOrigins = FRONTEND_ORIGINS.length > 0
     ? FRONTEND_ORIGINS
@@ -77,9 +83,8 @@ app.use('/api/workflow', verifyToken, workflowRouter);
 app.use('/api/admin', verifyToken, requireAdmin, (_req, res) => {
     res.json({ message: 'Bienvenue admin' });
 });
+app.use('/api/upload', verifyToken, uploadRouter);
 // HTTPS (certificats mkcert montés en volume dans /app/certs)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const certsDir = process.env.CERTS_DIR
     ? path.resolve(process.env.CERTS_DIR)
     : path.resolve(__dirname, '../certs');

@@ -1,0 +1,86 @@
+<form class="form" [formGroup]="editForm()" (ngSubmit)="submit()">
+    <div class="form__header">
+        <h2>Modifier l'utilisateur</h2>
+        <p class="form__hint">Mettez a jour uniquement les champs necessaires.</p>
+    </div>
+    <div class="form-grid">
+        <label class="field">
+            <span>Identifiant</span>
+            <input type="text" formControlName="login" />
+            @if (editForm().get('login')?.invalid && (editForm().get('login')?.dirty ||
+            editForm().get('login')?.touched)) {
+            <span class="field__error">Identifiant requis (min 3).</span>
+            }
+        </label>
+        <label class="field">
+            <span>Prenom</span>
+            <input type="text" formControlName="firstName" />
+            @if (editForm().get('firstName')?.invalid && (editForm().get('firstName')?.dirty ||
+            editForm().get('firstName')?.touched)) {
+            <span class="field__error">Prenom requis.</span>
+            }
+        </label>
+        <label class="field">
+            <span>Nom</span>
+            <input type="text" formControlName="lastName" />
+            @if (editForm().get('lastName')?.invalid && (editForm().get('lastName')?.dirty ||
+            editForm().get('lastName')?.touched)) {
+            <span class="field__error">Nom requis.</span>
+            }
+        </label>
+        <label class="field">
+            <span>Email</span>
+            <input type="email" formControlName="email" />
+            @if (editForm().get('email')?.invalid && (editForm().get('email')?.dirty ||
+            editForm().get('email')?.touched)) {
+            <span class="field__error">Email invalide.</span>
+            }
+        </label>
+        <label class="field">
+            <span>Telephone</span>
+            <input type="text" formControlName="phone" />
+        </label>
+        <div class="field avatar-field">
+            <span>Avatar (optionnel)</span>
+            <div class="avatar-upload">
+                <img [src]="avatarPreview()" alt="Avatar preview" class="avatar-preview" />
+                <div class="avatar-actions">
+                    <label class="file-input-label">
+                        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp"
+                            (change)="onFileSelected($event)" class="file-input" />
+                        Changer l'image
+                    </label>
+                    @if (selectedFile()) {
+                    <button type="button" class="ghost" (click)="removeAvatar()">Annuler</button>
+                    }
+                </div>
+                @if (uploadError()) {
+                <span class="field__error">{{ uploadError() }}</span>
+                }
+                @if (isUploading()) {
+                <span class="upload-status">Upload en cours...</span>
+                }
+            </div>
+        </div>
+        <label class="field">
+            <span>Role</span>
+            <select formControlName="role">
+                @for (role of roleOptions; track role) {
+                <option [value]="role">{{ roleLabels[role] }}</option>
+                }
+            </select>
+        </label>
+        <label class="field field--inline">
+            <input type="checkbox" formControlName="emailVerified" />
+            <span>Email verifie</span>
+        </label>
+    </div>
+    <div class="form-actions">
+        <button type="submit" [disabled]="editForm().invalid || isMutating()">
+            Enregistrer
+        </button>
+        <button type="button" class="ghost" (click)="cancel()">
+            Annuler
+        </button>
+    </div>
+</form>

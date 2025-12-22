@@ -1,0 +1,72 @@
+<section class="profile">
+  <header class="profile__header">
+    <div>
+      <p class="profile__eyebrow">Mon compte</p>
+      <h1>Profil utilisateur</h1>
+    </div>
+    <button
+      type="button"
+      class="icon-button"
+      (click)="toggleEdit()"
+      [disabled]="!user()"
+    >
+      <span>Modifier</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l8.06-8.06.92.92L5.92 19.58zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+        />
+      </svg>
+    </button>
+  </header>
+
+  @if (isLoading()) {
+    <p class="status">Chargement de votre profil…</p>
+  }
+
+  @if (authError() && !user()) {
+    <p class="status status--error">{{ authError() }}</p>
+  }
+
+  @if (mutationMessage()) {
+    <p
+      class="status"
+      [class.status--success]="mutationStatus() === 'success'"
+      [class.status--error]="mutationStatus() === 'error'"
+    >
+      {{ mutationMessage() }}
+    </p>
+  }
+
+  @if (user()) {
+    <div class="profile__grid">
+      <section class="profile__section">
+        @if (!isEditing()) {
+          <app-user-profile-info [user]="user()!" />
+        } @else {
+          <app-user-profile-edit
+            [editForm]="editForm"
+            [isMutating]="isMutating()"
+            [isUploading]="isUploading()"
+            [uploadError]="uploadError()"
+            [selectedFile]="selectedFile()"
+            [avatarPreview]="avatarPreview()"
+            (fileSelected)="onFileSelected($event)"
+            (avatarRemoved)="removeAvatar()"
+            (cancelled)="cancelEdit()"
+            (submitted)="submitEdit()"
+          />
+        }
+      </section>
+
+      <app-user-profile-actions
+        [userEmail]="user()!.email"
+        [isMutating]="isMutating()"
+        [confirmDelete]="confirmDelete()"
+        (passwordResetRequested)="requestPasswordReset()"
+        (deleteRequested)="requestDelete()"
+        (deleteCancelled)="cancelDelete()"
+        (deleteConfirmed)="confirmDeleteAccount()"
+      />
+    </div>
+  }
+</section>

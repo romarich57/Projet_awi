@@ -1,0 +1,110 @@
+<section class="register">
+  <h1>Inscription</h1>
+  <p class="introduction">
+    Créez votre compte avec les informations demandées. Un email de vérification vous sera envoyé
+    automatiquement.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="grid">
+      <div class="field">
+        <label for="login">Pseudo</label>
+        <input id="login" type="text" formControlName="login" autocomplete="username"
+          [class.invalid]="form.controls.login.touched && form.controls.login.invalid" />
+        @if (form.controls.login.touched && form.controls.login.hasError('required')) {
+        <p class="hint error">Pseudo requis.</p>
+        } @else if (form.controls.login.touched && form.controls.login.hasError('minlength')) {
+        <p class="hint error">3 caractères minimum.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="firstName">Prénom</label>
+        <input id="firstName" type="text" formControlName="firstName"
+          [class.invalid]="form.controls.firstName.touched && form.controls.firstName.invalid" />
+        @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
+        <p class="hint error">Prénom requis.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="lastName">Nom</label>
+        <input id="lastName" type="text" formControlName="lastName"
+          [class.invalid]="form.controls.lastName.touched && form.controls.lastName.invalid" />
+        @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
+        <p class="hint error">Nom requis.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" formControlName="email"
+          [class.invalid]="form.controls.email.touched && form.controls.email.invalid" />
+        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+        <p class="hint error">Email requis.</p>
+        } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+        <p class="hint error">Format d'email invalide.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input id="password" type="password" autocomplete="new-password" formControlName="password"
+          [class.invalid]="form.controls.password.touched && form.controls.password.invalid" />
+        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        <p class="hint error">Mot de passe requis.</p>
+        } @else if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+        <p class="hint error">8 caractères minimum.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="phone">Téléphone (optionnel)</label>
+        <input id="phone" type="tel" formControlName="phone" />
+      </div>
+
+      <div class="field avatar-field">
+        <label>Avatar (optionnel)</label>
+        <div class="avatar-upload">
+          <img [src]="avatarPreview()" alt="Avatar preview" class="avatar-preview" />
+          <div class="avatar-actions">
+            <label class="file-input-label">
+              <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" (change)="onFileSelected($event)"
+                class="file-input" />
+              Choisir une image
+            </label>
+            @if (selectedFile()) {
+            <button type="button" class="btn-ghost" (click)="removeAvatar()">Supprimer</button>
+            }
+          </div>
+          @if (uploadError()) {
+          <span class="hint error">{{ uploadError() }}</span>
+          }
+          @if (isUploading()) {
+          <span class="upload-status">Upload en cours...</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" [disabled]="form.invalid || isSubmitting()">
+      Créer mon compte
+    </button>
+  </form>
+
+  @if (successMessage()) {
+  <p class="status success">
+    {{ successMessage() }} Vérifiez votre boîte mail et cliquez sur le lien pour activer votre
+    compte.
+  </p>
+  }
+
+  @if (errorMessage()) {
+  <p class="status error">{{ errorMessage() }}</p>
+  }
+
+  <p class="hint">
+    Déjà inscrit ?
+    <a routerLink="/login">Retour à la connexion</a>
+  </p>
+</section>

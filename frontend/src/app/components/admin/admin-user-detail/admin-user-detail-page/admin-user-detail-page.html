@@ -1,0 +1,67 @@
+<section class="admin-detail">
+    <header class="admin-detail__header">
+        <button type="button" class="ghost" (click)="goBack()">Retour</button>
+        <div class="admin-detail__actions">
+            @if (user()) {
+            <button type="button" class="ghost edit-toggle" (click)="toggleEdit()" [disabled]="isMutating()">
+                <span class="edit-toggle__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path
+                            d="M3 17.25V21h3.75L18.37 9.38l-3.75-3.75L3 17.25zm17.71-10.04a1.003 1.003 0 0 0 0-1.42l-2.5-2.5a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.99-1.66z" />
+                    </svg>
+                </span>
+                @if (isEditing()) {
+                Terminer l'edition
+                } @else {
+                Modifier
+                }
+            </button>
+            }
+        </div>
+    </header>
+
+    <div class="admin-detail__title">
+        <p class="admin-detail__eyebrow">Fiche utilisateur</p>
+        <h1>Details du compte</h1>
+        <p class="admin-detail__subtitle">
+            Consultez toutes les informations et activez l'edition via le bouton crayon.
+        </p>
+    </div>
+
+    @if (isLoading()) {
+    <p class="status">Chargement de l'utilisateur…</p>
+    }
+
+    @if (error()) {
+    <p class="status status--error">{{ error() }}</p>
+    }
+
+    @if (!isLoading() && !error()) {
+    @if (mutationMessage()) {
+    <p class="status" [class.status--success]="mutationStatus() === 'success'"
+        [class.status--error]="mutationStatus() === 'error'">
+        {{ mutationMessage() }}
+    </p>
+    }
+
+    @if (user(); as selected) {
+    <!-- Display Info Component -->
+    <app-admin-user-detail-info [user]="selected"></app-admin-user-detail-info>
+
+    <!-- Edit Form Component (conditionally shown) -->
+    @if (isEditing()) {
+    <div class="edit-section">
+        <app-admin-user-detail-edit [editForm]="editForm" [isMutating]="isMutating()" [isUploading]="isUploading()"
+            [uploadError]="uploadError()" [selectedFile]="selectedFile()" [avatarPreview]="avatarPreview()"
+            (fileSelected)="onFileSelected($event)" (avatarRemoved)="removeAvatar()" (cancelled)="cancelEdit()"
+            (submitted)="submitEdit()">
+        </app-admin-user-detail-edit>
+    </div>
+    }
+    } @else if (showNotFound()) {
+    <p class="empty">Utilisateur introuvable.</p>
+    } @else {
+    <p class="empty">Identifiant invalide.</p>
+    }
+    }
+</section>

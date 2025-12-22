@@ -1,0 +1,38 @@
+.admin__toolbar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.field input,
+.field select {
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.65rem;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text);
+}
+
+.ghost {
+    border-radius: 0.65rem;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    background: transparent;
+    border-color: var(--border);
+}
+
+@media (max-width: 720px) {
+    .admin__toolbar {
+        grid-template-columns: 1fr;
+    }
+}

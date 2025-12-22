@@ -1,0 +1,241 @@
+.admin {
+    width: min(1200px, 100%);
+    margin: 2.5rem auto;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.admin__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.admin__intro {
+    max-width: 100%;
+}
+
+.admin__eyebrow {
+    margin: 0 0 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.7rem;
+    color: var(--muted);
+}
+
+.status {
+    margin: 0;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.75rem;
+    background: rgba(11, 87, 208, 0.1);
+    color: #0b57d0;
+}
+
+.status--success {
+    background: rgba(2, 122, 72, 0.12);
+    color: #027a48;
+}
+
+.status--error {
+    background: rgba(185, 28, 28, 0.12);
+    color: #b91c1c;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.stats-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stats-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stats-box__value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.stats-box__label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+}
+
+.stats-box--primary {
+    border-color: rgba(11, 87, 208, 0.25);
+    background: linear-gradient(135deg, #e8f0fe 0%, #f8fafd 100%);
+}
+
+.stats-box--primary .stats-box__value {
+    color: #0b57d0;
+}
+
+.stats-box--success {
+    border-color: rgba(2, 122, 72, 0.25);
+    background: linear-gradient(135deg, #ecfdf3 0%, #f8fdfb 100%);
+}
+
+.stats-box--success .stats-box__value {
+    color: #027a48;
+}
+
+.stats-box--admin {
+    border-color: rgba(156, 39, 176, 0.25);
+    background: linear-gradient(135deg, #f3e5f5 0%, #faf5fb 100%);
+}
+
+.stats-box--admin .stats-box__value {
+    color: #9c27b0;
+}
+
+.admin__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.panel__title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.panel__meta {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.panel__hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.user-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.user-list__item {
+    display: block;
+}
+
+.user-card {
+    text-align: left;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    padding: 0.75rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, auto);
+    gap: 1rem;
+    align-items: center;
+    width: 100%;
+}
+
+.primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55rem 0.9rem;
+    border-radius: 0.65rem;
+    background: var(--primary);
+    color: #fff;
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+
+.primary:hover {
+    background: var(--primary-dark);
+}
+
+.user-card:hover {
+    border-color: rgba(11, 87, 208, 0.35);
+    box-shadow: 0 10px 20px rgba(11, 87, 208, 0.12);
+}
+
+.user-card__link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.user-card__main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.user-card__login {
+    font-weight: 600;
+}
+
+.user-card__name {
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.user-card__email {
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.empty {
+    color: var(--muted);
+    text-align: center;
+    margin: 0;
+}
+
+@media (max-width: 720px) {
+    .user-card {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+    }
+
+    .panel__header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
