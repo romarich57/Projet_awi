@@ -52,6 +52,30 @@ export class WorkflowComponent implements OnDestroy {
     });
   }
 
+  contactMessage = signal<string | null>(null);
+
+  onContacted() {
+    const wf = this.workflow();
+    if (wf) {
+      this.contactMessage.set(null);
+      this.workflowService.addContactDate(wf.id).subscribe({
+        next: (dates) => {
+          this.workflow.update(w => w ? { ...w, contact_dates: dates } : null);
+          this.contactMessage.set('Contact enregistré avec succès !');
+          setTimeout(() => this.contactMessage.set(null), 3000);
+        },
+        error: (err) => {
+          if (err.status === 409) {
+            this.contactMessage.set('Un contact a déjà été enregistré aujourd\'hui.');
+          } else {
+            this.contactMessage.set('Erreur lors de l\'ajout du contact.');
+          }
+          setTimeout(() => this.contactMessage.set(null), 3000);
+        }
+      });
+    }
+  }
+
   onStateChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     const currentWorkflow = this.workflow();

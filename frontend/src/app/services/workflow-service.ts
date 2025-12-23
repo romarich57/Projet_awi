@@ -31,6 +31,11 @@ export class WorkflowService {
     );
   }
 
-
+  addContactDate(id: number) {
+    return this.http.post<string[]>(`${environment.apiUrl}/workflow/${id}/contact`,
+        {},
+        { withCredentials: true }
+    );
+  }
 
 }

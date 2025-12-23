@@ -65,6 +65,54 @@ router.get('/reservations/:festivalId', async (req, res) => {
 });
 
 
+// Récupérer une réservation par son ID avec ses zones tarifaires
+router.get('/detail/:reservationId', async (req, res) => {
+    const { reservationId } = req.params;
+    try {
+        // Récupérer la réservation
+        const reservationResult = await pool.query(
+            `SELECT 
+                r.id, r.reservant_id, r.festival_id, r.workflow_id,
+                r.start_price, r.table_discount_offered, r.direct_discount,
+                r.nb_prises, r.date_facturation, r.final_price, r.statut_paiement, r.note,
+                res.name as reservant_name, res.email as reservant_email, res.type as reservant_type,
+                f.name as festival_name
+             FROM reservation r
+             JOIN reservant res ON r.reservant_id = res.id
+             JOIN festival f ON r.festival_id = f.id
+             WHERE r.id = $1`,
+            [reservationId]
+        );
+        
+        if (reservationResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Réservation non trouvée' });
+        }
+        
+        const reservation = reservationResult.rows[0];
+        
+        // Récupérer les zones tarifaires de cette réservation
+        const zonesResult = await pool.query(
+            `SELECT 
+                rzt.zone_tarifaire_id,
+                rzt.nb_tables_reservees,
+                zt.name as zone_name,
+                zt.price_per_table,
+                zt.nb_tables_available
+             FROM reservation_zones_tarifaires rzt
+             JOIN zone_tarifaire zt ON rzt.zone_tarifaire_id = zt.id
+             WHERE rzt.reservation_id = $1`,
+            [reservationId]
+        );
+        
+        res.json({
+            ...reservation,
+            zones_tarifaires: zonesResult.rows
+        });
+    } catch (err) {
+        console.error('Erreur lors de la récupération de la réservation:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 
 
 //Lister les réservants avec leurs infos pour un festival donné

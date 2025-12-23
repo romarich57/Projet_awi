@@ -1,8 +1,10 @@
 <header class="header">
   <nav class="nav">
-    <div class="nav__links">
+    <div class="nav__links">        
+      
+      <a routerLink="/festivals" routerLinkActive="active">Festivals</a>
+
       @if (isLoggedIn()) {
-        <a routerLink="/festivals" routerLinkActive="active">Festivals</a>
         @if (isOrganizer()) {
           <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
           <a routerLink="/reservants" routerLinkActive="active">Réservants</a>

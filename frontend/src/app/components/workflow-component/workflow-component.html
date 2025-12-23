@@ -11,6 +11,27 @@
             <option value="Facture_payee">Facture payée</option>
         </select>
 
+        <div class="contact-section">
+            <button (click)="onContacted()">Contacté</button>
+            
+            @if (contactMessage()) {
+                <p class="contact-message" [class.success]="contactMessage()!.includes('succès')" [class.error]="!contactMessage()!.includes('succès')">
+                    {{ contactMessage() }}
+                </p>
+            }
+            
+            <div class="contact-history">
+                <h4>Historique des contacts :</h4>
+                <ul>
+                    @for (date of workflow()!.contact_dates; track date) {
+                        <li>Contacté le : {{ date | date:'dd/MM/yyyy à HH:mm' }}</li>
+                    } @empty {
+                        <li>Aucun contact enregistré.</li>
+                    }
+                </ul>
+            </div>
+        </div>
+
         <h3>Presence et reception des jeux</h3>
         <div class="game-presence">
             <label>

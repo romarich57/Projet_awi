@@ -15,6 +15,21 @@ export class FestivalService {
   //signal des festivals
   festivals = signal<FestivalDto[]>([]);
 
+
+  //on affiche que le dernier festival ajouté en tête de liste
+  loadLastFestival() {
+    this.http.get<FestivalDto[]>(`${environment.apiUrl}/festivals?limit=1&sort=desc`, 
+    { withCredentials: true }
+    ).subscribe({
+      next: (festivals) => {
+        this.festivals.set(festivals);
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement du dernier festival', err);
+    }
+    });
+  }
+
   loadAllFestivals() {
     this.http.get<FestivalDto[]>(`${environment.apiUrl}/festivals`, 
     { withCredentials: true }

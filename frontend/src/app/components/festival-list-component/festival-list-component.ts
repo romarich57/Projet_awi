@@ -5,7 +5,7 @@ import { FestivalService } from '../../services/festival-service';
 import { FestivalFormComponent } from '../festival-form-component/festival-form-component';
 import { FestivalDto } from '../../types/festival-dto';
 import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
-import { AuthService } from '../../shared/auth/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-festival-list-component',
@@ -24,7 +24,12 @@ export class FestivalListComponent {
   readonly isLoggedIn = this._authService.isLoggedIn;
 
   constructor() {
-    effect(() => this._festivalService.loadAllFestivals());
+    if (!this.isLoggedIn()) {
+      effect(() => this._festivalService.loadLastFestival());
+    }
+    else {
+      effect(() => this._festivalService.loadAllFestivals());
+    }
   }
 
 

@@ -9,4 +9,5 @@ export interface WorkflowDto {
     liste_jeux_obtenue: boolean;
     jeux_recus: boolean;
     presentera_jeux: boolean;
+    contact_dates?: string[];
 }
