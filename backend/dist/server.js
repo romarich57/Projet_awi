@@ -70,7 +70,7 @@ app.use(cors(corsOptions));
 app.use('/api/public', publicRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', verifyToken, usersRouter);
-app.use('/api/festivals', verifyToken, festivalRouter);
+app.use('/api/festivals', festivalRouter); //pas de verifyToken pour accès public sans compte
 app.use('/api/zones-tarifaires', verifyToken, zoneTarifaireRouter);
 app.use('/api/reservation', verifyToken, reservationRouter);
 app.use('/api/reservant', verifyToken, reservantRouter);

@@ -55,9 +55,16 @@ function validateAllocationPayload(body: any): { errors: string[], payload: any 
 }
 
 // Liste des festivals
-router.get('/', async (_req, res) => {
-    const { rows } = await pool.query('SELECT id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date FROM festival ORDER BY start_date DESC')
-    res.json(rows)
+router.get('/', async (req, res) => {
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : null;
+    let query = 'SELECT id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date FROM festival ORDER BY start_date DESC';
+    
+    if (limit && limit > 0) {
+        query += ` LIMIT ${limit}`;
+    }
+    
+    const { rows } = await pool.query(query);
+    res.json(rows);
 })
 
 // Détails d'un festival par ID
