@@ -5,6 +5,7 @@ import { FestivalService } from '../../services/festival-service';
 import { FestivalFormComponent } from '../festival-form-component/festival-form-component';
 import { FestivalDto } from '../../types/festival-dto';
 import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
+import { AuthService } from '../../shared/auth/auth.service';
 
 @Component({
   selector: 'app-festival-list-component',
@@ -17,8 +18,10 @@ import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
 export class FestivalListComponent {
 
   private readonly _festivalService = inject(FestivalService);
+  private readonly _authService = inject(AuthService);
   private readonly _router = inject(Router);
   readonly festivals = this._festivalService.festivals;
+  readonly isLoggedIn = this._authService.isLoggedIn;
 
   constructor() {
     effect(() => this._festivalService.loadAllFestivals());

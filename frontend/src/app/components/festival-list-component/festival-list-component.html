@@ -1,17 +1,18 @@
 <h1>Liste des festivals :</h1>
 
 
+@if (isLoggedIn()) {
+    @if(!showForm()){
+        <button class="form-btn" (click)="toggleForm()">Ajouter un nouveau festival</button>
+    }
+    @else {
+        <button class="form-btn" (click)="toggleForm()">Annuler</button>
+        <app-festival-form-component
+            (festivalSubmit)="addFestival($event)"
+            (zoneSubmit)="addZoneTarifaire($event, $event.festival_id)"
+        ></app-festival-form-component>
 
-@if(!showForm()){
-    <button class="form-btn" (click)="toggleForm()">Ajouter un nouveau festival</button>
-}
-@else {
-    <button class="form-btn" (click)="toggleForm()">Annuler</button>
-    <app-festival-form-component
-        (festivalSubmit)="addFestival($event)"
-        (zoneSubmit)="addZoneTarifaire($event, $event.festival_id)"
-    ></app-festival-form-component>
-
+    }
 }
 
 <div class="festival-list">

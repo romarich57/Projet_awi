@@ -47,7 +47,6 @@ export const routes: Routes = [
   {
     path: 'festivals',
     component: FestivalListComponent,
-    canActivate: [authGuard],
     title: 'Festivals',
   },
   {
