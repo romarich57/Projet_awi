@@ -1,0 +1,55 @@
+<div class="zone-plan-form-overlay">
+  <div class="zone-plan-form">
+    <h2>{{ isEditMode ? 'Modifier' : 'Ajouter' }} une zone de plan</h2>
+    <form [formGroup]="zonePlanForm" (ngSubmit)="submit()">
+      <div class="form-group">
+        <label for="name">Nom de la zone:</label>
+        <input id="name" type="text" formControlName="name" />
+        @if (zonePlanForm.controls['name'].errors?.['required'] && zonePlanForm.controls['name'].touched) {
+          <small class="error">Le nom est requis.</small>
+        }
+        @if (zonePlanForm.controls['name'].errors?.['minlength']) {
+          <small class="error">Le nom doit contenir au moins 2 caractères.</small>
+        }
+        @if (zonePlanForm.controls['name'].errors?.['maxlength']) {
+          <small class="error">Le nom ne peut pas dépasser 100 caractères.</small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="nb_tables">Nombre de tables:</label>
+        <input id="nb_tables" type="number" formControlName="nb_tables" min="1" />
+        @if (zonePlanForm.controls['id_zone_tarifaire'].value !== null) {
+          <small class="info">Tables disponibles: {{ tablesRestantes()[zonePlanForm.controls['id_zone_tarifaire'].value] ?? 0 }}</small>
+        }
+        @if (zonePlanForm.controls['nb_tables'].errors?.['required'] && zonePlanForm.controls['nb_tables'].touched) {
+          <small class="error">Le nombre de tables est requis.</small>
+        }
+        @if (zonePlanForm.controls['nb_tables'].errors?.['min']) {
+          <small class="error">Le nombre de tables doit être au moins 1.</small>
+        }
+        @if (zonePlanForm.errors?.['tablesExceeded']) {
+          <small class="error">Dépasse le nombre de tables disponibles (max: {{ zonePlanForm.errors?.['tablesExceeded'].max }}).</small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="id_zone_tarifaire">Zone tarifaire:</label>
+        <select id="id_zone_tarifaire" formControlName="id_zone_tarifaire">
+          <option [ngValue]="null" disabled>-- Sélectionner une zone tarifaire --</option>
+          @for (zone of zoneTarifaires(); track zone.id) {
+            <option [ngValue]="zone.id">{{ zone.name }} ({{ zone.price_per_table }}€/table)</option>
+          }
+        </select>
+        @if (zonePlanForm.controls['id_zone_tarifaire'].errors?.['required'] && zonePlanForm.controls['id_zone_tarifaire'].touched) {
+          <small class="error">La zone tarifaire est requise.</small>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" (click)="close()">Annuler</button>
+        <button type="submit" class="btn-submit" [disabled]="zonePlanForm.invalid">{{ isEditMode ? 'Modifier' : 'Créer' }}</button>
+      </div>
+    </form>
+  </div>
+</div>

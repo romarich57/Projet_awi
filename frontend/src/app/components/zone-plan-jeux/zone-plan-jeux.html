@@ -1,0 +1,34 @@
+<h3>Zone et plan des jeux</h3>
+<div class="zone-plan-jeux-container">
+    @if (festivalId()) {
+        <div class="zones-list">
+            <h3>Zones associées :</h3>
+            <div class="zone-item">
+                @for (zone of zonePlans(); track zone.id) {
+                    <div class="zone-details">
+                        <p><strong>Nom de la zone :</strong> {{ zone.name }}</p>
+                        <p><strong>Nb tables :</strong> {{ zone.nb_tables }}</p>
+                        <p><strong>Zone tarifaire :</strong> {{ zone.zone_tarifaire_name }}</p>
+                        <button class="edit-zone-button" (click)="openEditForm(zone)">Modifier</button>
+                        <button class="delete-zone-button" (click)="deleteZonePlan(zone.id)">Supprimer</button>
+                    </div>
+                } @empty {
+                    <p>Aucune zone associée à ce festival.</p>
+                }
+            </div>
+        </div>
+
+        <button class="add-zone-button" (click)="openForm()">Ajouter une zone</button>
+
+        @if (showForm()) {
+            <app-zone-plan-form
+                [festivalId]="festivalId()!"
+                [zoneTarifaires]="zoneTarifaires()"
+                [tablesRestantes]="tablesRestantesParZoneTarifaire()"
+                [zonePlanToEdit]="zonePlanToEdit()"
+                (formClosed)="closeForm()"
+                (zonePlanCreated)="onZonePlanCreated()">
+            </app-zone-plan-form>
+        }
+    }
+</div>

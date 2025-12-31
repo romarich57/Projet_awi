@@ -26,6 +26,13 @@
       </div>
 
     </div>
+
+    <div class="zone-plan-section">
+      <h2>Zone et plan des jeux</h2>
+      <app-zone-plan-jeux
+        [festivalId]="festivalId()">
+      </app-zone-plan-jeux>
+    </div>
   }
   @else {
     <div class="error-container">

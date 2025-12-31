@@ -4,4 +4,5 @@ export interface ZonePlanDto {
     festival_id: number;
     id_zone_tarifaire: number;
     nb_tables: number;
+    zone_tarifaire_name?: string;
 }
