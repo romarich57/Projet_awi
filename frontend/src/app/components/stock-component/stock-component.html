@@ -1,1 +1,79 @@
-<p>stock-component works!</p>
+<div class="stock-container">
+  <div class="stock-header">
+    <button class="back-button" type="button" (click)="goBack()">
+      <span class="back-icon">←</span> Retour
+    </button>
+    <h2>Stock - Festival {{ festivalId }}</h2>
+  </div>
+  
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement du stock en cours...</p>
+    </div>
+  }
+  
+  @if (error) {
+    <div class="error-state">
+      <div class="error-icon">!</div>
+      <div class="error-content">
+        <h3>Une erreur est survenue</h3>
+        <p>{{ error }}</p>
+        <button class="retry-button" (click)="loadStock()">
+          Réessayer le chargement
+        </button>
+      </div>
+    </div>
+  }
+  
+  @if (stock && !loading) {
+    <div class="stock-content">
+      <!-- Tables -->
+      <div class="stock-section">
+        <h3 class="section-title">Tables</h3>
+        <div class="items-grid">
+          @for (table of stock.tables; track table.type) {
+            <div class="stock-item">
+              <div class="item-header">
+                <span class="item-name">{{ table.type | uppercase }}</span>
+                <span class="item-stats">
+                  <span class="available">{{ table.available }}</span>
+                  <span class="separator">/</span>
+                  <span class="total">{{ table.total }}</span>
+                  <span class="unit">disponibles</span>
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      
+      <!-- Chaises -->
+      <div class="stock-section">
+        <h3 class="section-title">Chaises</h3>
+        <div class="stock-item">
+          <div class="item-header">
+            <span class="item-name">CHAISES</span>
+            <span class="item-stats">
+              <span class="available">{{ stock.chairs.available }}</span>
+              <span class="separator">/</span>
+              <span class="total">{{ stock.chairs.total }}</span>
+              <span class="unit">disponibles</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  
+  @if (!stock && !loading && !error) {
+    <div class="empty-state">
+      <div class="empty-icon">📦</div>
+      <h3>Aucun stock disponible</h3>
+      <p>Le stock pour ce festival n'a pas pu être chargé.</p>
+      <button class="retry-button" (click)="loadStock()">
+        Charger à nouveau
+      </button>
+    </div>
+  }
+</div>

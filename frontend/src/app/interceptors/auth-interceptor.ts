@@ -4,6 +4,8 @@ import { AuthService } from '@services/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  console.log('🔧 URL interceptée:', req.url);
+  
   const auth = inject(AuthService);
 
   // --- Ne pas intercepter les requêtes d'auth elles-mêmes ---
@@ -17,6 +19,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     '/auth/password/forgot',
     '/auth/password/reset',
   ];
+  
   if (excluded.some((path) => req.url.includes(path))) {
     // passe directement
     return next(req);
@@ -49,4 +52,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       );
     }),
   );
+  if (req.url.includes('/api/stock')) {
+    console.log('🔧 C\'est une requête stock!');
+    console.log('🔧 Headers:', req.headers);
+  }
+  
+  return next(req);
+
 };

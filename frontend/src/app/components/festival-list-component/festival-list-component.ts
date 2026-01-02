@@ -1,33 +1,37 @@
 import { Component, ChangeDetectionStrategy, effect, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { FestivalCardComponent } from '../festival-card-component/festival-card-component';
-import { FestivalService } from '../../services/festival-service';
 import { FestivalFormComponent } from '../festival-form-component/festival-form-component';
+import { FestivalService } from '../../services/festival-service';
 import { FestivalDto } from '../../types/festival-dto';
 import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
+
 
 @Component({
   selector: 'app-festival-list-component',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FestivalCardComponent, FestivalFormComponent],
+  imports: [FestivalCardComponent, FestivalFormComponent, RouterOutlet],
   templateUrl: './festival-list-component.html',
   styleUrl: './festival-list-component.scss',
 })
 export class FestivalListComponent {
-
   private readonly _festivalService = inject(FestivalService);
   private readonly _router = inject(Router);
+  
   readonly festivals = this._festivalService.festivals;
 
   constructor() {
     effect(() => this._festivalService.loadAllFestivals());
   }
 
-
   showForm = signal(false);
+
+  onFestivalSelected(festivalId: number): void {
+    this._router.navigate(['/stock', festivalId]);
+  }
+
   toggleForm(): void {
-    // Logique pour afficher ou masquer le formulaire d'ajout de festival
     this.showForm.update(show => !show);
   }
 
@@ -41,7 +45,6 @@ export class FestivalListComponent {
         console.error('Erreur lors de l\'ajout du festival:', err);
       }
     });
-    this.showForm.set(false);
   }
 
   addZoneTarifaire(zone_tarifaire: ZoneTarifaireDto, festival_id: number): void {
@@ -54,7 +57,4 @@ export class FestivalListComponent {
       }
     });
   }
-
-
-
 }

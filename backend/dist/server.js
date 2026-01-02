@@ -20,7 +20,7 @@ import allocatedGamesRouter from './routes/allocatedGames.js';
 import editorRouter from './routes/editor.js';
 import zonePlanRouter from './routes/zonePlan.js';
 import workflowRouter from './routes/workflow.js';
-import stockRoutes from './routes/stock.js';
+import stockRouter from './routes/stock.js';
 import uploadRouter from './routes/upload.js';
 import { verifyToken } from './middleware/token-management.js';
 import { requireAdmin } from './middleware/auth-admin.js';
@@ -84,7 +84,7 @@ app.use('/api/workflow', verifyToken, workflowRouter);
 app.use('/api/admin', verifyToken, requireAdmin, (_req, res) => {
     res.json({ message: 'Bienvenue admin' });
 });
-app.use('/api/stock', verifyToken, stockRoutes);
+app.use('/api/stock', verifyToken, stockRouter);
 app.use('/api/upload', verifyToken, uploadRouter);
 // HTTPS (certificats mkcert montés en volume dans /app/certs)
 const certsDir = process.env.CERTS_DIR

@@ -1,35 +1,32 @@
 import { Component, ChangeDetectionStrategy, inject, input, output } from '@angular/core';
 import { FestivalDto } from "../../types/festival-dto";
 import { DatePipe } from '@angular/common';
-import { FestivalState } from '../../stores/festival-state';
+import { RouterLink } from '@angular/router';
+
 @Component({
   selector: 'app-festival-card-component',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink], // RouterLink est bien importé ici
   templateUrl: './festival-card-component.html',
   styleUrl: './festival-card-component.scss',
 })
 export class FestivalCardComponent {
-
   festival = input.required<FestivalDto>();
-
   select = output<number>();
 
-  festivaStore = inject(FestivalState);
-
-  // Vérifier si ce festival est actuellement sélectionné
-  isSelected(): boolean {
-    const currentFestival = this.festivaStore.currentFestival();
-    return currentFestival?.id === this.festival().id;
+  // Calculer le total des tables
+  getTotalTables(): number {
+    const fest = this.festival();
+    return (fest.stock_tables_standard || 0) + 
+           (fest.stock_tables_grande || 0) + 
+           (fest.stock_tables_mairie || 0);
   }
 
   onFestivalClick(): void {
     const festival = this.festival();
-    this.festivaStore.setCurrentFestival(festival);
     if (festival.id !== undefined) {
       this.select.emit(festival.id);
     }
   }
-
 }

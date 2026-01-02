@@ -25,7 +25,7 @@ import { ReservationDetailsPage } from './components/reservation-details-page/re
 import { UserProfilePageComponent } from './components/User_profils/user-profile-page/user-profile-page';
 import { roleGuard } from './guards/role-guard';
 
-import { StockComponent } from './components/stock-component/stock-component';
+import { StockDisplayComponent } from './components/stock-component/stock-component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Connexion' },
@@ -142,7 +142,7 @@ export const routes: Routes = [
   },
   {
     path: 'stock/:id',
-    component: StockComponent,
+    component: StockDisplayComponent,
     canActivate: [authGuard],
     title: 'stock'
   },

@@ -1,23 +1,34 @@
 <h1>Liste des festivals :</h1>
 
 
-
-@if(!showForm()){
-    <button class="form-btn" (click)="toggleForm()">Ajouter un nouveau festival</button>
-}
-@else {
-    <button class="form-btn" (click)="toggleForm()">Annuler</button>
-    <app-festival-form-component
-        (festivalSubmit)="addFestival($event)"
-        (zoneSubmit)="addZoneTarifaire($event, $event.festival_id)"
-    ></app-festival-form-component>
-
-}
-
+<!-- §1 : OnPush + standalone -->
 <div class="festival-list">
-    @for(festival of festivals(); track festival.id) {
-        <app-festival-card-component
-            [festival]="festival"
-        ></app-festival-card-component>
+  <h1>Festivals</h1>
+  
+    @if(!showForm()){
+        <button class="form-btn" (click)="toggleForm()">Ajouter un nouveau festival</button>
     }
+    @else {
+        <button class="form-btn" (click)="toggleForm()">Annuler</button>
+        <app-festival-form-component
+            (festivalSubmit)="addFestival($event)"
+            (zoneSubmit)="addZoneTarifaire($event, $event.festival_id)"
+
+        ></app-festival-form-component>
+
+    }
+  
+  
+  <!-- §3 : @for avec track obligatoire -->
+  @for (festival of festivals(); track festival.id) {
+    <app-festival-card-component 
+      [festival]="festival"
+      (select)="onFestivalSelected($event)">
+    </app-festival-card-component>
+  } @empty {
+    <p>Aucun festival disponible</p>
+  }
 </div>
+
+<!-- §6 : RouterOutlet pour les routes enfants si nécessaire -->
+<router-outlet></router-outlet>

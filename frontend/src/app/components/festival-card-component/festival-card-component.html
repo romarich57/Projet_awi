@@ -1,12 +1,19 @@
-<div (click)="onFestivalClick()" class="festival-card-container">
-
-    <div class="festival-card" [class.selected]="isSelected()"> 
-        <h2>{{ festival().name }}</h2>
-        <p>Tables: {{ festival().stock_tables_standard + festival().stock_tables_grande + festival().stock_tables_mairie }} | Chaises: {{ festival().stock_chaises }}</p>
-        <p>Date de début : {{ festival().start_date | date: 'longDate'}}</p>
-        <p>Date de fin : {{ festival().end_date | date: 'longDate'}}</p>
-    </div>
-
-
-</div>
-
+<!-- festival-card-component.html -->
+@if (festival()) {
+  <div class="festival-card" (click)="onFestivalClick()">
+    <h3>{{ festival().name }}</h3>
+    <p>Dates: {{ festival().start_date | date }} - {{ festival().end_date | date }}</p>
+    
+    <!-- Afficher les stocks individuels ou calculer le total -->
+    @if (getTotalTables() > 0) {
+      <p>Tables: {{ getTotalTables() }} | Chaises: {{ festival().stock_chaises || 0 }}</p>
+    } @else {
+      <p>Chaises: {{ festival().stock_chaises || 0 }}</p>
+    }
+    
+    <!-- Navigation déclarative -->
+    <a [routerLink]="['/stock', festival().id]" routerLinkActive="active">
+      Voir le stock
+    </a>
+  </div>
+}
