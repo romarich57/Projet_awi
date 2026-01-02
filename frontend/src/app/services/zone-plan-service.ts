@@ -1,6 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { ZonePlanDto } from '@app/types/zone-plan-dto';
+import type { AllocatedGameDto } from '@app/types/allocated-game-dto';
+import { Observable } from 'rxjs';
+
+// Interface étendue pour les jeux alloués avec info réservant
+export interface AllocatedGameWithReservant extends AllocatedGameDto {
+  reservant_id: number;
+  reservant_name: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -66,6 +74,25 @@ export class ZonePlanService {
         console.error('Erreur lors de la suppression de la zone de plan de jeux', err);
       }
     });
+  }
+
+  // Récupérer les jeux alloués à une zone de plan
+  getJeuxAlloues(zonePlanId: number): Observable<AllocatedGameWithReservant[]> {
+    return this.http.get<AllocatedGameWithReservant[]>(`/api/zone-plan/${zonePlanId}/jeux-alloues`, { withCredentials: true });
+  }
+
+  // Récupérer les jeux non alloués à aucune zone pour un festival
+  getJeuxNonAlloues(festivalId: number): Observable<AllocatedGameWithReservant[]> {
+    return this.http.get<AllocatedGameWithReservant[]>(`/api/zone-plan/festival/${festivalId}/jeux-non-alloues`, { withCredentials: true });
+  }
+
+  // Assigner un jeu à une zone de plan
+  assignerJeuAZone(allocationId: number, zonePlanId: number | null, nbTablesOccupees?: number): Observable<AllocatedGameWithReservant> {
+    const payload: { zone_plan_id: number | null; nb_tables_occupees?: number } = { zone_plan_id: zonePlanId };
+    if (nbTablesOccupees !== undefined) {
+      payload.nb_tables_occupees = nbTablesOccupees;
+    }
+    return this.http.patch<AllocatedGameWithReservant>(`/api/jeux_alloues/${allocationId}`, payload, { withCredentials: true });
   }
 
 }

@@ -37,15 +37,24 @@ router.get('/reservations/:festivalId', async (req, res) => {
             `SELECT 
                 r.id, r.start_price, r.final_price, r.statut_paiement,
                 r.date_facturation, r.note, r.nb_prises,
+                res.id as reservant_id,
                 res.name as reservant_name, res.email as reservant_email,
                 res.type as reservant_type, res.phone_number, res.address,
-                e.name as editor_name, e.email as editor_email,
+                e.id as editor_id, e.name as editor_name, e.email as editor_email,
                 sw.state as workflow_state,
                 sw.liste_jeux_demandee, sw.liste_jeux_obtenue,
                 sw.jeux_recus, sw.presentera_jeux,
-                zt.name as zone_name, zt.price_per_table,
-                rzt.nb_tables_reservees,
-                f.name as festival_name
+                f.name as festival_name,
+                COALESCE(
+                    json_agg(
+                        DISTINCT jsonb_build_object(
+                            'zone_name', zt.name,
+                            'price_per_table', zt.price_per_table,
+                            'nb_tables_reservees', rzt.nb_tables_reservees
+                        )
+                    ) FILTER (WHERE zt.id IS NOT NULL),
+                    '[]'
+                ) as zones_tarifaires
              FROM reservation r
              JOIN Reservant res ON r.reservant_id = res.id
              LEFT JOIN Editor e ON res.editor_id = e.id
@@ -54,6 +63,12 @@ router.get('/reservations/:festivalId', async (req, res) => {
              LEFT JOIN reservation_zones_tarifaires rzt ON r.id = rzt.reservation_id
              LEFT JOIN zone_tarifaire zt ON rzt.zone_tarifaire_id = zt.id
              WHERE r.festival_id = $1
+             GROUP BY r.id, r.start_price, r.final_price, r.statut_paiement,
+                r.date_facturation, r.note, r.nb_prises,
+                res.id, res.name, res.email, res.type, res.phone_number, res.address,
+                e.id, e.name, e.email,
+                sw.state, sw.liste_jeux_demandee, sw.liste_jeux_obtenue,
+                sw.jeux_recus, sw.presentera_jeux, f.name
              ORDER BY sw.state, res.name`,
             [festivalId]
         );

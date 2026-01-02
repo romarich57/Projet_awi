@@ -1,0 +1,436 @@
+.zone-plan-jeux-container {
+  padding: 1rem;
+  
+  h3, h4 {
+    margin-bottom: 1rem;
+    color: #333;
+  }
+}
+
+// Section jeux non alloués
+.jeux-non-alloues {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+
+  h4 {
+    margin: 0 0 0.5rem;
+    color: #856404;
+  }
+
+  .jeux-list.compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .jeu-item.non-alloue {
+    background: #fff;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+
+    .jeu-info {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .jeu-title {
+      font-weight: 600;
+    }
+
+    .jeu-reservant {
+      color: #666;
+    }
+
+    .jeu-tables {
+      background: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+  }
+
+  .empty-message {
+    color: #155724;
+    margin: 0;
+  }
+}
+
+.section-divider {
+  border: none;
+  border-top: 2px solid #e9ecef;
+  margin: 1.5rem 0;
+}
+
+// Zone cards
+.zone-card {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+
+  &.expanded {
+    border-color: #007bff;
+  }
+
+  .zone-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    cursor: pointer;
+    background: #f8f9fa;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #e9ecef;
+    }
+
+    .zone-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      .zone-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .zone-tarifaire {
+        font-size: 0.85rem;
+        color: #666;
+      }
+    }
+
+    .zone-stats {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+
+      .tables-count {
+        font-weight: 500;
+      }
+
+      .tables-restantes {
+        font-size: 0.85rem;
+        color: #28a745;
+
+        &.warning {
+          color: #ffc107;
+        }
+
+        &.danger {
+          color: #dc3545;
+        }
+      }
+
+      .jeux-count {
+        color: #6c757d;
+      }
+    }
+
+    .zone-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+
+      button {
+        padding: 0.4rem 0.8rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: opacity 0.2s;
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+
+      .btn-allocate {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-edit {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-delete {
+        background: #dc3545;
+        color: white;
+      }
+
+      .expand-icon {
+        font-size: 0.8rem;
+        color: #666;
+        margin-left: 0.5rem;
+      }
+    }
+  }
+
+  .zone-content {
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+
+    .empty-zone {
+      color: #6c757d;
+      text-align: center;
+      padding: 1rem;
+    }
+  }
+}
+
+// Table des jeux alloués
+.jeux-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  th {
+    background: #f8f9fa;
+    font-weight: 600;
+  }
+
+  .jeu-title {
+    font-weight: 500;
+  }
+
+  .nb-tables-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .btn-small {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      background: #fff;
+      cursor: pointer;
+      font-weight: bold;
+
+      &:hover:not(:disabled) {
+        background: #e9ecef;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .btn-remove {
+    padding: 0.3rem 0.6rem;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+
+    &:hover {
+      background: #c82333;
+    }
+  }
+}
+
+// Bouton ajouter zone
+.add-zone-button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background: #0056b3;
+  }
+}
+
+// Modal d'allocation
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+
+    h3 {
+      margin: 0;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+  }
+
+  .modal-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+
+    h4 {
+      margin: 1rem 0 0.5rem;
+    }
+
+    .jeux-selection {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 0.5rem;
+    }
+
+    .jeu-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #f8f9fa;
+      }
+
+      &.selected {
+        background: #e7f3ff;
+        border-color: #007bff;
+      }
+
+      .jeu-title {
+        font-weight: 600;
+      }
+
+      .jeu-reservant {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .jeu-tables {
+        background: #e9ecef;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+      }
+    }
+
+    .allocation-options {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 4px;
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        input {
+          width: 80px;
+          padding: 0.5rem;
+          border: 1px solid #dee2e6;
+          border-radius: 4px;
+        }
+      }
+
+      .hint {
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+        color: #666;
+      }
+    }
+
+    .empty-message {
+      text-align: center;
+      color: #6c757d;
+      padding: 2rem;
+    }
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-cancel {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-confirm {
+      background: #28a745;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background: #218838;
+      }
+    }
+  }
+}

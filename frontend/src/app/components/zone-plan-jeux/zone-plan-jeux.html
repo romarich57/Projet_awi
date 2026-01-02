@@ -1,25 +1,106 @@
 <h3>Zone et plan des jeux</h3>
 <div class="zone-plan-jeux-container">
     @if (festivalId()) {
-        <div class="zones-list">
-            <h3>Zones associées :</h3>
-            <div class="zone-item">
-                @for (zone of zonePlans(); track zone.id) {
-                    <div class="zone-details">
-                        <p><strong>Nom de la zone :</strong> {{ zone.name }}</p>
-                        <p><strong>Nb tables :</strong> {{ zone.nb_tables }}</p>
-                        <p><strong>Zone tarifaire :</strong> {{ zone.zone_tarifaire_name }}</p>
-                        <button class="edit-zone-button" (click)="openEditForm(zone)">Modifier</button>
-                        <button class="delete-zone-button" (click)="deleteZonePlan(zone.id)">Supprimer</button>
-                    </div>
-                } @empty {
-                    <p>Aucune zone associée à ce festival.</p>
-                }
-            </div>
+        <!-- Section des jeux non alloués -->
+        <div class="jeux-non-alloues">
+            <h4>🎮 Jeux non alloués ({{ jeuxNonAlloues().length }})</h4>
+            @if (jeuxNonAlloues().length > 0) {
+                <div class="jeux-list compact">
+                    @for (jeu of jeuxNonAlloues(); track jeu.allocation_id) {
+                        <div class="jeu-item non-alloue">
+                            <div class="jeu-info">
+                                <span class="jeu-title">{{ jeu.title }}</span>
+                                <span class="jeu-reservant">{{ jeu.reservant_name }}</span>
+                                <span class="jeu-tables">{{ jeu.nb_tables_occupees }} table(s)</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <p class="empty-message">✅ Tous les jeux sont alloués à une zone.</p>
+            }
         </div>
 
-        <button class="add-zone-button" (click)="openForm()">Ajouter une zone</button>
+        <hr class="section-divider">
 
+        <!-- Liste des zones de plan -->
+        <div class="zones-list">
+            <h4>📍 Zones de plan</h4>
+            @for (zone of zonesAvecJeux(); track zone.id) {
+                <div class="zone-card" [class.expanded]="zone.expanded">
+                    <div class="zone-header" (click)="toggleZoneExpansion(zone.id)">
+                        <div class="zone-info">
+                            <span class="zone-name">{{ zone.name }}</span>
+                            <span class="zone-tarifaire">{{ zone.zone_tarifaire_name }}</span>
+                        </div>
+                        <div class="zone-stats">
+                            <span class="tables-count">
+                                📊 {{ tablesUtiliseesParZone()[zone.id] || 0 }} / {{ zone.nb_tables }} tables
+                            </span>
+                            <span class="tables-restantes" [class.warning]="tablesRestantesParZone()[zone.id] <= 2" [class.danger]="tablesRestantesParZone()[zone.id] <= 0">
+                                ({{ tablesRestantesParZone()[zone.id] }} restantes)
+                            </span>
+                            <span class="jeux-count">🎲 {{ zone.jeuxAlloues.length }} jeux</span>
+                        </div>
+                        <div class="zone-actions">
+                            <button class="btn-allocate" (click)="openAllocationModal(zone); $event.stopPropagation();" [disabled]="tablesRestantesParZone()[zone.id] <= 0">
+                                ➕ Ajouter un jeu
+                            </button>
+                            <button class="btn-edit" (click)="openEditForm(zone); $event.stopPropagation();">✏️</button>
+                            <button class="btn-delete" (click)="deleteZonePlan(zone.id); $event.stopPropagation();" [disabled]="zone.jeuxAlloues.length > 0">🗑️</button>
+                            <span class="expand-icon">{{ zone.expanded ? '▼' : '▶' }}</span>
+                        </div>
+                    </div>
+                    
+                    @if (zone.expanded) {
+                        <div class="zone-content">
+                            @if (zone.jeuxAlloues.length > 0) {
+                                <table class="jeux-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Jeu</th>
+                                            <th>Réservant</th>
+                                            <th>Tables occupées</th>
+                                            <th>Exemplaires</th>
+                                            <th>Taille table</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (jeu of zone.jeuxAlloues; track jeu.allocation_id) {
+                                            <tr>
+                                                <td class="jeu-title">{{ jeu.title }}</td>
+                                                <td>{{ jeu.reservant_name }}</td>
+                                                <td>
+                                                    <div class="nb-tables-control">
+                                                        <button class="btn-small" (click)="updateNbTables(jeu, jeu.nb_tables_occupees - 0.5)" [disabled]="jeu.nb_tables_occupees <= 0.5">-</button>
+                                                        <span>{{ jeu.nb_tables_occupees }}</span>
+                                                        <button class="btn-small" (click)="updateNbTables(jeu, jeu.nb_tables_occupees + 0.5)">+</button>
+                                                    </div>
+                                                </td>
+                                                <td>{{ jeu.nb_exemplaires }}</td>
+                                                <td>{{ jeu.taille_table_requise }}</td>
+                                                <td>
+                                                    <button class="btn-remove" (click)="removeGameFromZone(jeu)">Retirer</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            } @else {
+                                <p class="empty-zone">Aucun jeu alloué à cette zone.</p>
+                            }
+                        </div>
+                    }
+                </div>
+            } @empty {
+                <p>Aucune zone associée à ce festival.</p>
+            }
+        </div>
+
+        <button class="add-zone-button" (click)="openForm()">➕ Ajouter une zone</button>
+
+        <!-- Modal de création/édition de zone -->
         @if (showForm()) {
             <app-zone-plan-form
                 [festivalId]="festivalId()!"
@@ -29,6 +110,61 @@
                 (formClosed)="closeForm()"
                 (zonePlanCreated)="onZonePlanCreated()">
             </app-zone-plan-form>
+        }
+
+        <!-- Modal d'allocation de jeu -->
+        @if (showAllocationModal()) {
+            <div class="modal-overlay" (click)="closeAllocationModal()">
+                <div class="modal-content" (click)="$event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>Allouer un jeu à : {{ selectedZone()?.name }}</h3>
+                        <button class="btn-close" (click)="closeAllocationModal()">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tables disponibles : <strong>{{ tablesRestantesParZone()[selectedZone()!.id] }}</strong></p>
+                        
+                        @if (jeuxNonAlloues().length > 0) {
+                            <h4>Sélectionner un jeu :</h4>
+                            <div class="jeux-selection">
+                                @for (jeu of jeuxNonAlloues(); track jeu.allocation_id) {
+                                    <div class="jeu-option" 
+                                         [class.selected]="selectedGame()?.allocation_id === jeu.allocation_id"
+                                         (click)="selectGameForAllocation(jeu)">
+                                        <span class="jeu-title">{{ jeu.title }}</span>
+                                        <span class="jeu-reservant">{{ jeu.reservant_name }}</span>
+                                        <span class="jeu-tables">{{ jeu.nb_tables_occupees }} table(s)</span>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (selectedGame()) {
+                                <div class="allocation-options">
+                                    <label>
+                                        Nombre de tables pour ce jeu :
+                                        <input type="number" 
+                                               [ngModel]="nbTablesInput()" 
+                                               (ngModelChange)="nbTablesInput.set($event)"
+                                               min="0.5" 
+                                               step="0.5" 
+                                               max="10">
+                                    </label>
+                                    <p class="hint">💡 Utilisez 0.5 pour ½ table, 1 pour 1 table, etc.</p>
+                                </div>
+                            }
+                        } @else {
+                            <p class="empty-message">Aucun jeu disponible à allouer.</p>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel" (click)="closeAllocationModal()">Annuler</button>
+                        <button class="btn-confirm" 
+                                (click)="allocateGame()" 
+                                [disabled]="!selectedGame() || loading()">
+                            {{ loading() ? 'Allocation...' : 'Allouer le jeu' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
         }
     }
 </div>
