@@ -7,7 +7,7 @@ import { RouterLink } from '@angular/router';
   selector: 'app-festival-card-component',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePipe, RouterLink], // RouterLink est bien importé ici
+  imports: [DatePipe, RouterLink],
   templateUrl: './festival-card-component.html',
   styleUrl: './festival-card-component.scss',
 })
@@ -15,7 +15,6 @@ export class FestivalCardComponent {
   festival = input.required<FestivalDto>();
   select = output<number>();
 
-  // Calculer le total des tables
   getTotalTables(): number {
     const fest = this.festival();
     return (fest.stock_tables_standard || 0) + 
