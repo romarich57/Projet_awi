@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, input, output } from '@angu
 import { FestivalDto } from "../../types/festival-dto";
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FestivalState } from '@app/stores/festival-state';
 
 @Component({
   selector: 'app-festival-card-component',
@@ -14,6 +15,7 @@ import { RouterLink } from '@angular/router';
 export class FestivalCardComponent {
   festival = input.required<FestivalDto>();
   select = output<number>();
+  private festivalState = inject(FestivalState);
 
   getTotalTables(): number {
     const fest = this.festival();
@@ -26,6 +28,7 @@ export class FestivalCardComponent {
     const festival = this.festival();
     if (festival.id !== undefined) {
       this.select.emit(festival.id);
+      this.festivalState.setCurrentFestival(festival);
     }
   }
 }
