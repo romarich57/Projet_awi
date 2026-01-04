@@ -80,6 +80,69 @@ router.get('/:id', async (req, res) => {
     res.json(rows[0]) // Renvoi du festival trouvé
 })
 
+// Stock global des tables du festival avec occupation par type
+router.get('/:id/stock-tables', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        // Récupérer le stock du festival
+        const festivalResult = await pool.query(
+            'SELECT stock_tables_standard, stock_tables_grande, stock_tables_mairie FROM festival WHERE id = $1',
+            [id]
+        );
+        
+        if (festivalResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Festival non trouvé' });
+        }
+        
+        const festival = festivalResult.rows[0];
+        
+        // Calculer les tables occupées par type pour ce festival
+        const occupiedResult = await pool.query(
+            `SELECT 
+                ja.taille_table_requise AS table_type,
+                COALESCE(SUM(ja.nb_tables_occupees), 0) AS nb_tables_occupees
+             FROM jeux_alloues ja
+             JOIN reservation r ON r.id = ja.reservation_id
+             WHERE r.festival_id = $1 AND ja.zone_plan_id IS NOT NULL
+             GROUP BY ja.taille_table_requise`,
+            [id]
+        );
+        
+        const occupiedByType: Record<string, number> = {};
+        for (const row of occupiedResult.rows) {
+            occupiedByType[row.table_type] = Number(row.nb_tables_occupees);
+        }
+        
+        // Construire le résultat
+        const stock = [
+            {
+                table_type: 'standard',
+                total: Number(festival.stock_tables_standard),
+                occupees: occupiedByType['standard'] || 0,
+                restantes: Number(festival.stock_tables_standard) - (occupiedByType['standard'] || 0)
+            },
+            {
+                table_type: 'grande',
+                total: Number(festival.stock_tables_grande),
+                occupees: occupiedByType['grande'] || 0,
+                restantes: Number(festival.stock_tables_grande) - (occupiedByType['grande'] || 0)
+            },
+            {
+                table_type: 'mairie',
+                total: Number(festival.stock_tables_mairie),
+                occupees: occupiedByType['mairie'] || 0,
+                restantes: Number(festival.stock_tables_mairie) - (occupiedByType['mairie'] || 0)
+            }
+        ];
+        
+        res.json({ festival_id: Number(id), stock });
+    } catch (err) {
+        console.error('Erreur lors de la récupération du stock de tables:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+})
+
 // Création d'un nouveau festival
 router.post('/', async (req, res) => {
     const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date } = req.body

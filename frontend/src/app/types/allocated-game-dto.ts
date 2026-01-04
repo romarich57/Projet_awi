@@ -25,4 +25,17 @@ export interface AllocatedGameDto {
   image_url?: string | null;
   rules_video_url?: string | null;
   mechanisms?: MechanismDto[];
+  zones_tarifaires_reservees?: number[];
+}
+
+export interface TableStockByType {
+  table_type: TableSize;
+  total: number;
+  occupees: number;
+  restantes: number;
+}
+
+export interface ZoneTableStock {
+  festival_id: number;
+  stock: TableStockByType[];
 }

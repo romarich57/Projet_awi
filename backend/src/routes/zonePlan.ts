@@ -3,6 +3,125 @@ import pool from '../db/database.js'
 
 const router = Router();
 
+// Récupérer les allocations simples d'une réservation (tables sans jeux)
+router.get('/reservation/:reservation_id/allocations', async (req, res) => {
+    const reservationId = Number(req.params.reservation_id);
+    if (!Number.isFinite(reservationId)) {
+        return res.status(400).json({ error: 'Identifiant invalide' });
+    }
+
+    try {
+        const { rows } = await pool.query(
+            `SELECT reservation_id, zone_plan_id, nb_tables
+             FROM reservation_zone_plan
+             WHERE reservation_id = $1
+             ORDER BY zone_plan_id`,
+            [reservationId]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Erreur lors de la récupération des allocations simples:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Créer ou mettre à jour une allocation simple (tables sans jeux)
+router.put('/reservation/:reservation_id/allocations/:zone_plan_id', async (req, res) => {
+    const reservationId = Number(req.params.reservation_id);
+    const zonePlanId = Number(req.params.zone_plan_id);
+    const nbTables = Number(req.body?.nb_tables);
+
+    if (!Number.isFinite(reservationId) || !Number.isFinite(zonePlanId)) {
+        return res.status(400).json({ error: 'Identifiant invalide' });
+    }
+    if (!Number.isFinite(nbTables) || nbTables <= 0) {
+        return res.status(400).json({ error: 'nb_tables doit être positif' });
+    }
+
+    try {
+        const { rows: validationRows } = await pool.query(
+            `SELECT r.festival_id AS reservation_festival, zp.festival_id AS zone_festival
+             FROM reservation r
+             JOIN zone_plan zp ON zp.id = $2
+             WHERE r.id = $1`,
+            [reservationId, zonePlanId]
+        );
+
+        if (validationRows.length === 0) {
+            return res.status(404).json({ error: 'Réservation ou zone de plan introuvable' });
+        }
+
+        if (validationRows[0].reservation_festival !== validationRows[0].zone_festival) {
+            return res.status(400).json({
+                error: 'La zone de plan ne correspond pas au festival de la réservation'
+            });
+        }
+
+        const { rows } = await pool.query(
+            `INSERT INTO reservation_zone_plan (reservation_id, zone_plan_id, nb_tables)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (reservation_id, zone_plan_id)
+             DO UPDATE SET nb_tables = EXCLUDED.nb_tables
+             RETURNING reservation_id, zone_plan_id, nb_tables`,
+            [reservationId, zonePlanId, nbTables]
+        );
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Erreur lors de la mise à jour de l\'allocation simple:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Supprimer une allocation simple (tables sans jeux)
+router.delete('/reservation/:reservation_id/allocations/:zone_plan_id', async (req, res) => {
+    const reservationId = Number(req.params.reservation_id);
+    const zonePlanId = Number(req.params.zone_plan_id);
+
+    if (!Number.isFinite(reservationId) || !Number.isFinite(zonePlanId)) {
+        return res.status(400).json({ error: 'Identifiant invalide' });
+    }
+
+    try {
+        const { rowCount } = await pool.query(
+            `DELETE FROM reservation_zone_plan
+             WHERE reservation_id = $1 AND zone_plan_id = $2`,
+            [reservationId, zonePlanId]
+        );
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Allocation introuvable' });
+        }
+        res.json({ message: 'Allocation supprimée avec succès' });
+    } catch (err) {
+        console.error('Erreur lors de la suppression de l\'allocation simple:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Récupérer le total des allocations simples par zone de plan pour un festival
+router.get('/festival/:festival_id/allocations-simple', async (req, res) => {
+    const festivalId = Number(req.params.festival_id);
+    if (!Number.isFinite(festivalId)) {
+        return res.status(400).json({ error: 'Identifiant invalide' });
+    }
+
+    try {
+        const { rows } = await pool.query(
+            `SELECT rzp.zone_plan_id, COALESCE(SUM(rzp.nb_tables), 0) AS nb_tables
+             FROM reservation_zone_plan rzp
+             JOIN reservation r ON r.id = rzp.reservation_id
+             WHERE r.festival_id = $1
+             GROUP BY rzp.zone_plan_id
+             ORDER BY rzp.zone_plan_id`,
+            [festivalId]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Erreur lors de la récupération des allocations simples par festival:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 // Récupérer toutes les zones de plan d'un festival
 router.get('/:festival_id', async (req, res) => {
     const { festival_id } = req.params;
@@ -109,16 +228,20 @@ router.delete('/:id', async (req, res) => {
     try {
         await client.query('BEGIN');
         
-        // Vérifier s'il y a des jeux alloués liés à cette zone de plan
+        // Vérifier s'il y a des jeux alloués ou des réservations simples liées à cette zone de plan
         const { rows: jeuxAllouesRows } = await client.query(
             'SELECT COUNT(*) as count FROM jeux_alloues WHERE zone_plan_id = $1',
             [id]
         );
+        const { rows: reservationsRows } = await client.query(
+            'SELECT COUNT(*) as count FROM reservation_zone_plan WHERE zone_plan_id = $1',
+            [id]
+        );
         
-        if (parseInt(jeuxAllouesRows[0].count) > 0) {
+        if (parseInt(jeuxAllouesRows[0].count) > 0 || parseInt(reservationsRows[0].count) > 0) {
             await client.query('ROLLBACK');
             return res.status(400).json({ 
-                error: 'Impossible de supprimer cette zone de plan car elle contient des jeux alloués' 
+                error: 'Impossible de supprimer cette zone de plan car elle contient des allocations' 
             });
         }
         
@@ -177,7 +300,7 @@ router.get('/:id/jeux-alloues', async (req, res) => {
                 g.image_url,
                 g.rules_video_url,
                 r.reservant_id,
-                u.company_name AS reservant_name,
+                res.name AS reservant_name,
                 COALESCE(
                     json_agg(DISTINCT jsonb_build_object('id', m.id, 'name', m.name, 'description', m.description))
                         FILTER (WHERE m.id IS NOT NULL),
@@ -189,14 +312,14 @@ router.get('/:id/jeux-alloues', async (req, res) => {
             LEFT JOIN game_mechanism gm ON gm.game_id = g.id
             LEFT JOIN mechanism m ON m.id = gm.mechanism_id
             LEFT JOIN reservation r ON r.id = ja.reservation_id
-            LEFT JOIN users u ON u.id = r.reservant_id
+            LEFT JOIN reservant res ON res.id = r.reservant_id
             WHERE ja.zone_plan_id = $1
             GROUP BY
                 ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires,
                 ja.zone_plan_id, ja.taille_table_requise,
                 g.id, g.title, g.type, g.editor_id, e.name, g.min_age, g.authors,
                 g.min_players, g.max_players, g.prototype, g.duration_minutes, g.theme,
-                g.description, g.image_url, g.rules_video_url, r.reservant_id, u.company_name
+                g.description, g.image_url, g.rules_video_url, r.reservant_id, res.name
             ORDER BY g.title ASC`,
             [id]
         );
@@ -237,26 +360,32 @@ router.get('/festival/:festival_id/jeux-non-alloues', async (req, res) => {
                 g.image_url,
                 g.rules_video_url,
                 r.reservant_id,
-                u.company_name AS reservant_name,
+                res.name AS reservant_name,
                 COALESCE(
                     json_agg(DISTINCT jsonb_build_object('id', m.id, 'name', m.name, 'description', m.description))
                         FILTER (WHERE m.id IS NOT NULL),
                     '[]'
-                ) AS mechanisms
+                ) AS mechanisms,
+                COALESCE(
+                    (SELECT json_agg(DISTINCT rzt.zone_tarifaire_id)
+                     FROM reservation_zones_tarifaires rzt
+                     WHERE rzt.reservation_id = r.id),
+                    '[]'
+                ) AS zones_tarifaires_reservees
             FROM jeux_alloues ja
             JOIN games g ON g.id = ja.game_id
             JOIN reservation r ON r.id = ja.reservation_id
             LEFT JOIN editor e ON e.id = g.editor_id
             LEFT JOIN game_mechanism gm ON gm.game_id = g.id
             LEFT JOIN mechanism m ON m.id = gm.mechanism_id
-            LEFT JOIN users u ON u.id = r.reservant_id
+            LEFT JOIN reservant res ON res.id = r.reservant_id
             WHERE r.festival_id = $1 AND ja.zone_plan_id IS NULL
             GROUP BY
                 ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires,
                 ja.zone_plan_id, ja.taille_table_requise,
                 g.id, g.title, g.type, g.editor_id, e.name, g.min_age, g.authors,
                 g.min_players, g.max_players, g.prototype, g.duration_minutes, g.theme,
-                g.description, g.image_url, g.rules_video_url, r.reservant_id, u.company_name
+                g.description, g.image_url, g.rules_video_url, r.reservant_id, res.name, r.id
             ORDER BY g.title ASC`,
             [festival_id]
         );

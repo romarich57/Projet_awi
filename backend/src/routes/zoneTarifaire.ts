@@ -18,6 +18,29 @@ router.get('/:id', async (req, res) => {
     }
 })
 
+// Zones tarifaires avec réservations pour un festival donné
+// Retourne uniquement les zones tarifaires où au moins une réservation existe
+router.get('/:id/with-reservations', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await pool.query(
+            `SELECT DISTINCT zt.id, zt.name, zt.festival_id, zt.nb_tables, zt.price_per_table, zt.nb_tables_available, zt.m2_price,
+                    COALESCE(SUM(rzt.nb_tables_reservees), 0) AS total_tables_reservees
+             FROM zone_tarifaire zt
+             INNER JOIN reservation_zones_tarifaires rzt ON zt.id = rzt.zone_tarifaire_id
+             INNER JOIN reservation r ON r.id = rzt.reservation_id
+             WHERE zt.festival_id = $1 AND r.festival_id = $1
+             GROUP BY zt.id, zt.name, zt.festival_id, zt.nb_tables, zt.price_per_table, zt.nb_tables_available, zt.m2_price
+             ORDER BY zt.id ASC`, 
+            [id]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Erreur lors de la récupération des zones tarifaires avec réservations:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+})
+
 // Création d'une nouvelle zone tarifaire
 router.post('/', async (req, res) => {
     const { name, nb_tables, price_per_table, festival_id, nb_tables_available, m2_price } = req.body;

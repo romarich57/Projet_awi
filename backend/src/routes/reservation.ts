@@ -271,6 +271,36 @@ router.post('/reservation', async (req, res) => {
             }
         }
 
+        // 6. Si le réservant est lié à un éditeur, créer automatiquement les allocations de jeux
+        // Récupérer l'editor_id du réservant
+        const reservantEditorResult = await client.query(
+            'SELECT editor_id FROM reservant WHERE id = $1',
+            [reservantId]
+        );
+        const reservantEditorId = reservantEditorResult.rows[0]?.editor_id;
+
+        if (reservantEditorId) {
+            // Récupérer tous les jeux de cet éditeur
+            const gamesResult = await client.query(
+                'SELECT id FROM games WHERE editor_id = $1',
+                [reservantEditorId]
+            );
+
+            // Créer une allocation pour chaque jeu (nb_exemplaires=1, nb_tables_occupees=1 par défaut)
+            for (const game of gamesResult.rows) {
+                await client.query(
+                    `INSERT INTO jeux_alloues (game_id, reservation_id, nb_tables_occupees, nb_exemplaires, taille_table_requise)
+                     VALUES ($1, $2, 1, 1, 'standard')
+                     ON CONFLICT (reservation_id, game_id) DO NOTHING`,
+                    [game.id, reservationId]
+                );
+            }
+
+            if (gamesResult.rows.length > 0) {
+                console.log(`✅ ${gamesResult.rows.length} jeux auto-alloués pour la réservation ${reservationId} (éditeur ${reservantEditorId})`);
+            }
+        }
+
         await client.query('COMMIT');
 
         // Retourner les données complètes

@@ -106,5 +106,142 @@ router.delete('/:id', async (req, res) => {
         client.release();
     }
 });
+// Récupérer les jeux alloués d'une zone de plan
+router.get('/:id/jeux-alloues', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await pool.query(`SELECT
+                ja.id AS allocation_id,
+                ja.reservation_id,
+                ja.game_id,
+                ja.nb_tables_occupees,
+                ja.nb_exemplaires,
+                ja.zone_plan_id,
+                ja.taille_table_requise,
+                g.title,
+                g.type,
+                g.editor_id,
+                e.name AS editor_name,
+                g.min_age,
+                g.authors,
+                g.min_players,
+                g.max_players,
+                g.prototype,
+                g.duration_minutes,
+                g.theme,
+                g.description,
+                g.image_url,
+                g.rules_video_url,
+                r.reservant_id,
+                res.name AS reservant_name,
+                COALESCE(
+                    json_agg(DISTINCT jsonb_build_object('id', m.id, 'name', m.name, 'description', m.description))
+                        FILTER (WHERE m.id IS NOT NULL),
+                    '[]'
+                ) AS mechanisms
+            FROM jeux_alloues ja
+            JOIN games g ON g.id = ja.game_id
+            LEFT JOIN editor e ON e.id = g.editor_id
+            LEFT JOIN game_mechanism gm ON gm.game_id = g.id
+            LEFT JOIN mechanism m ON m.id = gm.mechanism_id
+            LEFT JOIN reservation r ON r.id = ja.reservation_id
+            LEFT JOIN reservant res ON res.id = r.reservant_id
+            WHERE ja.zone_plan_id = $1
+            GROUP BY
+                ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires,
+                ja.zone_plan_id, ja.taille_table_requise,
+                g.id, g.title, g.type, g.editor_id, e.name, g.min_age, g.authors,
+                g.min_players, g.max_players, g.prototype, g.duration_minutes, g.theme,
+                g.description, g.image_url, g.rules_video_url, r.reservant_id, res.name
+            ORDER BY g.title ASC`, [id]);
+        res.json(rows);
+    }
+    catch (err) {
+        console.error('Erreur lors de la récupération des jeux alloués de la zone de plan:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+// Récupérer les jeux NON alloués à aucune zone pour un festival donné
+router.get('/festival/:festival_id/jeux-non-alloues', async (req, res) => {
+    const { festival_id } = req.params;
+    try {
+        const { rows } = await pool.query(`SELECT
+                ja.id AS allocation_id,
+                ja.reservation_id,
+                ja.game_id,
+                ja.nb_tables_occupees,
+                ja.nb_exemplaires,
+                ja.zone_plan_id,
+                ja.taille_table_requise,
+                g.title,
+                g.type,
+                g.editor_id,
+                e.name AS editor_name,
+                g.min_age,
+                g.authors,
+                g.min_players,
+                g.max_players,
+                g.prototype,
+                g.duration_minutes,
+                g.theme,
+                g.description,
+                g.image_url,
+                g.rules_video_url,
+                r.reservant_id,
+                res.name AS reservant_name,
+                COALESCE(
+                    json_agg(DISTINCT jsonb_build_object('id', m.id, 'name', m.name, 'description', m.description))
+                        FILTER (WHERE m.id IS NOT NULL),
+                    '[]'
+                ) AS mechanisms
+            FROM jeux_alloues ja
+            JOIN games g ON g.id = ja.game_id
+            JOIN reservation r ON r.id = ja.reservation_id
+            LEFT JOIN editor e ON e.id = g.editor_id
+            LEFT JOIN game_mechanism gm ON gm.game_id = g.id
+            LEFT JOIN mechanism m ON m.id = gm.mechanism_id
+            LEFT JOIN reservant res ON res.id = r.reservant_id
+            WHERE r.festival_id = $1 AND ja.zone_plan_id IS NULL
+            GROUP BY
+                ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires,
+                ja.zone_plan_id, ja.taille_table_requise,
+                g.id, g.title, g.type, g.editor_id, e.name, g.min_age, g.authors,
+                g.min_players, g.max_players, g.prototype, g.duration_minutes, g.theme,
+                g.description, g.image_url, g.rules_video_url, r.reservant_id, res.name
+            ORDER BY g.title ASC`, [festival_id]);
+        res.json(rows);
+    }
+    catch (err) {
+        console.error('Erreur lors de la récupération des jeux non alloués:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+//mettre à jour une zone de plan
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, id_zone_tarifaire, nb_tables } = req.body;
+    if (!name || !id_zone_tarifaire || nb_tables === undefined) {
+        return res.status(400).json({ error: 'Champs obligatoires manquants (name, id_zone_tarifaire, nb_tables)' });
+    }
+    if (nb_tables < 0) {
+        return res.status(400).json({ error: 'Le nombre de tables doit être positif' });
+    }
+    try {
+        const { rowCount } = await pool.query(`UPDATE zone_plan
+             SET name = $1, id_zone_tarifaire = $2, nb_tables = $3
+             WHERE id = $4`, [name, id_zone_tarifaire, nb_tables, id]);
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Zone de plan non trouvée' });
+        }
+        res.json({ message: 'Zone de plan mise à jour avec succès' });
+    }
+    catch (err) {
+        console.error('Erreur lors de la mise à jour de la zone de plan:', err);
+        res.status(500).json({
+            error: 'Erreur serveur',
+            details: err instanceof Error ? err.message : 'Erreur inconnue'
+        });
+    }
+});
 export default router;
 //# sourceMappingURL=zonePlan.js.map

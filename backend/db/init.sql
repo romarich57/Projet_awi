@@ -190,3 +190,10 @@ CREATE TABLE IF NOT EXISTS reservation_zones_tarifaires (
     nb_tables_reservees INTEGER NOT NULL,
     PRIMARY KEY (reservation_id, zone_tarifaire_id)
 );
+
+CREATE TABLE IF NOT EXISTS reservation_zone_plan (
+    reservation_id INTEGER REFERENCES reservation(id) ON DELETE CASCADE,
+    zone_plan_id INTEGER REFERENCES zone_plan(id) ON DELETE CASCADE,
+    nb_tables INTEGER NOT NULL,
+    PRIMARY KEY (reservation_id, zone_plan_id)
+);

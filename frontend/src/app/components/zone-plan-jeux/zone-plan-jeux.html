@@ -40,6 +40,9 @@
                             <span class="tables-restantes" [class.warning]="tablesRestantesParZone()[zone.id] <= 2" [class.danger]="tablesRestantesParZone()[zone.id] <= 0">
                                 ({{ tablesRestantesParZone()[zone.id] }} restantes)
                             </span>
+                            @if ((tablesSimplesParZone()[zone.id] || 0) > 0) {
+                                <span class="simple-count">Plan simple : {{ tablesSimplesParZone()[zone.id] }} table(s)</span>
+                            }
                             <span class="jeux-count">🎲 {{ zone.jeuxAlloues.length }} jeux</span>
                         </div>
                         <div class="zone-actions">
@@ -123,10 +126,25 @@
                     <div class="modal-body">
                         <p>Tables disponibles : <strong>{{ tablesRestantesParZone()[selectedZone()!.id] }}</strong></p>
                         
-                        @if (jeuxNonAlloues().length > 0) {
+                        <!-- Affichage du stock par type de table -->
+                        @if (stockTables().length > 0) {
+                            <div class="stock-tables-info">
+                                <h5>📦 Stock global de tables par type :</h5>
+                                <div class="stock-grid">
+                                    @for (stock of stockTables(); track stock.table_type) {
+                                        <div class="stock-item" [class.epuise]="stock.restantes <= 0" [class.faible]="stock.restantes > 0 && stock.restantes <= 2">
+                                            <span class="stock-type">{{ stock.table_type }}</span>
+                                            <span class="stock-count">{{ stock.restantes }} / {{ stock.total }}</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        
+                        @if (jeuxDisponiblesPourZone().length > 0) {
                             <h4>Sélectionner un jeu :</h4>
                             <div class="jeux-selection">
-                                @for (jeu of jeuxNonAlloues(); track jeu.allocation_id) {
+                                @for (jeu of jeuxDisponiblesPourZone(); track jeu.allocation_id) {
                                     <div class="jeu-option" 
                                          [class.selected]="selectedGame()?.allocation_id === jeu.allocation_id"
                                          (click)="selectGameForAllocation(jeu)">
@@ -140,26 +158,66 @@
                             @if (selectedGame()) {
                                 <div class="allocation-options">
                                     <label>
-                                        Nombre de tables pour ce jeu :
+                                        Place occupée par exemplaire :
                                         <input type="number" 
-                                               [ngModel]="nbTablesInput()" 
-                                               (ngModelChange)="nbTablesInput.set($event)"
+                                               [ngModel]="placeOccupeeInput()" 
+                                               (ngModelChange)="placeOccupeeInput.set($event)"
                                                min="0.5" 
-                                               step="0.5" 
-                                               max="10">
+                                               step="0.5">
+                                        <small class="hint-text">Ex: 0.5 = demi-table, 1 = table entière, 2 = deux tables</small>
                                     </label>
-                                    <p class="hint">💡 Utilisez 0.5 pour ½ table, 1 pour 1 table, etc.</p>
+                                    
+                                    <label>
+                                        Nombre d'exemplaires :
+                                        <input type="number" 
+                                               [ngModel]="nbExemplairesInput()" 
+                                               (ngModelChange)="nbExemplairesInput.set($event)"
+                                               min="1" 
+                                               step="1">
+                                    </label>
+                                    
+                                    <label>
+                                        Type de table :
+                                        <select [ngModel]="tailleTableInput()" (ngModelChange)="tailleTableInput.set($event)">
+                                            @for (stock of stockTables(); track stock.table_type) {
+                                                <option [value]="stock.table_type" [disabled]="stock.restantes < tablesCalculees()">
+                                                    {{ stock.table_type }} - {{ stock.restantes }} dispo
+                                                </option>
+                                            }
+                                            @if (stockTables().length === 0) {
+                                                <option value="standard">Standard</option>
+                                                <option value="grande">Grande</option>
+                                                <option value="mairie">Mairie</option>
+                                            }
+                                        </select>
+                                    </label>
+                                    
+                                    <p class="tables-calculees">
+                                        📊 Tables occupées : <strong>{{ tablesCalculees() }}</strong> 
+                                        ({{ placeOccupeeInput() }} × {{ nbExemplairesInput() }} exemplaire(s))
+                                    </p>
+                                    
+                                    <p class="hint" [class.warning]="tablesCalculees() > tablesRestantesParZone()[selectedZone()!.id]">
+                                        💡 Tables disponibles dans cette zone : {{ tablesRestantesParZone()[selectedZone()!.id] }}
+                                    </p>
+                                    
+                                    @if (stockInsuffisant()) {
+                                        <p class="error">⚠️ Stock insuffisant pour ce type de table ({{ stockPourTailleSelectionnee() }} restantes)</p>
+                                    }
                                 </div>
                             }
                         } @else {
-                            <p class="empty-message">Aucun jeu disponible à allouer.</p>
+                            <p class="empty-message warning-message">
+                                ⚠️ Aucun jeu disponible pour cette zone.<br>
+                                <small>Les jeux doivent appartenir à un réservant qui a réservé des tables dans la zone tarifaire "{{ selectedZone()?.zone_tarifaire_name }}".</small>
+                            </p>
                         }
                     </div>
                     <div class="modal-footer">
                         <button class="btn-cancel" (click)="closeAllocationModal()">Annuler</button>
                         <button class="btn-confirm" 
                                 (click)="allocateGame()" 
-                                [disabled]="!selectedGame() || loading()">
+                                [disabled]="!selectedGame() || loading() || tablesCalculees() > tablesRestantesParZone()[selectedZone()!.id] || stockInsuffisant()">
                             {{ loading() ? 'Allocation...' : 'Allouer le jeu' }}
                         </button>
                     </div>

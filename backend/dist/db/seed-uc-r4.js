@@ -121,6 +121,30 @@ async function upsertEditors(client, records) {
     }
     console.log(`✅ Éditeurs insérés/mis à jour: ${inserted} créés, ${updated} mis à jour`);
 }
+async function upsertReservantsFromEditors(client, records) {
+    // Récupérer les réservants existants liés à un éditeur
+    const existingEditorIds = new Set();
+    const { rows } = await client.query('SELECT editor_id FROM reservant WHERE editor_id IS NOT NULL');
+    rows.forEach((row) => existingEditorIds.add(row.editor_id));
+    let inserted = 0;
+    let skipped = 0;
+    for (const record of records) {
+        const editorId = Number(record.idEditeur);
+        const name = record.libelleEditeur.trim();
+        const email = `${slugify(name, `editeur-${editorId}`)}-${editorId}@dummy-editor.local`;
+        // Skip si un réservant existe déjà pour cet éditeur
+        if (existingEditorIds.has(editorId)) {
+            skipped++;
+            continue;
+        }
+        await client.query(`
+        INSERT INTO reservant (name, email, type, editor_id, phone_number, address, siret, notes)
+        VALUES ($1, $2, 'editeur', $3, NULL, NULL, NULL, 'Créé automatiquement depuis le catalogue éditeurs')
+      `, [name, email, editorId]);
+        inserted++;
+    }
+    console.log(`✅ Réservants (éditeurs) insérés: ${inserted} créés, ${skipped} déjà existants`);
+}
 async function upsertMechanisms(client, records) {
     const existingIds = new Set();
     const { rows } = await client.query('SELECT id FROM mechanism');
@@ -149,13 +173,24 @@ async function upsertGames(client, records, typeMap) {
     const existingIds = new Set();
     const { rows } = await client.query('SELECT id FROM games');
     rows.forEach((row) => existingIds.add(row.id));
+    // Récupérer les IDs des éditeurs existants pour éviter les erreurs de clé étrangère
+    const existingEditorIds = new Set();
+    const { rows: editorRows } = await client.query('SELECT id FROM editor');
+    editorRows.forEach((row) => existingEditorIds.add(row.id));
     let inserted = 0;
     let updated = 0;
+    let skippedMissingEditor = 0;
     for (const record of records) {
         const id = Number(record.idJeu);
         // Skip if ID is not a valid number
         if (!Number.isFinite(id) || id <= 0) {
             console.warn(`⚠️  Jeu ignoré: ID invalide "${record.idJeu}" pour "${record.libelleJeu}"`);
+            continue;
+        }
+        const editorId = Number(record.idEditeur);
+        // Skip if editor doesn't exist
+        if (!existingEditorIds.has(editorId)) {
+            skippedMissingEditor++;
             continue;
         }
         const title = normalizeText(record.libelleJeu) ?? `Jeu ${id}`;
@@ -166,7 +201,6 @@ async function upsertGames(client, records, typeMap) {
         const prototype = toBoolean(record.prototype);
         const durationMinutes = toNumber(record.duree);
         const typeLabel = typeMap.get(Number(record.idTypeJeu)) ?? `Type ${record.idTypeJeu}`;
-        const editorId = Number(record.idEditeur);
         const theme = normalizeText(record.theme);
         const description = normalizeText(record.description) ?? normalizeText(record.noticeJeu);
         const imageUrl = normalizeText(record.imageJeu);
@@ -213,7 +247,7 @@ async function upsertGames(client, records, typeMap) {
         else
             inserted++;
     }
-    console.log(`✅ Jeux insérés/mis à jour: ${inserted} créés, ${updated} mis à jour`);
+    console.log(`✅ Jeux insérés/mis à jour: ${inserted} créés, ${updated} mis à jour${skippedMissingEditor > 0 ? `, ${skippedMissingEditor} ignorés (éditeur manquant)` : ''}`);
 }
 async function upsertGameMechanisms(client, records) {
     const existingGames = new Set();
@@ -246,6 +280,7 @@ async function fixSequences(client) {
         { table: 'editor', column: 'id' },
         { table: 'games', column: 'id' },
         { table: 'mechanism', column: 'id' },
+        { table: 'reservant', column: 'id' },
     ];
     for (const seq of sequences) {
         await client.query(`
@@ -275,6 +310,7 @@ async function runSeed() {
         });
         await client.query('BEGIN');
         await upsertEditors(client, editors);
+        await upsertReservantsFromEditors(client, editors);
         await upsertMechanisms(client, mechanisms);
         await upsertGames(client, games, typeMap);
         await upsertGameMechanisms(client, gameMechanisms);

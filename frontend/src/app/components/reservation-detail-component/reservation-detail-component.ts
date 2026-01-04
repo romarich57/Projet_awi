@@ -1,7 +1,8 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ReservationService, ZoneStock, ReservationWithZones } from '@app/services/reservation.service';
+import { ReservationService, ReservationWithZones } from '@app/services/reservation.service';
+import { M2_PER_TABLE, m2ToTables, tablesToM2 } from '@app/shared/utils/table-conversion';
 
 interface ZoneSelection {
   zone_tarifaire_id: number;
@@ -23,6 +24,7 @@ interface ZoneSelection {
 })
 export class ReservationDetailComponent {
   reservationId = input<number | null>(null);
+  reservationLoaded = output<ReservationWithZones>();
 
   private readonly reservationService = inject(ReservationService);
 
@@ -52,7 +54,9 @@ export class ReservationDetailComponent {
   readonly prixParPrise = 5;
   
   // Constante de conversion m² par table
-  readonly M2_PER_TABLE = 4.5;
+  readonly M2_PER_TABLE = M2_PER_TABLE;
+  readonly m2ToTables = m2ToTables;
+  readonly tablesToM2 = tablesToM2;
 
   // Prix de base (avant remises)
   startPrice = computed(() => {
@@ -95,16 +99,6 @@ export class ReservationDetailComponent {
     return this.zones().reduce((sum, zone) => sum + (zone.nb_tables_reservees * this.M2_PER_TABLE), 0);
   });
 
-  // Convertir m² en tables (arrondi supérieur)
-  m2ToTables(m2: number): number {
-    return Math.ceil(m2 / this.M2_PER_TABLE);
-  }
-
-  // Convertir tables en m²
-  tablesToM2(tables: number): number {
-    return tables * this.M2_PER_TABLE;
-  }
-
   constructor() {
     effect(() => {
       const id = this.reservationId();
@@ -121,6 +115,7 @@ export class ReservationDetailComponent {
     this.reservationService.getReservationById(reservationId).subscribe({
       next: (reservation) => {
         this.reservation.set(reservation);
+        this.reservationLoaded.emit(reservation);
         this.nbPrises.set(reservation.nb_prises || 0);
         this.tableDiscountOffered.set(reservation.table_discount_offered || 0);
         this.directDiscount.set(reservation.direct_discount || 0);
@@ -272,6 +267,24 @@ export class ReservationDetailComponent {
       zones_tarifaires: zonesData
     }).subscribe({
       next: () => {
+        const currentReservation = this.reservation();
+        if (currentReservation) {
+          const zonesTarifaires = this.zones()
+            .filter(z => z.nb_tables_reservees > 0)
+            .map(z => ({
+              zone_tarifaire_id: z.zone_tarifaire_id,
+              nb_tables_reservees: z.nb_tables_reservees,
+              zone_name: z.name,
+              price_per_table: z.price_per_table,
+              nb_tables_available: z.available_tables
+            }));
+          const updatedReservation = {
+            ...currentReservation,
+            zones_tarifaires: zonesTarifaires
+          };
+          this.reservation.set(updatedReservation);
+          this.reservationLoaded.emit(updatedReservation);
+        }
         this.message.set('Réservation mise à jour avec succès !');
         this.isError.set(false);
         this.saving.set(false);

@@ -1,11 +1,12 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { ZonePlanService, AllocatedGameWithReservant } from '@app/services/zone-plan-service';
+import { ZonePlanAllocationSummary, ZonePlanService, AllocatedGameWithReservant } from '@app/services/zone-plan-service';
 import { ZoneTarifaireService } from '@app/services/zone-tarifaire.service';
 import { ZonePlanForm } from '../zone-plan-form/zone-plan-form';
 import { ZoneTarifaireDto } from '@app/types/zone-tarifaire-dto';
 import { ZonePlanDto } from '@app/types/zone-plan-dto';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import type { TableStockByType } from '@app/types/allocated-game-dto';
 
 // Interface pour une zone avec ses jeux alloués
 interface ZonePlanAvecJeux extends ZonePlanDto {
@@ -36,8 +37,61 @@ export class ZonePlanJeux {
   readonly showAllocationModal = signal(false);
   readonly selectedZone = signal<ZonePlanAvecJeux | null>(null);
   readonly selectedGame = signal<AllocatedGameWithReservant | null>(null);
-  readonly nbTablesInput = signal<number>(1);
+  readonly placeOccupeeInput = signal<number>(1);
+  readonly nbExemplairesInput = signal<number>(1);
+  readonly tailleTableInput = signal<'standard' | 'grande' | 'mairie'>('standard');
   readonly loading = signal(false);
+  readonly allocationsSimple = signal<ZonePlanAllocationSummary[]>([]);
+  
+  // Stock de tables par type pour la zone sélectionnée
+  readonly stockTables = signal<TableStockByType[]>([]);
+
+  readonly tablesSimplesParZone = computed(() => {
+    const result: Record<number, number> = {};
+    for (const allocation of this.allocationsSimple()) {
+      result[allocation.zone_plan_id] = Number(allocation.nb_tables) || 0;
+    }
+    return result;
+  });
+
+  // Calcul automatique des tables occupées = place × exemplaires
+  readonly tablesCalculees = computed(() => {
+    const place = this.placeOccupeeInput();
+    const exemplaires = this.nbExemplairesInput();
+    return place * exemplaires;
+  });
+
+  // Filtrer les jeux disponibles pour la zone sélectionnée
+  // Un jeu n'est disponible que si son réservant a réservé des tables dans la zone tarifaire de la zone de plan
+  readonly jeuxDisponiblesPourZone = computed(() => {
+    const zone = this.selectedZone();
+    const jeux = this.jeuxNonAlloues();
+    
+    if (!zone) return [];
+    
+    // Filtrer les jeux dont le réservant a réservé dans cette zone tarifaire
+    return jeux.filter(jeu => {
+      // Si zones_tarifaires_reservees est défini, vérifier que la zone tarifaire de la zone de plan est incluse
+      if (jeu.zones_tarifaires_reservees && jeu.zones_tarifaires_reservees.length > 0) {
+        return jeu.zones_tarifaires_reservees.includes(zone.id_zone_tarifaire);
+      }
+      // Si pas d'info sur les zones tarifaires réservées, on ne peut pas allouer
+      return false;
+    });
+  });
+
+  // Stock restant pour la taille de table sélectionnée
+  readonly stockPourTailleSelectionnee = computed(() => {
+    const stock = this.stockTables();
+    const taille = this.tailleTableInput();
+    const stockItem = stock.find(s => s.table_type === taille);
+    return stockItem ? stockItem.restantes : Infinity;
+  });
+
+  // Vérifie si le stock est suffisant pour l'allocation
+  readonly stockInsuffisant = computed(() => {
+    return this.stockPourTailleSelectionnee() < this.tablesCalculees();
+  });
 
   // Calcule le nombre de tables utilisées dans les zones de plan par zone tarifaire
   readonly tablesUtiliseesParZoneTarifaire = computed(() => {
@@ -73,6 +127,8 @@ export class ZonePlanJeux {
         this._zonePlanService.getZonePlans(id);
         this.loadZoneTarifaires(id);
         this.loadJeuxNonAlloues(id);
+        this.loadStockTablesFestival(id);
+        this.loadAllocationsSimple(id);
       }
     });
 
@@ -86,7 +142,8 @@ export class ZonePlanJeux {
   }
 
   private loadZoneTarifaires(festivalId: number): void {
-    this._zoneTarifaireService.getZonesTarifaires(festivalId).subscribe({
+    // Charger uniquement les zones tarifaires qui ont des réservations
+    this._zoneTarifaireService.getZonesTarifairesWithReservations(festivalId).subscribe({
       next: (zones) => this.zoneTarifaires.set(zones),
       error: (err) => console.error('Erreur chargement zones tarifaires', err)
     });
@@ -96,6 +153,20 @@ export class ZonePlanJeux {
     this._zonePlanService.getJeuxNonAlloues(festivalId).subscribe({
       next: (jeux) => this.jeuxNonAlloues.set(jeux),
       error: (err) => console.error('Erreur chargement jeux non alloués', err)
+    });
+  }
+
+  private loadStockTablesFestival(festivalId: number): void {
+    this._zonePlanService.getStockTablesFestival(festivalId).subscribe({
+      next: (data) => this.stockTables.set(data.stock),
+      error: (err) => console.error('Erreur chargement stock tables festival', err)
+    });
+  }
+
+  private loadAllocationsSimple(festivalId: number): void {
+    this._zonePlanService.getFestivalAllocationsSummary(festivalId).subscribe({
+      next: (allocations) => this.allocationsSimple.set(allocations),
+      error: (err) => console.error('Erreur chargement allocations simples', err)
     });
   }
 
@@ -123,10 +194,12 @@ export class ZonePlanJeux {
   // Calcule le nombre de tables utilisées (jeux alloués) par zone
   readonly tablesUtiliseesParZone = computed(() => {
     const zones = this.zonesAvecJeux();
+    const simples = this.tablesSimplesParZone();
     const result: Record<number, number> = {};
     
     for (const zone of zones) {
-      result[zone.id] = zone.jeuxAlloues.reduce((sum, jeu) => sum + jeu.nb_tables_occupees, 0);
+      const tablesJeux = zone.jeuxAlloues.reduce((sum, jeu) => sum + Number(jeu.nb_tables_occupees), 0);
+      result[zone.id] = tablesJeux + (simples[zone.id] || 0);
     }
     
     return result;
@@ -155,8 +228,11 @@ export class ZonePlanJeux {
   openAllocationModal(zone: ZonePlanAvecJeux): void {
     this.selectedZone.set(zone);
     this.selectedGame.set(null);
-    this.nbTablesInput.set(1);
+    this.placeOccupeeInput.set(1);
+    this.nbExemplairesInput.set(1);
+    this.tailleTableInput.set('standard');
     this.showAllocationModal.set(true);
+    // Le stock est déjà chargé au niveau du festival
   }
 
   closeAllocationModal(): void {
@@ -167,19 +243,34 @@ export class ZonePlanJeux {
 
   selectGameForAllocation(game: AllocatedGameWithReservant): void {
     this.selectedGame.set(game);
-    this.nbTablesInput.set(game.nb_tables_occupees);
+    // Pré-remplir avec les valeurs existantes du jeu ou des valeurs par défaut
+    // nb_tables_occupees contient le total, on suppose 1 place par exemplaire par défaut
+    const nbExemplaires = Number(game.nb_exemplaires) || 1;
+    const nbTables = Number(game.nb_tables_occupees) || 1;
+    this.nbExemplairesInput.set(nbExemplaires);
+    this.placeOccupeeInput.set(nbExemplaires > 0 ? nbTables / nbExemplaires : 1);
+    this.tailleTableInput.set(game.taille_table_requise || 'standard');
   }
 
   // Allouer le jeu sélectionné à la zone
   allocateGame(): void {
     const zone = this.selectedZone();
     const game = this.selectedGame();
-    const nbTables = this.nbTablesInput();
+    const nbTables = this.tablesCalculees();
+    const nbExemplaires = this.nbExemplairesInput();
+    const tailleTable = this.tailleTableInput();
     
     if (!zone || !game) return;
     
+    // Vérifier que les tables ne dépassent pas la capacité
+    const tablesRestantes = this.tablesRestantesParZone()[zone.id] || 0;
+    if (nbTables > tablesRestantes) {
+      alert(`Pas assez de tables disponibles. Restantes: ${tablesRestantes}, Demandées: ${nbTables}`);
+      return;
+    }
+    
     this.loading.set(true);
-    this._zonePlanService.assignerJeuAZone(game.allocation_id, zone.id, nbTables).subscribe({
+    this._zonePlanService.assignerJeuAZone(game.allocation_id, zone.id, nbTables, nbExemplaires, tailleTable).subscribe({
       next: () => {
         this.refreshData();
         this.closeAllocationModal();
@@ -222,6 +313,8 @@ export class ZonePlanJeux {
     if (id !== null) {
       this._zonePlanService.getZonePlans(id);
       this.loadJeuxNonAlloues(id);
+      this.loadStockTablesFestival(id);
+      this.loadAllocationsSimple(id);
     }
     this.loading.set(false);
   }
@@ -256,4 +349,3 @@ export class ZonePlanJeux {
   }
 
 }
-

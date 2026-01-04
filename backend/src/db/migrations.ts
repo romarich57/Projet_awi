@@ -261,6 +261,16 @@ export async function runMigrations() {
     `);
     console.log('✅ Table reservation_zones_tarifaires vérifiée/créée');
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS reservation_zone_plan (
+        reservation_id INTEGER REFERENCES reservation(id) ON DELETE CASCADE,
+        zone_plan_id INTEGER REFERENCES zone_plan(id) ON DELETE CASCADE,
+        nb_tables INTEGER NOT NULL,
+        PRIMARY KEY (reservation_id, zone_plan_id)
+      );
+    `);
+    console.log('✅ Table reservation_zone_plan vérifiée/créée');
+
     // Mécanismes et liaisons
     await client.query(`
       CREATE TABLE IF NOT EXISTS mechanism(

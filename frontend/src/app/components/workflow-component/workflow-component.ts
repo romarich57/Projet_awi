@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, OnDestroy, signal } from '@angular/core';
+import { Component, effect, inject, input, OnDestroy, output, signal } from '@angular/core';
 import { WorkflowService } from '@app/services/workflow-service';
 import { CommonModule } from '@angular/common';
 import { WorkflowDto } from '@app/types/workflow-dto';
@@ -13,6 +13,7 @@ import { WorkflowDto } from '@app/types/workflow-dto';
 //on impléme,te OnDestroy pour gérer la sauvegarde des changements lorsque le composant est détruit/ la page est quittée
 export class WorkflowComponent implements OnDestroy {
   reservationId = input.required<number | null>();
+  workflowLoaded = output<WorkflowDto>();
 
   workflowService = inject(WorkflowService);
 
@@ -44,6 +45,7 @@ export class WorkflowComponent implements OnDestroy {
       next: (workflowData) => {
         console.log('Workflow chargé:', workflowData);
         this.workflow.set(workflowData);
+        this.workflowLoaded.emit(workflowData);
         this.hasChanges = false;
       },
       error: (err) => {
@@ -96,6 +98,7 @@ export class WorkflowComponent implements OnDestroy {
         ...currentWorkflow,
         [field]: checkbox.checked
       });
+      this.workflowLoaded.emit(this.workflow()!);
       this.hasChanges = true;
     }
   }

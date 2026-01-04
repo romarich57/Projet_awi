@@ -29,15 +29,24 @@ router.get('/reservations/:festivalId', async (req, res) => {
         const { rows } = await pool.query(`SELECT 
                 r.id, r.start_price, r.final_price, r.statut_paiement,
                 r.date_facturation, r.note, r.nb_prises,
+                res.id as reservant_id,
                 res.name as reservant_name, res.email as reservant_email,
                 res.type as reservant_type, res.phone_number, res.address,
-                e.name as editor_name, e.email as editor_email,
+                e.id as editor_id, e.name as editor_name, e.email as editor_email,
                 sw.state as workflow_state,
                 sw.liste_jeux_demandee, sw.liste_jeux_obtenue,
                 sw.jeux_recus, sw.presentera_jeux,
-                zt.name as zone_name, zt.price_per_table,
-                rzt.nb_tables_reservees,
-                f.name as festival_name
+                f.name as festival_name,
+                COALESCE(
+                    json_agg(
+                        DISTINCT jsonb_build_object(
+                            'zone_name', zt.name,
+                            'price_per_table', zt.price_per_table,
+                            'nb_tables_reservees', rzt.nb_tables_reservees
+                        )
+                    ) FILTER (WHERE zt.id IS NOT NULL),
+                    '[]'
+                ) as zones_tarifaires
              FROM reservation r
              JOIN Reservant res ON r.reservant_id = res.id
              LEFT JOIN Editor e ON res.editor_id = e.id
@@ -46,6 +55,12 @@ router.get('/reservations/:festivalId', async (req, res) => {
              LEFT JOIN reservation_zones_tarifaires rzt ON r.id = rzt.reservation_id
              LEFT JOIN zone_tarifaire zt ON rzt.zone_tarifaire_id = zt.id
              WHERE r.festival_id = $1
+             GROUP BY r.id, r.start_price, r.final_price, r.statut_paiement,
+                r.date_facturation, r.note, r.nb_prises,
+                res.id, res.name, res.email, res.type, res.phone_number, res.address,
+                e.id, e.name, e.email,
+                sw.state, sw.liste_jeux_demandee, sw.liste_jeux_obtenue,
+                sw.jeux_recus, sw.presentera_jeux, f.name
              ORDER BY sw.state, res.name`, [festivalId]);
         res.json(rows);
     }
@@ -183,6 +198,23 @@ router.post('/reservation', async (req, res) => {
                 await client.query(`UPDATE zone_tarifaire 
                      SET nb_tables_available = nb_tables_available - $1 
                      WHERE id = $2`, [zone.nb_tables_reservees, zone.zone_tarifaire_id]);
+            }
+        }
+        // 6. Si le réservant est lié à un éditeur, créer automatiquement les allocations de jeux
+        // Récupérer l'editor_id du réservant
+        const reservantEditorResult = await client.query('SELECT editor_id FROM reservant WHERE id = $1', [reservantId]);
+        const reservantEditorId = reservantEditorResult.rows[0]?.editor_id;
+        if (reservantEditorId) {
+            // Récupérer tous les jeux de cet éditeur
+            const gamesResult = await client.query('SELECT id FROM games WHERE editor_id = $1', [reservantEditorId]);
+            // Créer une allocation pour chaque jeu (nb_exemplaires=1, nb_tables_occupees=1 par défaut)
+            for (const game of gamesResult.rows) {
+                await client.query(`INSERT INTO jeux_alloues (game_id, reservation_id, nb_tables_occupees, nb_exemplaires, taille_table_requise)
+                     VALUES ($1, $2, 1, 1, 'standard')
+                     ON CONFLICT (reservation_id, game_id) DO NOTHING`, [game.id, reservationId]);
+            }
+            if (gamesResult.rows.length > 0) {
+                console.log(`✅ ${gamesResult.rows.length} jeux auto-alloués pour la réservation ${reservationId} (éditeur ${reservantEditorId})`);
             }
         }
         await client.query('COMMIT');

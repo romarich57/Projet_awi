@@ -13,7 +13,8 @@
       <div class="reservation-section">
         <h2>Informations de la réservation</h2>
         <app-reservation-detail-component
-          [reservationId]="reservationId()">
+          [reservationId]="reservationId()"
+          (reservationLoaded)="onReservationLoaded($event)">
         </app-reservation-detail-component>
       </div>
 
@@ -21,17 +22,25 @@
       <div class="workflow-section">
         <h2>Suivi du workflow</h2>
         <app-workflow-component
-          [reservationId]="reservationId()">
+          [reservationId]="reservationId()"
+          (workflowLoaded)="onWorkflowLoaded($event)">
         </app-workflow-component>
       </div>
 
     </div>
 
     <div class="zone-plan-section">
-      <h2>Zone et plan des jeux</h2>
-      <app-zone-plan-jeux
-        [festivalId]="festivalId()">
-      </app-zone-plan-jeux>
+      <h2>{{ showGameAllocation ? 'Zone et plan des jeux' : 'Zone et plan simple' }}</h2>
+      @if (showGameAllocation) {
+        <app-zone-plan-jeux
+          [festivalId]="festivalId()">
+        </app-zone-plan-jeux>
+      } @else {
+        <app-zone-plan-simple
+          [festivalId]="festivalId()"
+          [reservation]="reservationData()">
+        </app-zone-plan-simple>
+      }
     </div>
   }
   @else {
