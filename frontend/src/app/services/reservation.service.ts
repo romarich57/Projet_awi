@@ -31,7 +31,7 @@ export class ReservationService {
   //     reservation, { withCredentials: true });
   // }
     createReservation(data: any): Observable<any> {
-    return this.http.post('/api/reservation', data);
+    return this.http.post('/api/reservation/reservation', data);
   }
 
       getZonesTarifaires(festivalId: number): Observable<ZoneTarifaireDto[]> {

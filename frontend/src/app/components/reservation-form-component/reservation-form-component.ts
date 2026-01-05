@@ -3,9 +3,8 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormArray, For
 import { CommonModule } from '@angular/common';
 import { ReservationService } from '../../services/reservation.service';
 import { ReservantApiService } from '../../services/reservant-api';
+import { StockService, TableStock } from '../../services/stock-service';
 import { ReservantDto } from '../../types/reservant-dto';
-import { ReservationDto } from '../../types/reservation-dto';
-import { ReservationZoneTarifaireDto } from '../../types/reservation-zone-tarifaire-dto';
 import { ZoneTarifaireDto } from '@app/types/zone-tarifaire-dto';
 
 @Component({
@@ -26,6 +25,7 @@ export class ReservationFormComponent implements OnInit {
 
   reservationService = inject(ReservationService);
   reservantService = inject(ReservantApiService);
+  stockService = inject(StockService);
   fb = inject(FormBuilder);
 
   isSubmitting = false;
@@ -37,6 +37,10 @@ export class ReservationFormComponent implements OnInit {
   // Zones tarifaires disponibles
   zonesTarifaires = signal<ZoneTarifaireDto[]>([]);
   loadingZones = false;
+
+  // Stock disponible
+  stockData: any = null;
+  loadingStock = false;
 
   reservationForm = new FormGroup({
     reservant_mode: new FormControl<'new' | 'existing'>('new'),
@@ -60,57 +64,140 @@ export class ReservationFormComponent implements OnInit {
 
   constructor() {
     console.log('🏗️ CONSTRUCTEUR appelé');
-    console.log('🎯 Festival ID dans constructeur:', this.festivalId());
-    
     this.loadExistingReservants();
     this.updateValidators();
     
-    // ✅ SOLUTION 1 : Utiliser effect pour réagir aux changements de festivalId
     effect(() => {
       const festivalId = this.festivalId();
       console.log('⚡ EFFECT déclenché - Festival ID:', festivalId);
       
       if (festivalId) {
-        console.log('✅ Festival ID valide, chargement des zones...');
+        console.log('✅ Festival ID valide, chargement...');
         this.loadZonesTarifaires();
-      } else {
-        console.log('⚠️ Festival ID non défini, attente...');
+        this.loadStock();
       }
     });
   }
 
-  // ✅ SOLUTION 2 ALTERNATIVE : Utiliser ngOnInit
   ngOnInit(): void {
     console.log('🔄 ngOnInit appelé');
-    console.log('🎯 Festival ID dans ngOnInit:', this.festivalId());
-    
-    // Vous pouvez aussi charger ici si vous préférez
-    // this.loadZonesTarifaires();
   }
 
   get zonesArray(): FormArray {
     return this.reservationForm.get('zones') as FormArray;
   }
 
-  calculatedPrice = computed(() => {
+  // Calculer les tables déjà réservées dans le formulaire
+  getTablesAlreadyReserved(): number {
     let total = 0;
     const zones = this.zonesArray.value;
     
     zones.forEach((zone: any) => {
+      if (zone.mode_paiement === 'table') {
+        total += 
+          (zone.nb_tables_standard || 0) + 
+          (zone.nb_tables_grande || 0) + 
+          (zone.nb_tables_mairie || 0);
+      }
+    });
+    
+    console.log('📊 Tables déjà dans le formulaire:', total);
+    return total;
+  }
+
+  // Obtenir le stock disponible
+  getAvailableTables(): number {
+    console.log('📦 === CALCUL STOCK DISPONIBLE ===');
+    console.log('📦 stockData:', this.stockData);
+    
+    if (!this.stockData?.tables) {
+      console.warn('⚠️ Pas de données de stock !');
+      return 0;
+    }
+    
+    const totalAvailable = this.stockData.tables.reduce(
+      (sum: number, t: TableStock) => sum + t.available, 
+      0
+    );
+    
+    console.log('📦 Total disponible (stock):', totalAvailable);
+    
+    const alreadyInForm = this.getTablesAlreadyReserved();
+    console.log('📦 Déjà dans le formulaire:', alreadyInForm);
+    
+    const remaining = Math.max(0, totalAvailable - alreadyInForm);
+    console.log('📦 Restant:', remaining);
+    
+    return remaining;
+  }
+
+  // Charger le stock
+  loadStock(): void {
+    const festivalId = this.festivalId();
+    if (!festivalId) {
+      console.error('❌ Pas de festival ID pour charger le stock');
+      return;
+    }
+    
+    this.loadingStock = true;
+    console.log('📦 Chargement du stock pour festival:', festivalId);
+    
+    this.stockService.getStock(festivalId).subscribe({
+      next: (data) => {
+        console.log('✅ Stock chargé avec succès:', data);
+        this.stockData = data;
+        this.loadingStock = false;
+      },
+      error: (error) => {
+        console.error('❌ Erreur chargement stock:', error);
+        this.stockData = null;
+        this.loadingStock = false;
+      }
+    });
+  }
+
+  // PRIX CALCULÉ - DEBUGGING
+  calculatedPrice = computed(() => {
+    console.log('💰 === CALCUL DU PRIX ===');
+    let total = 0;
+    const zones = this.zonesArray.value;
+    
+    console.log('💰 Zones array value:', zones);
+    console.log('💰 Zones tarifaires disponibles:', this.zonesTarifaires());
+    
+    zones.forEach((zone: any) => {
+      console.log('💰 Traitement zone:', zone);
+      
       const zoneInfo = this.zonesTarifaires().find(z => z.id === zone.zone_tarifaire_id);
-      if (!zoneInfo) return;
+      console.log('💰 Zone info trouvée:', zoneInfo);
+      
+      if (!zoneInfo) {
+        console.warn('⚠️ Zone info introuvable pour ID:', zone.zone_tarifaire_id);
+        return;
+      }
       
       if (zone.mode_paiement === 'table') {
         const totalTables = 
           (zone.nb_tables_standard || 0) + 
           (zone.nb_tables_grande || 0) + 
           (zone.nb_tables_mairie || 0);
-        total += totalTables * zoneInfo.price_per_table;
+        
+        const pricePerTable = zoneInfo.price_per_table;
+        const zonePrice = totalTables * pricePerTable;
+        
+        console.log(`💰 Mode TABLE: ${totalTables} tables × ${pricePerTable}€ = ${zonePrice}€`);
+        total += zonePrice;
       } else {
-        total += (zone.surface_m2 || 0) * zoneInfo.m2_price;
+        const surface = zone.surface_m2 || 0;
+        const pricePerM2 = zoneInfo.m2_price;
+        const zonePrice = surface * pricePerM2;
+        
+        console.log(`💰 Mode M²: ${surface} m² × ${pricePerM2}€ = ${zonePrice}€`);
+        total += zonePrice;
       }
     });
     
+    console.log('💰 PRIX TOTAL:', total);
     return total;
   });
 
@@ -156,7 +243,6 @@ export class ReservationFormComponent implements OnInit {
       next: (reservants) => {
         this.existingReservants = reservants;
         this.loadingReservants = false;
-        console.log('✅ Réservants chargés:', reservants.length);
       },
       error: (error) => {
         console.error('❌ Erreur chargement réservants:', error);
@@ -167,37 +253,24 @@ export class ReservationFormComponent implements OnInit {
 
   loadZonesTarifaires(): void {
     const festivalId = this.festivalId();
-    
-    console.log('🎯 === DÉBUT loadZonesTarifaires ===');
-    console.log('🎯 Festival ID:', festivalId);
-    console.log('🎯 Type:', typeof festivalId);
-    
     if (!festivalId) {
-      console.error('❌ Festival ID non défini - ARRÊT');
+      console.error('❌ Pas de festival ID pour charger les zones');
       return;
     }
     
     this.loadingZones = true;
-    console.log('🌐 Appel API zones-tarifaires pour festival:', festivalId);
+    console.log('🎯 Chargement zones tarifaires pour festival:', festivalId);
     
     this.reservationService.getZonesTarifaires(festivalId).subscribe({
       next: (zones: ZoneTarifaireDto[]) => {
-        console.log('✅ SUCCESS - Zones reçues:', zones);
-        console.log('✅ Nombre de zones:', zones.length);
+        console.log('✅ Zones tarifaires reçues:', zones);
+        console.log('✅ Détail première zone:', zones[0]);
         this.zonesTarifaires.set(zones);
         this.loadingZones = false;
       },
       error: (error: any) => {
-        console.error('❌ ERROR DÉTAILLÉ:');
-        console.error('  - Status:', error.status);
-        console.error('  - Message:', error.message);
-        console.error('  - URL:', error.url);
-        console.error('  - Body:', error.error);
-        console.error('  - Objet complet:', error);
+        console.error('❌ Erreur chargement zones:', error);
         this.loadingZones = false;
-      },
-      complete: () => {
-        console.log('✅ Observable complete');
       }
     });
   }
@@ -205,7 +278,6 @@ export class ReservationFormComponent implements OnInit {
   onModeChange(): void {
     const mode = this.reservationForm.get('reservant_mode')?.value;
     this.useExistingReservant = mode === 'existing';
-    console.log('Mode changé vers:', mode);
     this.updateValidators();
     
     this.reservationForm.patchValue({
@@ -247,9 +319,17 @@ export class ReservationFormComponent implements OnInit {
     return this.reservationForm.get('reservant_mode')?.value === 'existing';
   }
 
+  // VALIDATION DU STOCK AVANT AJOUT
   addZone(): void {
+    console.log('🎯 === AJOUT ZONE ===');
+    
     const zoneId = this.reservationForm.get('selected_zone_id')?.value;
-    if (!zoneId) return;
+    if (!zoneId) {
+      console.warn('⚠️ Pas de zone sélectionnée');
+      return;
+    }
+    
+    console.log('🎯 Zone ID sélectionnée:', zoneId);
     
     const alreadyAdded = this.zonesArray.controls.some(
       (control: any) => control.value.zone_tarifaire_id === zoneId
@@ -267,12 +347,39 @@ export class ReservationFormComponent implements OnInit {
     const tempChaises = this.reservationForm.get('temp_chaises')?.value || 0;
     const tempSurfaceM2 = this.reservationForm.get('temp_surface_m2')?.value || 0;
     
-    if (reservationType === 'table' && 
-        tempTablesStandard === 0 && 
-        tempTablesGrande === 0 && 
-        tempTablesMairie === 0) {
-      alert('Veuillez spécifier au moins une table');
-      return;
+    console.log('🎯 Type de réservation:', reservationType);
+    console.log('🎯 Tables demandées - Standard:', tempTablesStandard, 'Grande:', tempTablesGrande, 'Mairie:', tempTablesMairie);
+    
+    if (reservationType === 'table') {
+      const totalRequestedTables = tempTablesStandard + tempTablesGrande + tempTablesMairie;
+      
+      console.log('🎯 Total tables demandées:', totalRequestedTables);
+      
+      if (totalRequestedTables === 0) {
+        alert('Veuillez spécifier au moins une table');
+        return;
+      }
+      
+      // VÉRIFICATION DU STOCK
+      const availableTables = this.getAvailableTables();
+      console.log('🎯 Tables disponibles:', availableTables);
+      
+      if (!this.stockData) {
+        console.error('❌ PROBLÈME: Pas de données de stock !');
+        alert('⚠️ Impossible de vérifier le stock. Veuillez rafraîchir la page.');
+        return;
+      }
+      
+      if (totalRequestedTables > availableTables) {
+        console.error('❌ STOCK INSUFFISANT !');
+        alert(`❌ Stock insuffisant !\n\n` +
+              `Vous demandez : ${totalRequestedTables} tables\n` +
+              `Disponibles : ${availableTables} tables\n\n` +
+              `Veuillez réduire le nombre de tables.`);
+        return;
+      }
+      
+      console.log('✅ Stock suffisant, ajout de la zone...');
     }
     
     if (reservationType === 'm2' && tempSurfaceM2 === 0) {
@@ -291,6 +398,8 @@ export class ReservationFormComponent implements OnInit {
     });
     
     this.zonesArray.push(zoneGroup);
+    console.log('✅ Zone ajoutée au formulaire');
+    console.log('📝 Zones actuelles:', this.zonesArray.value);
     
     this.reservationForm.patchValue({
       selected_zone_id: null,
@@ -304,6 +413,7 @@ export class ReservationFormComponent implements OnInit {
 
   removeZone(index: number): void {
     this.zonesArray.removeAt(index);
+    console.log('🗑️ Zone supprimée, zones restantes:', this.zonesArray.value);
   }
 
   getZoneName(zoneId: number): string {
@@ -313,7 +423,10 @@ export class ReservationFormComponent implements OnInit {
 
   calculateZonePrice(zoneData: any): number {
     const zone = this.zonesTarifaires().find(z => z.id === zoneData.zone_tarifaire_id);
-    if (!zone) return 0;
+    if (!zone) {
+      console.warn('⚠️ Zone non trouvée pour calcul prix:', zoneData.zone_tarifaire_id);
+      return 0;
+    }
     
     if (zoneData.mode_paiement === 'table') {
       const totalTables = 
@@ -356,7 +469,7 @@ export class ReservationFormComponent implements OnInit {
         const selectedReservant = this.existingReservants.find(r => r.id === reservantId);
         
         if (!selectedReservant) {
-          console.error('Réservant sélectionné introuvable. ID:', reservantId);
+          console.error('Réservant sélectionné introuvable');
           this.isSubmitting = false;
           return;
         }
