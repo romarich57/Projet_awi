@@ -144,15 +144,199 @@
                 <p class="info-text">Les prix seront définis à 0 par défaut et pourront être modifiés ultérieurement.</p>
             </div>
 
+            <!-- NOUVELLE SECTION : Type de réservation -->
+            <div class="form-card">
+                <h4>Type de réservation</h4>
+                <div class="mode-selector">
+                    <label class="radio-option">
+                        <input 
+                            type="radio" 
+                            value="table"
+                            formControlName="reservation_type"
+                        >
+                        <span>Au MATÉRIEL (par nombre de tables)</span>
+                    </label>
+                    <label class="radio-option">
+                        <input 
+                            type="radio" 
+                            value="m2"
+                            formControlName="reservation_type"
+                        >
+                        <span>À la SURFACE (au m²)</span>
+                    </label>
+                </div>
+            </div>
 
+            <!-- NOUVELLE SECTION : Zones tarifaires -->
+            <div class="form-card">
+                <h4>Zones tarifaires</h4>
+                
+                @if (loadingZones) {
+                    <p>Chargement des zones tarifaires...</p>
+                } @else if (zonesTarifaires().length === 0) {
+                    <p class="info">Aucune zone tarifaire disponible pour ce festival</p>
+                } @else {
+                    <!-- Sélecteur pour ajouter une zone -->
+                    <div class="add-zone-section">
+                        <label class="field">
+                            <span>Sélectionner une zone tarifaire</span>
+                            <select formControlName="selected_zone_id">
+                                <option value="">-- Choisir une zone --</option>
+                                @for (zone of zonesTarifaires(); track zone.id) {
+                                    <option [value]="zone.id">
+                                        {{ zone.name }} 
+                                        ({{ zone.price_per_table }}€/table, {{ zone.m2_price }}€/m²)
+                                        - Disponible: {{ zone.nb_tables_available }} tables
+                                    </option>
+                                }
+                            </select>
+                        </label>
+                        
+                        <!-- Champs selon le type de réservation -->
+                        @if (reservationForm.get('reservation_type')?.value === 'table') {
+                            <div class="temp-fields">
+                                <label class="field">
+                                    <span>Tables standard</span>
+                                    <input 
+                                        type="number" 
+                                        min="0" 
+                                        formControlName="temp_tables_standard"
+                                    >
+                                </label>
+                                <label class="field">
+                                    <span>Tables grande</span>
+                                    <input 
+                                        type="number" 
+                                        min="0" 
+                                        formControlName="temp_tables_grande"
+                                    >
+                                </label>
+                                <label class="field">
+                                    <span>Tables mairie</span>
+                                    <input 
+                                        type="number" 
+                                        min="0" 
+                                        formControlName="temp_tables_mairie"
+                                    >
+                                </label>
+                                <label class="field">
+                                    <span>Chaises (gratuit)</span>
+                                    <input 
+                                        type="number" 
+                                        min="0" 
+                                        formControlName="temp_chaises"
+                                    >
+                                </label>
+                            </div>
+                        } @else {
+                            <div class="temp-fields">
+                                <label class="field full">
+                                    <span>Surface nécessaire (m²)</span>
+                                    <input 
+                                        type="number" 
+                                        min="0" 
+                                        step="0.5"
+                                        formControlName="temp_surface_m2"
+                                    >
+                                </label>
+                            </div>
+                        }
+                        
+                        <button 
+                            type="button" 
+                            class="add-zone-btn"
+                            (click)="addZone()"
+                            [disabled]="!reservationForm.get('selected_zone_id')?.value"
+                        >
+                            + Ajouter cette zone
+                        </button>
+                    </div>
 
+                    <!-- Liste des zones ajoutées -->
+                    <div class="zones-list">
+                        <h5>Zones sélectionnées</h5>
+                        
+                        @if (zonesArray.length === 0) {
+                            <p class="info">Aucune zone ajoutée. Ajoutez au moins une zone.</p>
+                        }
+                        
+                        @for (zoneGroup of zonesArray.controls; track zoneGroup.value.zone_tarifaire_id || $index; let i = $index) {
+                            <div class="zone-item">
+                                <div class="zone-header">
+                                    <h6>
+                                        {{ getZoneName(zoneGroup.value.zone_tarifaire_id) }}
+                                        <span class="zone-price">
+                                            {{ calculateZonePrice(zoneGroup.value) }} €
+                                        </span>
+                                    </h6>
+                                    <button 
+                                        type="button" 
+                                        class="remove-zone-btn"
+                                        (click)="removeZone(i)"
+                                    >
+                                        × Supprimer
+                                    </button>
+                                </div>
+                                
+                                <div class="zone-details">
+                                    @if (zoneGroup.value.mode_paiement === 'table') {
+                                        <div class="zone-info">
+                                            <span>Tables standard: {{ zoneGroup.value.nb_tables_standard || 0 }}</span>
+                                            <span>Tables grande: {{ zoneGroup.value.nb_tables_grande || 0 }}</span>
+                                            <span>Tables mairie: {{ zoneGroup.value.nb_tables_mairie || 0 }}</span>
+                                            <span>Chaises: {{ zoneGroup.value.nb_chaises || 0 }}</span>
+                                        </div>
+                                    } @else {
+                                        <div class="zone-info">
+                                            <span>Surface: {{ zoneGroup.value.surface_m2 || 0 }} m²</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
 
+            <!-- NOUVELLE SECTION : Récapitulatif du prix -->
+            <div class="form-card price-summary">
+                <h4>Récapitulatif</h4>
+                
+                <div class="price-display">
+                    <div class="total-price">
+                        <span class="label">Prix estimé :</span>
+                        <span class="value">{{ calculatedPrice() }} €</span>
+                    </div>
+                    
+                    <div class="equivalents">
+                        <small>
+                            Équivalent : {{ totalTablesEquivalent() }} tables / {{ totalM2Equivalent() }} m²
+                        </small>
+                    </div>
+                    
+                    <div class="price-formula">
+                        <small>
+                            Prix BRUT = 
+                            @if (reservationForm.get('reservation_type')?.value === 'table') {
+                                (tables × prix_table)
+                            } @else {
+                                (m² × prix_m²)
+                            }
+                        </small>
+                    </div>
+                </div>
+            </div>
 
+            <!-- MODIFIEZ LE BOUTON SUBMIT POUR VALIDER LES ZONES -->
             <div class="form-actions">
                 <button type="button" class="cancel-btn" (click)="cancel()" [disabled]="isSubmitting">
                     Annuler
                 </button>
-                <button type="submit" class="submit-btn" [disabled]="isSubmitting || reservationForm.invalid">
+                <button 
+                    type="submit" 
+                    class="submit-btn" 
+                    [disabled]="isSubmitting || reservationForm.invalid || zonesArray.length === 0"
+                >
                     @if (isSubmitting) {
                         Création en cours...
                     } @else {
@@ -160,6 +344,7 @@
                     }
                 </button>
             </div>
+            
         </form>
     }
 </div>

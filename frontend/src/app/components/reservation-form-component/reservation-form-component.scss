@@ -230,3 +230,131 @@ h4 {
     font-size: 13px;
   }
 }
+/* NOUVEAUX STYLES */
+
+.add-zone-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+  
+  .temp-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+  
+  .add-zone-btn {
+    align-self: flex-start;
+    padding: 10px 20px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    
+    &:hover:not(:disabled) {
+      background: #2980b9;
+    }
+    
+    &:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.zones-list {
+  .zone-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f9f9f9;
+    
+    .zone-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      
+      h6 {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+        
+        .zone-price {
+          margin-left: 10px;
+          color: #4CAF50;
+          font-weight: bold;
+        }
+      }
+      
+      .remove-zone-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        
+        &:hover {
+          background: #c0392b;
+        }
+      }
+    }
+    
+    .zone-details {
+      .zone-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        color: #666;
+        font-size: 14px;
+        
+        span {
+          background: #eee;
+          padding: 4px 8px;
+          border-radius: 4px;
+        }
+      }
+    }
+  }
+  
+  .info {
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 6px;
+  }
+}
+
+.price-summary {
+  .price-display {
+    text-align: center;
+    
+    .total-price {
+      margin-bottom: 10px;
+      
+      .label {
+        font-size: 18px;
+        color: #333;
+      }
+      
+      .value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #4CAF50;
+        margin-left: 10px;
+      }
+    }
+    
+    .equivalents, .price-formula {
+      margin-top: 5px;
+      color: #666;
+    }
+  }
+}

@@ -1,8 +1,10 @@
 import { Router } from 'express'
 import pool from '../db/database.js'
+import { calculerPrixBrutReservation } from '../services/reservation-calculator.js';
+import { verifierStockDisponible } from '../services/stock-checker.js';
 
 const router = Router();
-
+const M2_PAR_TABLE = 4;
 // Route pour consulter le stock disponible d'un festival
 router.get('/stock/:festivalId', async (req, res) => {
     const { festivalId } = req.params;
@@ -15,7 +17,8 @@ router.get('/stock/:festivalId', async (req, res) => {
                 zt.nb_tables as total_tables,
                 zt.nb_tables_available as available_tables,
                 (zt.nb_tables - zt.nb_tables_available) as reserved_tables,
-                zt.price_per_table
+                zt.price_per_table,
+                zt.m2_price 
              FROM zone_tarifaire zt
              WHERE zt.festival_id = $1
              ORDER BY zt.name`,
@@ -89,156 +92,268 @@ router.get('/:festivalId', async (req, res) => {
 });
 
 // Créer une nouvelle réservation avec réservant (création automatique si n'existe pas)
+// Créer une nouvelle réservation avec réservant
 router.post('/reservation', async (req, res) => {
-    const {
-        reservant_name, reservant_email, reservant_type, festival_id,
-        editor_name, editor_email, // Optionnels pour les réservants de type 'éditeur'
-        start_price, nb_prises, final_price,
-        table_discount_offered = 0, direct_discount = 0,
-        note, phone_number, address, siret,
-        zones_tarifaires = [] // Nouvelle structure pour les zones tarifaires
-    } = req.body;
+  console.log('📥 Requête reçue:', req.body);
+  
+  const {
+    reservant_name, reservant_email, reservant_type, festival_id,
+    editor_name, editor_email,
+    // SUPPRIMÉ : start_price, nb_prises, final_price (calculés automatiquement)
+    table_discount_offered = 0, direct_discount = 0,
+    note, phone_number, address, siret,
+    zones = []  // ← NOUVEAU : tableau de zones avec détails
+  } = req.body;
 
-    if (!reservant_name || !reservant_email || !reservant_type || !festival_id || start_price === undefined || nb_prises === undefined || final_price === undefined) {
-        return res.status(400).json({ error: 'Champs obligatoires manquants' });
+  // Validation
+  if (!reservant_name || !reservant_email || !reservant_type || !festival_id) {
+    return res.status(400).json({ error: 'Champs obligatoires manquants' });
+  }
+
+  if (!zones || zones.length === 0) {
+    return res.status(400).json({ 
+      error: 'Au moins une zone tarifaire avec tables/chaises est requise' 
+    });
+  }
+
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    // 1. RÉCUPÉRER LES ZONES TARIFAIRES
+    const { rows: zonesTarifaires } = await client.query(
+      `SELECT id, price_per_table, m2_price, nb_tables_available 
+       FROM zone_tarifaire 
+       WHERE festival_id = $1`,
+      [festival_id]
+    );
+
+    if (zonesTarifaires.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        error: 'Aucune zone tarifaire disponible pour ce festival' 
+      });
     }
 
-    const client = await pool.connect();
+    console.log('📍 Zones tarifaires disponibles:', zonesTarifaires);
+
+    // 2. CALCULER LE PRIX AUTOMATIQUEMENT (NOUVEAU)
+    let prixBrut;
+    let totalChaises;
+
     try {
-        await client.query('BEGIN');
-
-        let editorId = null;
-
-        // 1. Si le réservant est de type 'editeur', créer/récupérer l'éditeur
-        if (reservant_type === 'editeur' && editor_name && editor_email) {
-            let editorResult = await client.query(
-                'SELECT id FROM Editor WHERE email = $1',
-                [editor_email]
-            );
-
-            if (editorResult.rows.length === 0) {
-                // Créer nouvel éditeur
-                const newEditor = await client.query(
-                    'INSERT INTO Editor (name, email) VALUES ($1, $2) RETURNING id',
-                    [editor_name, editor_email]
-                );
-                editorId = newEditor.rows[0].id;
-            } else {
-                editorId = editorResult.rows[0].id;
-            }
-        }
-
-        // 2. Créer ou récupérer le réservant
-        let reservantResult = await client.query(
-            'SELECT id FROM reservant WHERE email = $1',
-            [reservant_email]
-        );
-
-        let reservantId;
-        if (reservantResult.rows.length === 0) {
-            // Créer nouveau réservant
-            const newReservant = await client.query(
-                `INSERT INTO reservant (name, email, type, editor_id, phone_number, address, siret)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-                [reservant_name, reservant_email, reservant_type, editorId, phone_number, address, siret]
-            );
-            reservantId = newReservant.rows[0].id;
-        } else {
-            reservantId = reservantResult.rows[0].id;
-        }
-
-        // 3. Créer le suivi_workflow
-        const workflowResult = await client.query(
-            `INSERT INTO suivi_workflow (reservant_id, festival_id, state)
-             VALUES ($1, $2, 'Pas_de_contact')
-             ON CONFLICT (reservant_id, festival_id) 
-             DO UPDATE SET state = EXCLUDED.state
-             RETURNING id`,
-            [reservantId, festival_id]
-        );
-        const workflowId = workflowResult.rows[0].id;
-
-        // 4. Créer la réservation
-        const reservationResult = await client.query(
-            `INSERT INTO reservation (
-                reservant_id, festival_id, workflow_id,
-                start_price, table_discount_offered, direct_discount, 
-                nb_prises, final_price, note
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING *`,
-            [reservantId, festival_id, workflowId,
-                start_price, table_discount_offered, direct_discount,
-                nb_prises, final_price, note]
-        );
-
-        const reservationId = reservationResult.rows[0].id;
-
-        // 5. Insérer les relations avec les zones tarifaires et mettre à jour le stock
-        if (zones_tarifaires && zones_tarifaires.length > 0) {
-            for (const zone of zones_tarifaires) {
-                // Vérifier le stock disponible
-                const stockCheck = await client.query(
-                    `SELECT nb_tables_available FROM zone_tarifaire WHERE id = $1 FOR UPDATE`,
-                    [zone.zone_tarifaire_id]
-                );
-
-                if (stockCheck.rows.length === 0) {
-                    throw new Error(`Zone tarifaire ${zone.zone_tarifaire_id} introuvable`);
-                }
-
-                const stockDisponible = stockCheck.rows[0].nb_tables_available;
-                if (stockDisponible < zone.nb_tables_reservees) {
-                    throw new Error(`Stock insuffisant pour la zone tarifaire ${zone.zone_tarifaire_id}. Disponible: ${stockDisponible}, Demandé: ${zone.nb_tables_reservees}`);
-                }
-
-                // Insérer la réservation de zone tarifaire
-                await client.query(
-                    `INSERT INTO reservation_zones_tarifaires (reservation_id, zone_tarifaire_id, nb_tables_reservees)
-                     VALUES ($1, $2, $3)`,
-                    [reservationId, zone.zone_tarifaire_id, zone.nb_tables_reservees]
-                );
-
-                // Mettre à jour le stock disponible
-                await client.query(
-                    `UPDATE zone_tarifaire 
-                     SET nb_tables_available = nb_tables_available - $1 
-                     WHERE id = $2`,
-                    [zone.nb_tables_reservees, zone.zone_tarifaire_id]
-                );
-            }
-        }
-
-        await client.query('COMMIT');
-
-        // Retourner les données complètes
-        const completeResult = await client.query(
-            `SELECT 
-                r.*, 
-                res.name as reservant_name, res.email as reservant_email, res.type as reservant_type,
-                e.name as editor_name, e.email as editor_email,
-                sw.state as workflow_state,
-                f.name as festival_name
-             FROM reservation r
-             JOIN Reservant res ON r.reservant_id = res.id
-             LEFT JOIN Editor e ON res.editor_id = e.id
-             JOIN suivi_workflow sw ON r.workflow_id = sw.id
-             JOIN festival f ON r.festival_id = f.id
-             WHERE r.id = $1`,
-            [reservationResult.rows[0].id]
-        );
-
-        res.status(201).json({
-            message: 'Réservation créée avec succès',
-            reservation: completeResult.rows[0]
-        });
-
-    } catch (err) {
+        const result = calculerPrixBrutReservation(zones, zonesTarifaires);
+        prixBrut = result.prixTotal;
+        totalChaises = result.totalChaises;
+    } catch (calcError) {
         await client.query('ROLLBACK');
-        console.error('Erreur lors de la création de la réservation:', err);
-        res.status(500).json({ error: 'Erreur serveur', details: err instanceof Error ? err.message : 'Erreur inconnue' });
-    } finally {
-        client.release();
+        const errorMessage = calcError instanceof Error ? calcError.message : 'Erreur de calcul du prix';
+        return res.status(400).json({ error: errorMessage });
     }
+
+    console.log('💰 Prix brut calculé:', prixBrut, 'Chaises:', totalChaises);
+
+    // 2bis. VÉRIFIER LE STOCK DISPONIBLE (AJOUTEZ ICI)
+    const verificationStock = verifierStockDisponible(zones, zonesTarifaires);
+    if (!verificationStock.success) {
+        await client.query('ROLLBACK');
+            return res.status(400).json({ 
+                error: 'Stock insuffisant', 
+                details: verificationStock.message 
+    });
+    }
+
+    // 3. CODE EXISTANT POUR RÉSERVANT (inchangé)
+    let editorId = null;
+
+    if (reservant_type === 'editeur' && editor_name && editor_email) {
+      let editorResult = await client.query(
+        'SELECT id FROM Editor WHERE email = $1',
+        [editor_email]
+      );
+
+      if (editorResult.rows.length === 0) {
+        const newEditor = await client.query(
+          'INSERT INTO Editor (name, email) VALUES ($1, $2) RETURNING id',
+          [editor_name, editor_email]
+        );
+        editorId = newEditor.rows[0].id;
+      } else {
+        editorId = editorResult.rows[0].id;
+      }
+    }
+
+    // Créer ou récupérer le réservant
+    let reservantResult = await client.query(
+      'SELECT id FROM reservant WHERE email = $1',
+      [reservant_email]
+    );
+
+    let reservantId;
+    if (reservantResult.rows.length === 0) {
+      const newReservant = await client.query(
+        `INSERT INTO reservant (name, email, type, editor_id, phone_number, address, siret)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+        [reservant_name, reservant_email, reservant_type, editorId, 
+         phone_number, address, siret]
+      );
+      reservantId = newReservant.rows[0].id;
+    } else {
+      reservantId = reservantResult.rows[0].id;
+    }
+
+    // 4. Créer le suivi_workflow
+    const workflowResult = await client.query(
+      `INSERT INTO suivi_workflow (reservant_id, festival_id, state)
+       VALUES ($1, $2, 'Pas_de_contact')
+       ON CONFLICT (reservant_id, festival_id) 
+       DO UPDATE SET state = EXCLUDED.state
+       RETURNING id`,
+      [reservantId, festival_id]
+    );
+    const workflowId = workflowResult.rows[0].id;
+
+    // 5. CRÉER LA RÉSERVATION AVEC PRIX CALCULÉ
+    const reservationResult = await client.query(
+      `INSERT INTO reservation (
+        reservant_id, festival_id, workflow_id,
+        start_price, table_discount_offered, direct_discount, 
+        nb_prises, final_price, note, nb_chaises_reservees
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *`,
+      [
+        reservantId, 
+        festival_id, 
+        workflowId,
+        prixBrut,       // ← start_price = calculé automatiquement
+        0,              // ← table_discount_offered = 0 (remise plus tard)
+        0,              // ← direct_discount = 0 (remise plus tard)
+        1,              // ← nb_prises = 1 par défaut
+        prixBrut,       // ← final_price = start_price initialement
+        note || '',
+        totalChaises    // ← chaises calculées
+      ]
+    );
+
+    const reservationId = reservationResult.rows[0].id;
+    console.log('✅ Réservation créée ID:', reservationId);
+
+    // 6. INSÉRER LES ZONES DANS reservation_zones_tarifaires
+    for (const zone of zones) {
+      // Calculer le prix de cette zone spécifique
+      let prixZone = 0;
+      const zoneTarifaire = zonesTarifaires.find(z => z.id === zone.zone_tarifaire_id);
+      
+      if (zone.mode_paiement === 'table') {
+        const totalTables = 
+          (zone.nb_tables_standard || 0) + 
+          (zone.nb_tables_grande || 0) + 
+          (zone.nb_tables_mairie || 0);
+        prixZone = totalTables * zoneTarifaire.price_per_table;
+      } else {
+        prixZone = (zone.surface_m2 || 0) * zoneTarifaire.m2_price;
+      }
+
+      await client.query(
+        `INSERT INTO reservation_zones_tarifaires (
+          reservation_id, zone_tarifaire_id, mode_paiement,
+          nb_tables_standard, nb_tables_grande, nb_tables_mairie, 
+          nb_chaises, surface_m2, prix_calcule
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [
+          reservationId,
+          zone.zone_tarifaire_id,
+          zone.mode_paiement || 'table',
+          zone.nb_tables_standard || 0,
+          zone.nb_tables_grande || 0,
+          zone.nb_tables_mairie || 0,
+          zone.nb_chaises || 0,
+          zone.surface_m2 || 0,
+          prixZone
+        ]
+      );
+
+      // 7. VÉRIFIER ET METTRE À JOUR LE STOCK
+      const stockCheck = await client.query(
+        `SELECT nb_tables_available FROM zone_tarifaire WHERE id = $1 FOR UPDATE`,
+        [zone.zone_tarifaire_id]
+      );
+
+      if (stockCheck.rows.length === 0) {
+        throw new Error(`Zone tarifaire ${zone.zone_tarifaire_id} introuvable`);
+      }
+
+      // Calculer tables réservées
+      let tablesReservees = 0;
+      if (zone.mode_paiement === 'table') {
+        tablesReservees = (zone.nb_tables_standard || 0) + 
+                         (zone.nb_tables_grande || 0) + 
+                         (zone.nb_tables_mairie || 0);
+      } else {
+        // Mode m² : convertir en tables équivalentes (arrondi au supérieur)
+        tablesReservees = Math.ceil((zone.surface_m2 || 0) / M2_PAR_TABLE);
+      }
+
+      const stockDisponible = stockCheck.rows[0].nb_tables_available;
+      if (stockDisponible < tablesReservees) {
+        throw new Error(`Stock insuffisant dans la zone "${zoneTarifaire?.name}". Disponible: ${stockDisponible}, Demandé: ${tablesReservees}`);
+      }
+
+      // Mettre à jour le stock
+      await client.query(
+        `UPDATE zone_tarifaire 
+         SET nb_tables_available = nb_tables_available - $1 
+         WHERE id = $2`,
+        [tablesReservees, zone.zone_tarifaire_id]
+      );
+      
+      console.log(`📉 Stock mis à jour: -${tablesReservees} tables pour zone ${zone.zone_tarifaire_id}`);
+    }
+
+    await client.query('COMMIT');
+
+    // 8. RÉPONSE
+    const completeResult = await client.query(
+      `SELECT 
+        r.*, 
+        res.name as reservant_name, res.email as reservant_email, res.type as reservant_type,
+        e.name as editor_name, e.email as editor_email,
+        sw.state as workflow_state,
+        f.name as festival_name
+       FROM reservation r
+       JOIN Reservant res ON r.reservant_id = res.id
+       LEFT JOIN Editor e ON res.editor_id = e.id
+       JOIN suivi_workflow sw ON r.workflow_id = sw.id
+       JOIN festival f ON r.festival_id = f.id
+       WHERE r.id = $1`,
+      [reservationId]
+    );
+
+    res.status(201).json({
+      message: 'Réservation créée avec succès',
+      reservation: completeResult.rows[0],
+      prix_calcule: prixBrut,
+      total_chaises: totalChaises
+    });
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('💥 Erreur création réservation:', err);
+    
+    if (err instanceof Error && err.message.includes('duplicate key')) {
+      return res.status(409).json({ 
+        error: 'Ce réservant a déjà une réservation pour ce festival' 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Erreur serveur lors de la création de la réservation',
+      details: err instanceof Error ? err.message : 'Erreur inconnue' 
+    });
+  } finally {
+    client.release();
+  }
 });
 
 //modifier une reservation
