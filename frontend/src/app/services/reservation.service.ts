@@ -39,9 +39,5 @@ export class ReservationService {
     return this.http.get<ZoneTarifaireDto[]>(`/api/zones-tarifaires/${festivalId}`);
   }
 
-//   // La méthode createReservation existe déjà et accepte maintenant le champ 'zones'
-//   createReservation(data: any): Observable<any> {
-//     return this.http.post('/api/reservations', data);
-// }
 
 }  
