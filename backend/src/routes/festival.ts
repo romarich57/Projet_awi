@@ -58,11 +58,11 @@ function validateAllocationPayload(body: any): { errors: string[], payload: any 
 router.get('/', async (req, res) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : null;
     let query = 'SELECT id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date FROM festival ORDER BY start_date DESC';
-    
+
     if (limit && limit > 0) {
         query += ` LIMIT ${limit}`;
     }
-    
+
     const { rows } = await pool.query(query);
     res.json(rows);
 })
@@ -83,20 +83,20 @@ router.get('/:id', async (req, res) => {
 // Stock global des tables du festival avec occupation par type
 router.get('/:id/stock-tables', async (req, res) => {
     const { id } = req.params;
-    
+
     try {
         // Récupérer le stock du festival
         const festivalResult = await pool.query(
             'SELECT stock_tables_standard, stock_tables_grande, stock_tables_mairie FROM festival WHERE id = $1',
             [id]
         );
-        
+
         if (festivalResult.rows.length === 0) {
             return res.status(404).json({ error: 'Festival non trouvé' });
         }
-        
+
         const festival = festivalResult.rows[0];
-        
+
         // Calculer les tables occupées par type pour ce festival
         const occupiedResult = await pool.query(
             `SELECT 
@@ -108,12 +108,12 @@ router.get('/:id/stock-tables', async (req, res) => {
              GROUP BY ja.taille_table_requise`,
             [id]
         );
-        
+
         const occupiedByType: Record<string, number> = {};
         for (const row of occupiedResult.rows) {
             occupiedByType[row.table_type] = Number(row.nb_tables_occupees);
         }
-        
+
         // Construire le résultat
         const stock = [
             {
@@ -135,7 +135,7 @@ router.get('/:id/stock-tables', async (req, res) => {
                 restantes: Number(festival.stock_tables_mairie) - (occupiedByType['mairie'] || 0)
             }
         ];
-        
+
         res.json({ festival_id: Number(id), stock });
     } catch (err) {
         console.error('Erreur lors de la récupération du stock de tables:', err);
@@ -157,7 +157,10 @@ router.post('/', async (req, res) => {
             [name, stock_tables_standard || 0, stock_tables_grande || 0, stock_tables_mairie || 0, stock_chaises || 0, start_date, end_date]
         )
         res.status(201).json({ message: 'Festival créé', festival: rows[0] })
-    } catch (err) {
+    } catch (err: any) {
+        if (err.code === '23505') {
+            return res.status(409).json({ error: 'Un festival avec ce nom existe déjà' })
+        }
         console.error(err)
         res.status(500).json({ error: 'Erreur serveur' })
     }

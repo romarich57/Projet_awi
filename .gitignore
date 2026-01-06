@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+backend/dist/
+backend/uploads/
+frontend/dist/
+.DS_Store
+.env
+.idea/
+.vscode/
+coverage/

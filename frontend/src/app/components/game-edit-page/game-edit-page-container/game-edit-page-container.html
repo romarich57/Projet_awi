@@ -1,0 +1,20 @@
+<app-game-edit-header
+  [gameTitle]="gameTitle()"
+  (backClicked)="onBackClicked()" />
+
+<app-game-form
+  [formData]="formData()"
+  [editors]="editors()"
+  [mechanisms]="mechanisms()"
+  [loading]="loading()"
+  [saving]="saving()"
+  [error]="error()"
+  [imageSource]="imageSource()"
+  [imagePreview]="imagePreview()"
+  [imageUploadError]="imageUploadError()"
+  [isUploadingImage]="isUploadingImage()"
+  (formDataChanged)="onFormDataChanged($event)"
+  (imageSourceChanged)="onImageSourceChanged($event)"
+  (imageFileSelected)="onImageFileSelected($event)"
+  (submitClicked)="onSubmit()"
+  (cancelClicked)="onCancelClicked()" />

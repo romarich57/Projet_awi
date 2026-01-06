@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.card {
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.7rem;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.muted {
+  color: var(--muted);
+}

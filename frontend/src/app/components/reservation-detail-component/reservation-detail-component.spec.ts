@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { ReservationDetailComponent } from './reservation-detail-component';
 
@@ -8,9 +10,12 @@ describe('ReservationDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ReservationDetailComponent]
-    })
-    .compileComponents();
+      imports: [ReservationDetailComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ReservationDetailComponent);
     component = fixture.componentInstance;

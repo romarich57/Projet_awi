@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+.mechanisms-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.mechanism-chip {
+  border: 1px solid transparent;
+  background: #fff;
+  color: #0f172a;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.mechanism-chip.selected {
+  background: rgba(11, 87, 208, 0.12);
+  border-color: rgba(11, 87, 208, 0.35);
+  color: #0b57d0;
+}
+
+.muted {
+  color: var(--muted);
+}

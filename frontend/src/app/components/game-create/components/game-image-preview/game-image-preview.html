@@ -1,0 +1,7 @@
+<div class="game-avatar" [class.fallback]="!safeImageUrl()">
+  @if (safeImageUrl()) {
+    <img [src]="safeImageUrl()" alt="Aperçu du jeu" loading="lazy" />
+  } @else {
+    <ng-content></ng-content>
+  }
+</div>

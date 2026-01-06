@@ -54,6 +54,34 @@ export class UploadService {
     }
 
     /**
+     * Upload une image de jeu et retourne l'URL du fichier uploadé.
+     */
+    uploadGameImage(file: File): Observable<string | null> {
+        this.isUploading.set(true);
+        this.uploadError.set(null);
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        return this.http
+            .post<UploadAvatarResponse>(`${environment.apiUrl}/upload/game-image`, formData, {
+                withCredentials: true,
+            })
+            .pipe(
+                map((response) => response.url),
+                tap(() => {
+                    this.uploadError.set(null);
+                }),
+                catchError((err) => {
+                    console.error('Erreur upload image de jeu:', err);
+                    this.uploadError.set(err?.error?.error ?? 'Erreur lors de l\'upload');
+                    return of(null);
+                }),
+                finalize(() => this.isUploading.set(false)),
+            );
+    }
+
+    /**
      * Force le rechargement de tous les avatars en invalidant le cache.
      */
     invalidateAvatarCache(): void {

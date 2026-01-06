@@ -1,0 +1,23 @@
+<app-game-create-header (backClicked)="onBack()" />
+
+<app-game-create-form
+  [formData]="formData()"
+  [editors]="editors()"
+  [saving]="saving()"
+  [error]="error()"
+  [imageSource]="imageSource()"
+  [imageUploadError]="imageUploadError()"
+  [isUploadingImage]="isUploadingImage()"
+  (patch)="onPatch($event)"
+  (imageSourceChanged)="onImageSourceChanged($event)"
+  (imageFileSelected)="onImageFileSelected($event)"
+  (submit)="onSubmit()"
+  (cancelClicked)="onCancel()">
+  <app-game-image-preview [imageUrl]="imagePreview()">
+    <span>{{ formData().title.charAt(0) || '?' }}</span>
+  </app-game-image-preview>
+  <app-game-mechanisms-select
+    [mechanisms]="mechanisms()"
+    [selectedIds]="formData().mechanismIds"
+    (selectedIdsChange)="onPatch({ mechanismIds: $event })" />
+</app-game-create-form>

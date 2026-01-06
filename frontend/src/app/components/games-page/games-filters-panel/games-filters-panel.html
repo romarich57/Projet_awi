@@ -1,0 +1,57 @@
+<form class="filters" (ngSubmit)="submit()">
+  <label>
+    <span>Titre</span>
+    <input
+      type="text"
+      name="title-filter"
+      placeholder="Rechercher un titre"
+      [ngModel]="localFilters().title"
+      (ngModelChange)="updateFilter({ title: $event })" />
+  </label>
+  <label>
+    <span>Type</span>
+    <select
+      name="type-filter"
+      [ngModel]="localFilters().type"
+      (ngModelChange)="updateFilter({ type: $event })">
+      <option value="">Tous</option>
+      @for (type of types(); track type) {
+        <option [value]="type">{{ type }}</option>
+      }
+    </select>
+  </label>
+  <label>
+    <span>Éditeur</span>
+    <select
+      name="editor-filter"
+      [ngModel]="localFilters().editorId"
+      (ngModelChange)="updateFilter({ editorId: $event })">
+      <option value="">Tous</option>
+      @for (editor of editors(); track editor.id) {
+        <option [value]="editor.id">{{ editor.name }}</option>
+      }
+    </select>
+  </label>
+  <label>
+    <span>Âge min.</span>
+    <input
+      type="number"
+      min="0"
+      name="age-filter"
+      [ngModel]="localFilters().minAge"
+      (ngModelChange)="updateFilter({ minAge: $event })" />
+  </label>
+</form>
+
+<div class="column-toggles">
+  <span>Colonnes visibles :</span>
+  @for (opt of columnOptions(); track opt.key) {
+    <label>
+      <input
+        type="checkbox"
+        [checked]="visibleColumns()[opt.key]"
+        (change)="toggleColumn(opt.key, $any($event.target).checked)" />
+      <span>{{ opt.label }}</span>
+    </label>
+  }
+</div>

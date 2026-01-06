@@ -1,0 +1,138 @@
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { GameApiService } from '@app/services/game-api';
+import { EditorApiService } from '@app/services/editor-api';
+import type { GameDto } from '@app/types/game-dto';
+import type { MechanismDto } from '@app/types/mechanism-dto';
+import type { EditorDto } from '@app/types/editor-dto';
+import type { GamesColumnOption, GamesFilters, GamesVisibleColumns } from '@app/types/games-page.types';
+
+const DEFAULT_FILTERS: GamesFilters = {
+  title: '',
+  type: '',
+  editorId: '',
+  minAge: '',
+};
+
+const DEFAULT_VISIBLE_COLUMNS: GamesVisibleColumns = {
+  type: true,
+  editor: true,
+  age: true,
+  players: true,
+  authors: true,
+  mechanisms: true,
+  theme: false,
+  duration: false,
+  prototype: true,
+  description: false,
+};
+
+const COLUMN_OPTIONS: GamesColumnOption[] = [
+  { key: 'type', label: 'Type' },
+  { key: 'editor', label: 'Éditeur' },
+  { key: 'age', label: 'Âge' },
+  { key: 'players', label: 'Joueurs' },
+  { key: 'authors', label: 'Auteurs' },
+  { key: 'mechanisms', label: 'Mécanismes' },
+  { key: 'theme', label: 'Thème' },
+  { key: 'duration', label: 'Durée' },
+  { key: 'prototype', label: 'Prototype' },
+  { key: 'description', label: 'Description' },
+];
+
+@Injectable()
+export class GamesStore {
+  private readonly gameApi = inject(GameApiService);
+  private readonly editorApi = inject(EditorApiService);
+
+  private readonly _games = signal<GameDto[]>([]);
+  private readonly _mechanisms = signal<MechanismDto[]>([]);
+  private readonly _editors = signal<EditorDto[]>([]);
+  private readonly _loading = signal(false);
+  private readonly _error = signal<string | null>(null);
+  private readonly _deleteError = signal<string | null>(null);
+  private readonly _filters = signal<GamesFilters>({ ...DEFAULT_FILTERS });
+  private readonly _visibleColumns = signal<GamesVisibleColumns>({ ...DEFAULT_VISIBLE_COLUMNS });
+
+  readonly games = this._games.asReadonly();
+  readonly mechanisms = this._mechanisms.asReadonly();
+  readonly editors = this._editors.asReadonly();
+  readonly loading = this._loading.asReadonly();
+  readonly error = this._error.asReadonly();
+  readonly deleteError = this._deleteError.asReadonly();
+  readonly filters = this._filters.asReadonly();
+  readonly visibleColumns = this._visibleColumns.asReadonly();
+  readonly columnOptions = COLUMN_OPTIONS;
+
+  readonly types = computed(() =>
+    Array.from(new Set(this._games().map((game) => game.type))).sort((a, b) =>
+      a.localeCompare(b, 'fr'),
+    ),
+  );
+
+  init(): void {
+    this.loadMechanisms();
+    this.loadEditors();
+    this.loadGames();
+  }
+
+  loadAll(): void {
+    this.init();
+  }
+
+  loadGames(): void {
+    this._loading.set(true);
+    this._error.set(null);
+    const filters = this._filters();
+    this.gameApi
+      .list({
+        title: filters.title.trim(),
+        type: filters.type,
+        editor_id: filters.editorId || null,
+        min_age: filters.minAge || null,
+      })
+      .subscribe({
+        next: (games) => this._games.set(games),
+        error: (err) => this._error.set(err.message || 'Erreur lors du chargement des jeux'),
+      })
+      .add(() => this._loading.set(false));
+  }
+
+  loadMechanisms(): void {
+    this.gameApi.listMechanisms().subscribe({
+      next: (items) => this._mechanisms.set(items),
+      error: (err: unknown) => console.error('Erreur lors du chargement des mécanismes', err),
+    });
+  }
+
+  loadEditors(): void {
+    this.editorApi.list().subscribe({
+      next: (items) => this._editors.set(items),
+      error: (err: unknown) => console.error('Erreur lors du chargement des éditeurs', err),
+    });
+  }
+
+  updateFilters(filters: GamesFilters): void {
+    this._filters.set({ ...filters });
+    this.loadGames();
+  }
+
+  setVisibleColumns(columns: GamesVisibleColumns): void {
+    this._visibleColumns.set({ ...columns });
+  }
+
+  deleteGame(game: GameDto): void {
+    this._deleteError.set(null);
+    this.gameApi.delete(game.id).subscribe({
+      next: () => {
+        this._games.set(this._games().filter((item) => item.id !== game.id));
+      },
+      error: (err: any) => {
+        if (err.status === 409) {
+          this._deleteError.set('Impossible de supprimer ce jeu car il est utilisé dans une réservation');
+        } else {
+          this._deleteError.set(err.message || 'Erreur lors de la suppression');
+        }
+      },
+    });
+  }
+}
