@@ -1,6 +1,8 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { GameApiService } from '@app/services/game-api';
 import { EditorApiService } from '@app/services/editor-api';
+import { ReservationService } from '@app/services/reservation.service';
+import { FestivalState } from '@app/stores/festival-state';
 import type { GameDto } from '@app/types/game-dto';
 import type { MechanismDto } from '@app/types/mechanism-dto';
 import type { EditorDto } from '@app/types/editor-dto';
@@ -43,6 +45,8 @@ const COLUMN_OPTIONS: GamesColumnOption[] = [
 export class GamesStore {
   private readonly gameApi = inject(GameApiService);
   private readonly editorApi = inject(EditorApiService);
+  private readonly reservationService = inject(ReservationService);
+  private readonly festivalState = inject(FestivalState);
 
   private readonly _games = signal<GameDto[]>([]);
   private readonly _mechanisms = signal<MechanismDto[]>([]);
@@ -52,8 +56,15 @@ export class GamesStore {
   private readonly _deleteError = signal<string | null>(null);
   private readonly _filters = signal<GamesFilters>({ ...DEFAULT_FILTERS });
   private readonly _visibleColumns = signal<GamesVisibleColumns>({ ...DEFAULT_VISIBLE_COLUMNS });
+  private readonly _festivalEditorIds = signal<number[] | null>(null);
 
-  readonly games = this._games.asReadonly();
+  readonly games = computed(() => {
+    const editorIds = this._festivalEditorIds();
+    const games = this._games();
+    if (!editorIds) return games;
+    if (editorIds.length === 0) return [];
+    return games.filter((game) => game.editor_id !== null && editorIds.includes(game.editor_id));
+  });
   readonly mechanisms = this._mechanisms.asReadonly();
   readonly editors = this._editors.asReadonly();
   readonly loading = this._loading.asReadonly();
@@ -64,10 +75,21 @@ export class GamesStore {
   readonly columnOptions = COLUMN_OPTIONS;
 
   readonly types = computed(() =>
-    Array.from(new Set(this._games().map((game) => game.type))).sort((a, b) =>
+    Array.from(new Set(this.games().map((game) => game.type))).sort((a, b) =>
       a.localeCompare(b, 'fr'),
     ),
   );
+
+  constructor() {
+    effect(() => {
+      const festivalId = this.festivalState.currentFestivalId;
+      if (festivalId == null) {
+        this._festivalEditorIds.set(null);
+        return;
+      }
+      this.loadFestivalEditors(festivalId);
+    });
+  }
 
   init(): void {
     this.loadMechanisms();
@@ -132,6 +154,25 @@ export class GamesStore {
         } else {
           this._deleteError.set(err.message || 'Erreur lors de la suppression');
         }
+      },
+    });
+  }
+
+  private loadFestivalEditors(festivalId: number): void {
+    this.reservationService.getReservantsByFestival(festivalId).subscribe({
+      next: (reservants) => {
+        const editorIds = Array.from(
+          new Set(
+            reservants
+              .map((reservant) => reservant.editor_id)
+              .filter((id): id is number => Number.isFinite(id)),
+          ),
+        );
+        this._festivalEditorIds.set(editorIds);
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des jeux du festival', err);
+        this._festivalEditorIds.set([]);
       },
     });
   }

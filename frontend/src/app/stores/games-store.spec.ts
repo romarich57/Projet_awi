@@ -4,12 +4,14 @@ import { of, throwError } from 'rxjs';
 import { GamesStore } from './games-store';
 import { GameApiService } from '@app/services/game-api';
 import { EditorApiService } from '@app/services/editor-api';
+import { ReservationService } from '@app/services/reservation.service';
 import type { GameDto } from '@app/types/game-dto';
 
 describe('GamesStore', () => {
   let store: GamesStore;
   let gameApiSpy: jasmine.SpyObj<GameApiService>;
   let editorApiSpy: jasmine.SpyObj<EditorApiService>;
+  let reservationApiSpy: jasmine.SpyObj<ReservationService>;
 
   const games: GameDto[] = [
     {
@@ -53,17 +55,20 @@ describe('GamesStore', () => {
   beforeEach(() => {
     gameApiSpy = jasmine.createSpyObj('GameApiService', ['list', 'listMechanisms', 'delete']);
     editorApiSpy = jasmine.createSpyObj('EditorApiService', ['list']);
+    reservationApiSpy = jasmine.createSpyObj('ReservationService', ['getReservantsByFestival']);
 
     gameApiSpy.list.and.returnValue(of(games));
     gameApiSpy.listMechanisms.and.returnValue(of([]));
     gameApiSpy.delete.and.returnValue(of(void 0));
     editorApiSpy.list.and.returnValue(of([]));
+    reservationApiSpy.getReservantsByFestival.and.returnValue(of([]));
 
     TestBed.configureTestingModule({
       providers: [
         GamesStore,
         { provide: GameApiService, useValue: gameApiSpy },
         { provide: EditorApiService, useValue: editorApiSpy },
+        { provide: ReservationService, useValue: reservationApiSpy },
       ],
     });
 

@@ -1,209 +1,110 @@
-h1 {
-  color: #2c3e50;
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2.5rem;
-  font-weight: 300;
-}
-
-h2 {
-  color: #2c3e50;
-  text-align: center;
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-  font-weight: 400;
-}
-
-p {
-  color: #5a6c7d;
-  text-align: center;
-  font-size: 1rem;
-  margin-bottom: 2rem;
-}
-
-.dashboard-container {
-  a {
-    color: #3498db;
-    text-decoration: none;
-    font-weight: 500;
-    margin-bottom: 1rem;
-    display: inline-block;
-    
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-}
-
-.reservation-list {
-  padding: 0 1rem;
+.dashboard {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
 }
 
-.no-festival {
-  text-align: center;
-  padding: 3rem 2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  
-  p {
-    font-size: 1.2rem;
-    color: #7f8c8d;
-    margin-bottom: 1.5rem;
-    
-    &::before {
-      content: "⚠️";
-      display: block;
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-  }
-}
-
-// États de chargement
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem;
-  
-  &::after {
-    content: "🔄";
-    font-size: 2rem;
-    animation: spin 1s linear infinite;
-  }
-}
-
-
-// Messages vides
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: #95a5a6;
-  font-style: italic;
-  
-  &::before {
-    content: "📭";
-    display: block;
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-  }
-}
-
-
-.new-reservation-button {
-  display: inline-block;
-  padding: 12px 24px;
-  margin: 1rem auto;
-  background-color: #4CAF50;
-  color: white;
-  font-size: 1rem;
-  font-weight: 500;
-  border: none;
-  border-radius: 6px;
-  text-align: center;
+.back-link {
+  color: var(--primary);
   text-decoration: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  
-  &:hover {
-    background-color: #45a049;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.dashboard-header {
+  margin-bottom: 1.8rem;
+
+  h1 {
+    margin: 0.4rem 0 0;
+    font-size: 2.2rem;
+    color: var(--text);
   }
 }
 
-.grid-table {
-  width: 100%;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 1rem;
-  
-  .grid-header {
-    display: grid;
-    grid-template-columns: 2fr 1fr 2fr 1fr;
-    gap: 0;
-    background: #f5f5f5;
-    border-bottom: 2px solid #ddd;
-    
-    div {
-      padding: 16px 12px;
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-right: 1px solid #ddd;
-      
-      &:last-child {
-        border-right: none;
-      }
-    }
-  }
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0;
 }
 
-// Style global pour les reservation-item dans .reservation-list
-.reservation-list .reservation-item {
+.festival-summary {
+  padding: 1.6rem;
   display: grid;
-  grid-template-columns: 2fr 1fr 2fr 1fr;
-  gap: 0;
-  border-bottom: 1px solid #eee;
-  transition: background-color 0.2s ease;
-  background: white;
-  
-}
-  
-.reservation-list {
-  border-radius: 8px;
+  gap: 1.2rem;
 }
 
-
-// Styles pour les cellules des lignes de réservation
-.reservation-list .reservation-item div {
-  padding: 14px 12px;
-  color: #444;
-  font-size: 0.95rem;
-  border-right: 1px solid #eee;
+.summary-main {
   display: flex;
   align-items: center;
-  
-  &:last-child {
-    border-right: none;
-    justify-content: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h2 {
+    margin: 0.2rem 0 0;
+    font-size: 1.5rem;
+    color: var(--text);
   }
-  
-    
-  button {
-    background: #3498db;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    
-    &:hover {
-      background: #2980b9;
-    }
-  }
-  
 }
 
+.label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+}
 
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.8rem;
+}
 
-.toolbar {
+.stat {
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  padding: 0.7rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(11, 87, 208, 0.05);
+
+  span {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  strong {
+    color: var(--text);
+    font-size: 1.05rem;
+  }
+}
+
+.primary {
+  background: linear-gradient(120deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.2rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.form-panel {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+}
+
+.filters {
+  margin-top: 1.5rem;
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
   align-items: center;
-  background: #0b4f6c10;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 0.85rem 1rem;
+  padding: 1rem;
 }
 
 .field {
@@ -211,15 +112,175 @@ p {
   flex-direction: column;
   gap: 0.35rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
+
+  select {
+    min-width: 200px;
+    border-radius: 0.7rem;
+    border: 1px solid var(--border);
+    padding: 0.55rem 0.75rem;
+    background: #fff;
+    font-weight: 500;
+    color: var(--text);
+  }
 }
 
-.field select {
-  min-width: 200px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  padding: 0.55rem 0.75rem;
+.reservation-table {
+  margin-top: 1.5rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-head,
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr 1fr;
+  gap: 0;
+}
+
+.table-head {
+  background: rgba(15, 23, 42, 0.04);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+  color: var(--muted);
+
+  span {
+    padding: 0.9rem 1rem;
+  }
+}
+
+.table-row {
+  border-top: 1px solid var(--border);
   background: #fff;
-  font-weight: 500;
-  color: #0f172a;
+}
+
+.cell {
+  padding: 0.9rem 1rem;
+  display: flex;
+  align-items: center;
+  color: var(--text);
+}
+
+.cell.actions {
+  justify-content: flex-end;
+}
+
+.status-pill {
+  background: rgba(11, 87, 208, 0.12);
+  color: #0b57d0;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.action-btn {
+  background: #0b57d0;
+  color: #fff;
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.empty-state {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.no-festival {
+  padding: 2rem;
+  text-align: center;
+
+  p {
+    margin: 0;
+    color: var(--muted);
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard {
+    padding: 2rem 1.2rem 2.5rem;
+  }
+
+  .summary-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .table-head {
+    display: none;
+  }
+
+  .table-row {
+    grid-template-columns: 1fr;
+    padding: 0.9rem 1rem;
+    gap: 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    background: var(--card-bg);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    margin-bottom: 0.8rem;
+  }
+
+  .cell {
+    padding: 0;
+    justify-content: space-between;
+  }
+
+  .cell::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .cell.actions {
+    justify-content: flex-start;
+  }
+
+  .reservation-table {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .filters {
+    padding: 0.85rem;
+  }
+
+  .field {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard {
+    padding: 2rem 1rem 2.5rem;
+  }
+
+  .summary-stats {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .field select {
+    min-width: 100%;
+  }
+
+  .primary {
+    width: 100%;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

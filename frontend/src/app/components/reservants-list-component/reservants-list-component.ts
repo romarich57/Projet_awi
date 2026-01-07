@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ReservantStore } from '../../stores/reservant.store';
 import { ReservantDto } from '../../types/reservant-dto';
+import { FestivalState } from '../../stores/festival-state';
 
 
 @Component({
@@ -13,8 +14,9 @@ import { ReservantDto } from '../../types/reservant-dto';
   changeDetection: ChangeDetectionStrategy.OnPush,
 
 })
-export class ReservantsListComponent implements OnInit {
+export class ReservantsListComponent {
   readonly reservantStore = inject(ReservantStore);
+  private readonly festivalState = inject(FestivalState);
   readonly typeFilter = signal<'all' | ReservantDto['type']>('all');
   readonly sortKey = signal<'name-asc' | 'name-desc'>('name-asc');
 
@@ -32,8 +34,16 @@ export class ReservantsListComponent implements OnInit {
     });
   });
 
-  ngOnInit() {
-    this.reservantStore.loadAll();
+  constructor() {
+    effect(() => {
+      const festivalId = this.festivalState.currentFestivalId;
+      this.reservantStore.setFestival(festivalId);
+      if (festivalId == null) {
+        this.reservantStore.loadAll();
+      } else {
+        this.reservantStore.loadByFestival(festivalId);
+      }
+    });
   }
 
   setTypeFilter(value: string): void {

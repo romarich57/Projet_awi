@@ -1,82 +1,102 @@
-<div class="dashboard-container">
-    <a routerLink="/festivals">← Retour à la liste des festivals</a>
+<section class="dashboard">
+  <a class="back-link" routerLink="/festivals">← Retour à la liste des festivals</a>
 
+  <header class="dashboard-header">
+    <p class="eyebrow">Dashboard</p>
     <h1>Dashboard des Réservations</h1>
-    
-    @if (festivalState.currentFestival()) {
-        <h2>Festival: {{ festivalState.currentFestival()?.name }}</h2>
-        <p>Tables standard: {{ festivalState.currentFestival()?.stock_tables_standard }} | 
-           Tables grandes: {{ festivalState.currentFestival()?.stock_tables_grande }} | 
-           Tables mairie: {{ festivalState.currentFestival()?.stock_tables_mairie }} | 
-           Chaises: {{ festivalState.currentFestival()?.stock_chaises }}</p>
+  </header>
 
-        
-    
-        @if (showReservationForm()) {
-            <app-reservation-form-component
-                [festivalName]="festivalState.currentFestival()?.name"
-                [festivalId]="festivalState.currentFestival()?.id"
-                (closeForm)="showReservationForm.set(false)"
-            ></app-reservation-form-component>
-        }
-        @else {
-            <button class="new-reservation-button" (click)="openReservationForm()">Nouvelle Réservation</button>
-        }
-
-
-        <section class="toolbar">
-            <label class="field">
-                <span>Type</span>
-                <select [value]="typeFilter()" (change)="setTypeFilter($any($event.target).value)">
-                    <option value="all">Tous les types</option>
-                    <option value="editeur">Editeur</option>
-                    <option value="prestataire">Prestataire</option>
-                    <option value="boutique">Boutique</option>
-                    <option value="animateur">Animateur</option>
-                    <option value="association">Association</option>
-                </select>
-            </label>
-
-            <label class="field">
-                <span>Trier par</span>
-                <select [value]="sortKey()" (change)="setSortKey($any($event.target).value)">
-                    <option value="name-asc">Nom (A -> Z)</option>
-                    <option value="name-desc">Nom (Z -> A)</option>
-                </select>
-            </label>
-        </section>
-
-        <div class="reservation-list">
-            @if (reservationsView().length > 0) {
-                <div class="grid-table">
-                    <div class="grid-header">
-                        <div>Reservant</div>    
-                        <div>Type</div>
-                        <div>Statut de la Réservation</div>
-                        <div>Voir Détails</div>
-                    </div>
-                </div>
-
-                <!-- pour chaque reservant du festival courant, on affiche sson nom, son type, le statut de sa réservation et un bouton pour voir les détails -->
-                @for(reservation of reservationsView(); track reservation.id) {
-                    <div class="reservation-item">
-                        <div>{{ reservation.reservant_name }}</div>
-                        <div>{{ reservation.reservant_type }}</div>
-                        <div>{{ reservation.workflow_state }}</div>
-                        <div>
-                            <button (click)="viewReservationDetails(reservation.id)">Voir Détails</button>
-                        </div>
-                    </div>
-                    
-                }
-            } @else {
-                <p>Aucune réservation trouvée pour ce festival.</p>
-            }
+  @if (festivalState.currentFestival()) {
+    <section class="festival-summary card">
+      <div class="summary-main">
+        <div>
+          <p class="label">Festival</p>
+          <h2>{{ festivalState.currentFestival()?.name }}</h2>
         </div>
-    } 
-    @else {
-        <div class="no-festival">
-            <p>Veuillez sélectionner un festival depuis la page d'accueil pour voir les réservations.</p>
+        @if (!showReservationForm()) {
+          <button class="primary" (click)="openReservationForm()">Nouvelle Réservation</button>
+        }
+      </div>
+      <div class="summary-stats">
+        <div class="stat">
+          <span>Tables standard</span>
+          <strong>{{ festivalState.currentFestival()?.stock_tables_standard }}</strong>
         </div>
+        <div class="stat">
+          <span>Tables grandes</span>
+          <strong>{{ festivalState.currentFestival()?.stock_tables_grande }}</strong>
+        </div>
+        <div class="stat">
+          <span>Tables mairie</span>
+          <strong>{{ festivalState.currentFestival()?.stock_tables_mairie }}</strong>
+        </div>
+        <div class="stat">
+          <span>Chaises</span>
+          <strong>{{ festivalState.currentFestival()?.stock_chaises }}</strong>
+        </div>
+      </div>
+    </section>
+
+    @if (showReservationForm()) {
+      <section class="form-panel card">
+        <app-reservation-form-component
+          [festivalName]="festivalState.currentFestival()?.name"
+          [festivalId]="festivalState.currentFestival()?.id"
+          (closeForm)="showReservationForm.set(false)"></app-reservation-form-component>
+      </section>
     }
-</div>
+
+    <section class="filters card">
+      <label class="field">
+        <span>Type</span>
+        <select [value]="typeFilter()" (change)="setTypeFilter($any($event.target).value)">
+          <option value="all">Tous les types</option>
+          <option value="editeur">Editeur</option>
+          <option value="prestataire">Prestataire</option>
+          <option value="boutique">Boutique</option>
+          <option value="animateur">Animateur</option>
+          <option value="association">Association</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Trier par</span>
+        <select [value]="sortKey()" (change)="setSortKey($any($event.target).value)">
+          <option value="name-asc">Nom (A -> Z)</option>
+          <option value="name-desc">Nom (Z -> A)</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="reservation-table card">
+      @if (reservationsView().length > 0) {
+        <div class="table-head">
+          <span>Reservant</span>
+          <span>Type</span>
+          <span>Statut de la Réservation</span>
+          <span>Voir Détails</span>
+        </div>
+
+        @for(reservation of reservationsView(); track reservation.id) {
+          <div class="table-row">
+            <div class="cell" data-label="Reservant">{{ reservation.reservant_name }}</div>
+            <div class="cell" data-label="Type">{{ reservation.reservant_type }}</div>
+            <div class="cell" data-label="Statut">
+              <span class="status-pill">{{ reservation.workflow_state }}</span>
+            </div>
+            <div class="cell actions" data-label="Détails">
+              <button class="action-btn" (click)="viewReservationDetails(reservation.id)">Voir Détails</button>
+            </div>
+          </div>
+        }
+      } @else {
+        <p class="empty-state">Aucune réservation trouvée pour ce festival.</p>
+      }
+    </section>
+  }
+  @else {
+    <div class="no-festival card">
+      <p>Veuillez sélectionner un festival depuis la page d'accueil pour voir les réservations.</p>
+    </div>
+  }
+</section>
