@@ -7,12 +7,14 @@ import { ReservantApiService } from '../services/reservant-api';
 import { ReservantWorkflowApi } from '../services/reservant-workflow-api';
 import { ReservantDto } from '../types/reservant-dto';
 import { ReservantContactApi } from '../services/reservant-contact-api';
+import { ReservationService } from '../services/reservation.service';
 
 describe('ReservantStore', () => {
     let store: ReservantStore;
     let apiMock: jasmine.SpyObj<ReservantApiService>;
     let workflowApiMock: jasmine.SpyObj<ReservantWorkflowApi>;
     let contactApiMock: jasmine.SpyObj<ReservantContactApi>;
+    let reservationServiceMock: jasmine.SpyObj<ReservationService>;
 
     const mockReservant: ReservantDto = {
         id: 1,
@@ -54,6 +56,8 @@ describe('ReservantStore', () => {
         contactApiMock = jasmine.createSpyObj('ReservantContactApi', ['listContacts', 'listTimeline', 'addContact', 'addContactEvent']);
         contactApiMock.listContacts.and.returnValue(of([]));
         contactApiMock.listTimeline.and.returnValue(of([]));
+        reservationServiceMock = jasmine.createSpyObj('ReservationService', ['getReservantsByFestival']);
+        reservationServiceMock.getReservantsByFestival.and.returnValue(of(mockReservantList));
 
         try {
             TestBed.configureTestingModule({
@@ -61,7 +65,8 @@ describe('ReservantStore', () => {
                     ReservantStore,
                     { provide: ReservantApiService, useValue: apiMock },
                     { provide: ReservantWorkflowApi, useValue: workflowApiMock },
-                    { provide: ReservantContactApi, useValue: contactApiMock }
+                    { provide: ReservantContactApi, useValue: contactApiMock },
+                    { provide: ReservationService, useValue: reservationServiceMock }
                 ]
             });
 

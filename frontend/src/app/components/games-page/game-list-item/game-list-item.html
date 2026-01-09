@@ -1,0 +1,75 @@
+<div class="game-row">
+  <div class="row-main">
+    <div class="game-avatar" [class.fallback]="!safeImageUrl()">
+      @if (safeImageUrl()) {
+        <img [src]="safeImageUrl()" [alt]="game().title" loading="lazy" />
+      } @else {
+        <span>{{ game().title.charAt(0) || '?' }}</span>
+      }
+    </div>
+    <div class="title-block">
+      <div class="title highlight">{{ game().title }}</div>
+      <div class="subline">
+        @if (visibleColumns()['type']) { <span class="pill">{{ game().type }}</span> }
+        @if (visibleColumns()['editor']) {
+          <span class="pill">{{ game().editor_name || '—' }}</span>
+        }
+        @if (visibleColumns()['age']) { <span class="pill">{{ ageLabel(game()) }}</span> }
+        @if (visibleColumns()['players']) {
+          <span class="pill">{{ playersLabel(game()) }}</span>
+        }
+        @if (visibleColumns()['prototype'] && game().prototype) {
+          <span class="pill warn">Prototype</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="row-meta">
+    @if (visibleColumns()['authors']) {
+      <div class="meta-item">
+        <span class="label">Auteurs</span>
+        <span class="value">{{ game().authors }}</span>
+      </div>
+    }
+    @if (visibleColumns()['mechanisms']) {
+      <div class="meta-item mechanisms">
+        <span class="label">Mécanismes</span>
+        <div class="chips">
+          @if (game().mechanisms?.length) {
+            @for (m of game().mechanisms!; track m.id) {
+              <span class="chip">{{ m.name }}</span>
+            }
+          } @else {
+            <span class="muted">—</span>
+          }
+        </div>
+      </div>
+    }
+    @if (visibleColumns()['theme']) {
+      <div class="meta-item">
+        <span class="label">Thème</span>
+        <span class="value">{{ game().theme || '—' }}</span>
+      </div>
+    }
+    @if (visibleColumns()['duration']) {
+      <div class="meta-item">
+        <span class="label">Durée</span>
+        <span class="value">{{ durationLabel(game()) }}</span>
+      </div>
+    }
+    @if (visibleColumns()['description'] && descriptionSnippet(game())) {
+      <div class="meta-item description">
+        <span class="label">Description</span>
+        <span class="value">{{ descriptionSnippet(game()) }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="row-actions">
+    <button type="button" class="primary strong" (click)="edit.emit(game())">Modifier</button>
+    <button type="button" class="ghost danger strong" (click)="delete.emit(game())">
+      Supprimer
+    </button>
+  </div>
+</div>

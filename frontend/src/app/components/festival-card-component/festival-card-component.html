@@ -1,12 +1,26 @@
-<div (click)="onFestivalClick()" class="festival-card-container">
-
-    <div class="festival-card" [class.selected]="isSelected()"> 
+<div (click)="onFestivalClick()" class="festival-card" [class.selected]="selected()">
+    <div class="card-header">
         <h2>{{ festival().name }}</h2>
-        <p>Tables: {{ festival().stock_tables_standard + festival().stock_tables_grande + festival().stock_tables_mairie }} | Chaises: {{ festival().stock_chaises }}</p>
-        <p>Date de début : {{ festival().start_date | date: 'longDate'}}</p>
-        <p>Date de fin : {{ festival().end_date | date: 'longDate'}}</p>
     </div>
 
+    <div class="card-content">
+        <div class="stat-row">
+            <span>Tables:</span>
+            <strong>{{ festival().stock_tables_standard + festival().stock_tables_grande +
+                festival().stock_tables_mairie }}</strong>
+        </div>
+        <div class="stat-row">
+            <span>Chaises:</span>
+            <strong>{{ festival().stock_chaises }}</strong>
+        </div>
+    </div>
 
+    <div class="card-footer">
+        <div class="dates">
+            <span>Du {{ festival().start_date | date: 'dd MMM yyyy' }}</span>
+            <span>Au {{ festival().end_date | date: 'dd MMM yyyy' }}</span>
+        </div>
+        <!-- Placeholder for future status badge or icon -->
+        <span class="arrow-icon">➝</span>
+    </div>
 </div>
-

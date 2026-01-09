@@ -1,44 +1,132 @@
+@use 'styles.scss' as *;
+
 .festival-card {
-  background: white;
-  border-radius: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86));
+  border-radius: 18px;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  
+  position: relative;
+  overflow: hidden;
+
+  // Subtle gradient border effect on top
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), #60a5fa);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: #3498db;
+    transform: translateY(-8px);
+    box-shadow: 0 28px 45px rgba(15, 23, 42, 0.12);
+
+    &::before {
+      opacity: 1;
+    }
+
+    h2 {
+      color: var(--primary);
+    }
   }
 
   // État sélectionné
   &.selected {
-    border: 3px solid #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-    
-    h2 {
-      color: #3498db;
+    border-color: rgba(11, 87, 208, 0.4);
+    box-shadow: 0 0 0 2px rgba(11, 87, 208, 0.15);
+
+    &::before {
+      opacity: 1;
     }
   }
-  
-  h2 {
-    color: #2c3e50;
-    font-size: 1.5rem;
+
+  .card-header {
     margin-bottom: 1rem;
-    font-weight: 600;
-    border-bottom: 2px solid #3498db;
-    padding-bottom: 0.5rem;
-    transition: color 0.3s ease;
+
+    h2 {
+      color: var(--text);
+      font-size: 1.2rem;
+      margin: 0;
+      font-weight: 700;
+      line-height: 1.4;
+      transition: color 0.3s ease;
+    }
   }
-  
-  p {
-    color: #5a6c7d;
-    margin: 0.5rem 0;
+
+  .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    color: var(--muted);
     font-size: 0.95rem;
-    line-height: 1.4;
+
+    strong {
+      color: var(--text);
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+  }
+
+  .card-footer {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+
+    .dates {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .arrow-icon {
+      font-size: 1.5rem;
+      color: var(--primary);
+      transition: transform 0.2s ease;
+      background: rgba(11, 87, 208, 0.1);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+  }
+
+  &:hover .arrow-icon {
+    transform: translateX(4px);
   }
 }
 
+@media (max-width: 600px) {
+  .festival-card {
+    padding: 1.2rem;
+
+    .card-footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+  }
+}

@@ -17,9 +17,9 @@ import { ReservantsListComponent } from '@app/components/reservants-list-compone
 import { ReservantCardComponent } from '@app/components/reservant-card-component/reservant-card-component';
 import { ReservantFormComponent } from '@app/components/reservant-form-component/reservant-form-component';
 import { HomeComponent } from './components/home/home';
-import { GamesPageComponent } from './components/games-page/games-page';
-import { GameEditPageComponent } from './components/game-edit-page/game-edit-page';
-import { GameCreatePageComponent } from './components/game-create-page/game-create-page';
+import { GamesPageContainerComponent } from './components/games-page/games-page-container/games-page-container';
+import { GameEditPageContainerComponent } from './components/game-edit-page/game-edit-page-container/game-edit-page-container';
+import { GameCreatePageContainerComponent } from './components/game-create/components/game-create-page-container/game-create-page-container';
 import { ReservationDetailComponent } from './components/reservation-detail-component/reservation-detail-component';
 import { ReservationDetailsPage } from './components/reservation-details-page/reservation-details-page';
 import { UserProfilePageComponent } from './components/User_profils/user-profile-page/user-profile-page';
@@ -94,19 +94,19 @@ export const routes: Routes = [
   },
   {
     path: 'games',
-    component: GamesPageComponent,
+    component: GamesPageContainerComponent,
     canActivate: [authGuard],
     title: 'Jeux',
   },
   {
     path: 'games/new',
-    component: GameCreatePageComponent,
+    component: GameCreatePageContainerComponent,
     canActivate: [authGuard],
     title: 'Créer un jeu',
   },
   {
     path: 'games/:id/edit',
-    component: GameEditPageComponent,
+    component: GameEditPageContainerComponent,
     canActivate: [authGuard],
     title: 'Modifier un jeu',
   },

@@ -10,6 +10,7 @@ import { ReservantWorkflowFlagsDto } from "../types/reservant-workflow-flags-dto
 import { ReservantContactApi } from "../services/reservant-contact-api";
 import { ReservantContactDto } from "../types/reservant-contact-dto";
 import { ContactDto } from "../types/contact-dto";
+import { ReservationService } from "../services/reservation.service";
 @Injectable({
     providedIn: 'root',
 })
@@ -18,6 +19,7 @@ export class ReservantStore {
     private readonly api = inject(ReservantApiService);
     private readonly workflowApi = inject(ReservantWorkflowApi);
     private readonly contactApi = inject(ReservantContactApi);
+    private readonly reservationService = inject(ReservationService);
     private readonly _reservants = signal<ReservantDto[]>([]);
     private readonly _contacts = signal<ContactDto[]>([]);
     private readonly _contactTimeline = signal<ReservantContactDto[]>([]);
@@ -42,6 +44,20 @@ export class ReservantStore {
             },
             error: (error) => {
                 console.error('Error loading reservants:', error);
+            },
+        });
+    }
+
+    loadByFestival(festivalId: number): void {
+        this.loading.set(true);
+        this.error.set(null);
+        this.reservationService.getReservantsByFestival(festivalId).subscribe({
+            next: (reservants) => {
+                this._reservants.set(reservants);
+            },
+            error: (error) => {
+                console.error('Error loading reservants for festival:', error);
+                this.error.set(error.message || 'Erreur lors du chargement des réservants');
             },
         });
     }

@@ -3,6 +3,7 @@ import { ReservantsListComponent } from './reservants-list-component';
 import { ReservantStore } from '../../stores/reservant.store';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { FestivalState } from '../../stores/festival-state';
 
 describe('ReservantsListComponent', () => {
   let component: ReservantsListComponent;
@@ -15,7 +16,12 @@ describe('ReservantsListComponent', () => {
   ];
 
   beforeEach(async () => {
-    storeMock = jasmine.createSpyObj('ReservantStore', ['loadAll', 'delete']);
+    storeMock = jasmine.createSpyObj('ReservantStore', [
+      'loadAll',
+      'loadByFestival',
+      'setFestival',
+      'delete',
+    ]);
     storeMock.reservants = signal(mockReservants);
     storeMock.loading = signal(false);
     storeMock.error = signal(null);
@@ -24,6 +30,7 @@ describe('ReservantsListComponent', () => {
       imports: [ReservantsListComponent],
       providers: [
         { provide: ReservantStore, useValue: storeMock },
+        FestivalState,
         provideRouter([])
       ]
     }).compileComponents();
@@ -37,8 +44,9 @@ describe('ReservantsListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load all reservants on init', () => {
+  it('should load all reservants when no festival is selected', () => {
     expect(storeMock.loadAll).toHaveBeenCalled();
+    expect(storeMock.setFestival).toHaveBeenCalledWith(null);
   });
 
   it('should have access to store reservants signal', () => {

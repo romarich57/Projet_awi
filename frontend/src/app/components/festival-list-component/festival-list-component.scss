@@ -1,50 +1,114 @@
-h1 {
-  color: #2c3e50;
-  text-align: center;
+@use 'styles.scss' as *;
+
+.festival-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
+}
+
+.festival-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
   margin-bottom: 2rem;
-  font-size: 2.5rem;
-  font-weight: 300;
+
+  h1 {
+    color: var(--text);
+    font-size: 2.35rem;
+    font-weight: 700;
+    margin: 0.2rem 0 0.4rem;
+    letter-spacing: -0.02em;
+  }
+}
+
+.header-text {
+  max-width: 520px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.festival-form-wrapper {
+  margin-bottom: 2.5rem;
 }
 
 .festival-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  padding: 0 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.6rem;
+  align-items: stretch;
 }
 
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .festival-list {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 0 0.5rem;
-  }
+.action-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .form-btn {
-  background-color: rgb(157, 118, 248);
-  color: rgb(255, 255, 255);
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s ease;
-  margin-bottom: 1.5rem;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);  }
+.form-btn.primary {
+  background: linear-gradient(120deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(11, 87, 208, 0.2);
+}
 
+.form-btn.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.icon-plus {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .festival-page {
+    padding: 2rem 1.2rem 2.5rem;
+  }
+
+  .festival-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-bar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .festival-page-header h1 {
+    font-size: 1.9rem;
+  }
+
+  .festival-list {
+    grid-template-columns: 1fr;
+  }
 }

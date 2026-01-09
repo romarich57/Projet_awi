@@ -1,0 +1,15 @@
+<div class="mechanisms-list">
+  @for (m of mechanisms(); track m.id) {
+    <button
+      type="button"
+      class="mechanism-chip"
+      [class.selected]="isSelected(m.id)"
+      [attr.aria-pressed]="isSelected(m.id)"
+      (click)="toggleMechanism(m.id)">
+      {{ m.name }}
+    </button>
+  }
+  @if (mechanisms().length === 0) {
+    <span class="muted">Aucun mécanisme disponible.</span>
+  }
+</div>

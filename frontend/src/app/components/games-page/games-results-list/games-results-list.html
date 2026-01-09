@@ -1,0 +1,24 @@
+<div class="table-head">
+  <div class="head-title">Titre</div>
+  @if (visibleColumns()['type']) { <div>Type</div> }
+  @if (visibleColumns()['editor']) { <div>Éditeur</div> }
+  @if (visibleColumns()['age']) { <div>Âge</div> }
+  @if (visibleColumns()['players']) { <div>Joueurs</div> }
+  @if (visibleColumns()['authors']) { <div>Auteurs</div> }
+  @if (visibleColumns()['mechanisms']) { <div>Mécanismes</div> }
+  @if (visibleColumns()['theme']) { <div>Thème</div> }
+  @if (visibleColumns()['duration']) { <div>Durée</div> }
+  @if (visibleColumns()['prototype']) { <div>Proto</div> }
+  @if (visibleColumns()['description']) { <div>Description</div> }
+  <div class="head-actions">Actions</div>
+</div>
+
+<div class="game-list">
+  @for (game of games(); track game.id) {
+    <app-game-list-item
+      [game]="game"
+      [visibleColumns]="visibleColumns()"
+      (edit)="edit.emit($event)"
+      (delete)="delete.emit($event)" />
+  }
+</div>

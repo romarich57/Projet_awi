@@ -1,0 +1,55 @@
+<section class="games-header card">
+  <div class="header-main">
+    <div>
+      <p class="eyebrow">Catalogue maître</p>
+      <h1>Jeux</h1>
+      <p class="muted">Filtrer, créer ou modifier les jeux du catalogue.</p>
+    </div>
+    <button type="button" class="primary" (click)="startCreate()">
+      + Nouveau jeu
+    </button>
+  </div>
+
+  <app-games-filters-panel
+    [filters]="filters()"
+    [types]="types()"
+    [editors]="editors()"
+    [visibleColumns]="visibleColumns()"
+    [columnOptions]="columnOptions"
+    (filtersChanged)="onFiltersChanged($event)"
+    (visibleColumnsChanged)="onVisibleColumnsChanged($event)" />
+</section>
+
+<section class="games-table card">
+  @if (loading()) {
+    <p class="muted">Chargement...</p>
+  }
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+  @if (deleteError()) {
+    <p class="error">{{ deleteError() }}</p>
+  }
+
+  @if (games().length === 0 && !loading()) {
+    <p class="muted">Aucun jeu trouvé avec ces filtres.</p>
+  } @else {
+    <app-games-results-list
+      [games]="games()"
+      [visibleColumns]="visibleColumns()"
+      (edit)="onEdit($event)"
+      (delete)="onDelete($event)" />
+  }
+</section>
+
+@if (pendingDelete()) {
+  <div class="modal-backdrop" (click)="cancelDelete()"></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+    <h3 id="delete-title">Confirmation</h3>
+    <p class="muted">{{ deletePrompt() }}</p>
+    <div class="modal-actions">
+      <button type="button" class="ghost" (click)="cancelDelete()">Annuler</button>
+      <button type="button" class="danger" (click)="confirmDelete()">Supprimer</button>
+    </div>
+  </div>
+}

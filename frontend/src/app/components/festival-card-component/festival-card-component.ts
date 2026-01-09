@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, input, output } from '@angular/core';
 import { FestivalDto } from "../../types/festival-dto";
 import { DatePipe } from '@angular/common';
 import { FestivalState } from '../../stores/festival-state';
@@ -14,22 +14,25 @@ export class FestivalCardComponent {
 
   festival = input.required<FestivalDto>();
 
-  select = output<number>();
+  select = output<number | null>();
 
-  festivaStore = inject(FestivalState);
+  private readonly festivalStore = inject(FestivalState);
 
   // Vérifier si ce festival est actuellement sélectionné
-  isSelected(): boolean {
-    const currentFestival = this.festivaStore.currentFestival();
+  readonly selected = computed(() => {
+    const currentFestival = this.festivalStore.currentFestival();
     return currentFestival?.id === this.festival().id;
-  }
+  });
 
   onFestivalClick(): void {
     const festival = this.festival();
-    this.festivaStore.setCurrentFestival(festival);
-    if (festival.id !== undefined) {
-      this.select.emit(festival.id);
+    if (this.selected()) {
+      this.festivalStore.setCurrentFestival(null);
+      this.select.emit(null);
+      return;
     }
+    this.festivalStore.setCurrentFestival(festival);
+    this.select.emit(festival.id ?? null);
   }
 
 }

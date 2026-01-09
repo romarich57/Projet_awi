@@ -1,0 +1,10 @@
+<section class="card header">
+  <div>
+    <p class="eyebrow">Modifier un jeu</p>
+    <h1>{{ gameTitle() || 'Chargement...' }}</h1>
+    <p class="muted">Mettre à jour les informations du catalogue maître.</p>
+  </div>
+  <div class="actions">
+    <a class="ghost" href="/games" (click)="onBack($event)">← Retour à la liste</a>
+  </div>
+</section>
