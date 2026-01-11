@@ -64,7 +64,8 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: ReservationDashbordComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin', 'super-organizer', 'organizer'] },
     title: 'Dashboard',
   },
   {
@@ -89,19 +90,22 @@ export const routes: Routes = [
   {
     path: 'reservants/:id',
     component: ReservantCardComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin', 'super-organizer', 'organizer'] },
     title: 'Réservant',
   },
   {
     path: 'games',
     component: GamesPageContainerComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin', 'super-organizer', 'organizer'] },
     title: 'Jeux',
   },
   {
     path: 'games/new',
     component: GameCreatePageContainerComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin', 'super-organizer', 'organizer'] },
     title: 'Créer un jeu',
   },
   {

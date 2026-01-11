@@ -14,8 +14,7 @@ export type StatusFilter = 'all' | 'verified' | 'unverified';
 export type RoleFilter = UserRole | 'all';
 
 const ROLE_LABELS: Record<UserRole, string> = {
-    visiteur: 'Visiteur',
-    benevole: 'Benevole',
+    benevole: 'Bénévole',
     organizer: 'Organisateur',
     'super-organizer': 'Super-organisateur',
     admin: 'Admin',

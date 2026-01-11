@@ -1,7 +1,8 @@
-import { Component, effect, inject, input, OnDestroy, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnDestroy, output, signal } from '@angular/core';
 import { WorkflowService } from '@app/services/workflow-service';
 import { CommonModule } from '@angular/common';
 import { WorkflowDto } from '@app/types/workflow-dto';
+import { AuthService } from '@app/services/auth.service';
 
 @Component({
   selector: 'app-workflow-component',
@@ -12,6 +13,16 @@ import { WorkflowDto } from '@app/types/workflow-dto';
 
 //on impléme,te OnDestroy pour gérer la sauvegarde des changements lorsque le composant est détruit/ la page est quittée
 export class WorkflowComponent implements OnDestroy {
+
+
+  readonly authService = inject(AuthService);
+  readonly currentUser = this.authService.currentUser();
+
+  // Inputs
+  readOnly = computed(() => {
+    return this.currentUser?.role !== 'admin' && this.currentUser?.role !== 'super-organizer';
+  });
+
   reservationId = input.required<number | null>();
   workflowLoaded = output<WorkflowDto>();
 

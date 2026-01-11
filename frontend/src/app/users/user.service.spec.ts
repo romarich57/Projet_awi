@@ -40,7 +40,7 @@ describe('UserService', () => {
       email: 'new@example.com',
       phone: null,
       avatarUrl: null,
-      role: 'visiteur',
+      role: 'benevole',
     };
 
     service.createUser(payload);
@@ -65,7 +65,7 @@ describe('UserService', () => {
       email: 'user1@example.com',
       phone: null,
       avatarUrl: null,
-      role: 'visiteur',
+      role: 'benevole',
       emailVerified: true,
     };
 
@@ -91,7 +91,7 @@ describe('UserService', () => {
       {
         id: 12,
         login: 'user12',
-        role: 'visiteur',
+        role: 'benevole',
         firstName: 'User',
         lastName: 'Twelve',
         email: 'user12@example.com',

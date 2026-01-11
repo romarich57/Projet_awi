@@ -100,7 +100,7 @@ export class AdminUserDetailPageComponent {
             validators: [Validators.required, Validators.email],
         }),
         phone: new FormControl('', { nonNullable: true }),
-        role: new FormControl<UserRole>('visiteur', {
+        role: new FormControl<UserRole>('benevole', {
             nonNullable: true,
             validators: [Validators.required],
         }),

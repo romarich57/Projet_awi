@@ -13,7 +13,7 @@ describe('AdminUserDetailInfoComponent', () => {
         firstName: 'Test',
         lastName: 'User',
         email: 'test@example.com',
-        role: 'visiteur',
+        role: 'benevole',
         emailVerified: true,
         avatarUrl: 'path/to/avatar.png',
         phone: null,

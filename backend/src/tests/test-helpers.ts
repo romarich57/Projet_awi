@@ -61,7 +61,7 @@ export async function createTestUser(overrides: {
         [
             login,
             passwordHash,
-            overrides.role || 'visiteur',
+            overrides.role || 'benevole',
             overrides.firstName || 'Test',
             overrides.lastName || 'User',
             email,

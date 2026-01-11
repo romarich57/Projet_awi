@@ -22,7 +22,7 @@ describe('AdminUserCreateCrudComponent', () => {
             lastName: new FormControl(''),
             email: new FormControl(''),
             phone: new FormControl(''),
-            role: new FormControl('visiteur')
+            role: new FormControl('benevole')
         });
         fixture.componentRef.setInput('createForm', formGroup);
 

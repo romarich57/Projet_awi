@@ -11,6 +11,55 @@
   }
 }
 
+.chaises-stock-global {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 0.75rem;
+  margin-bottom: 0.5rem;
+
+  .chaises-label {
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+
+  .chaises-count {
+    font-weight: 700;
+    color: #7c3aed;
+
+    &.low-stock {
+      color: #dc2626;
+    }
+  }
+}
+
+.chaises-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #7c3aed;
+    font-weight: 500;
+
+    input {
+      width: 80px;
+    }
+  }
+
+  .hint-text {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+  }
+}
+
 .zones-list > .empty-zone {
   color: var(--muted);
   margin: 0;

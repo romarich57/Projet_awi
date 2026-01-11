@@ -1,4 +1,4 @@
-CREATE TYPE role_enum AS ENUM ('visiteur', 'benevole', 'organizer', 'super-organizer', 'admin');
+CREATE TYPE role_enum AS ENUM ('benevole', 'organizer', 'super-organizer', 'admin');
 
 CREATE TYPE workflow_enum AS ENUM (
     'Pas_de_contact', 'Contact_pris', 'Discussion_en_cours', 
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
  id SERIAL PRIMARY KEY,
  login TEXT UNIQUE NOT NULL,
  password_hash TEXT NOT NULL,
- role role_enum DEFAULT 'visiteur',
+ role role_enum DEFAULT 'benevole',
  first_name TEXT,
  last_name TEXT,
  email TEXT UNIQUE NOT NULL,
@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS festival (
     stock_tables_standard INTEGER NOT NULL DEFAULT 0,
     stock_tables_grande INTEGER NOT NULL DEFAULT 0,
     stock_tables_mairie INTEGER NOT NULL DEFAULT 0,
-    stock_chaises INTEGER NOT NULL DEFAULT 0
+    stock_chaises INTEGER NOT NULL DEFAULT 0,
+    stock_chaises_available INTEGER NOT NULL DEFAULT 0
 );
 
 -- Table des Éditeurs (créateurs de jeux)
@@ -188,6 +189,7 @@ CREATE TABLE IF NOT EXISTS reservation_zones_tarifaires (
     reservation_id INTEGER REFERENCES reservation(id),
     zone_tarifaire_id INTEGER REFERENCES zone_tarifaire(id),
     nb_tables_reservees INTEGER NOT NULL,
+    nb_chaises_reservees INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (reservation_id, zone_tarifaire_id)
 );
 

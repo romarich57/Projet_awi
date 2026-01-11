@@ -9,7 +9,6 @@ const router = Router()
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const EMAIL_VERIFICATION_EXPIRATION_MS = 24 * 60 * 60 * 1000
 const ALLOWED_ROLES = new Set([
-  'visiteur',
   'benevole',
   'organizer',
   'super-organizer',
@@ -302,7 +301,7 @@ router.post('/', requireAdmin, async (req, res) => {
   const phone = sanitize(req.body?.phone)
   const avatarUrl = sanitize(req.body?.avatarUrl)
   const roleInput = typeof req.body?.role === 'string' ? sanitize(req.body.role) : ''
-  const role = roleInput || 'visiteur'
+  const role = roleInput || 'benevole'
 
   if (!login || !password || !firstName || !lastName || !email) {
     return res.status(400).json({ error: 'Champs obligatoires manquants' })

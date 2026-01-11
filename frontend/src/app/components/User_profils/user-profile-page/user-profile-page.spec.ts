@@ -27,7 +27,7 @@ describe('UserProfilePageComponent', () => {
       currentUser: signal({
         id: 2,
         login: 'profileuser',
-        role: 'visiteur',
+        role: 'benevole',
         firstName: 'Profile',
         lastName: 'User',
         email: 'profile@example.com',

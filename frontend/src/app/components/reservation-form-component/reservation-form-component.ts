@@ -1,9 +1,10 @@
-import { Component, inject, input, output, OnInit } from '@angular/core';
+import { Component, inject, input, output, OnInit, SimpleChanges, effect, computed } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ReservationService } from '../../services/reservation.service';
 import { ReservantApiService } from '../../services/reservant-api';
 import { ReservantDto } from '../../types/reservant-dto';
+import { AuthService } from '@app/services/auth.service';
 
 @Component({
   selector: 'app-reservation-form-component',
@@ -13,10 +14,17 @@ import { ReservantDto } from '../../types/reservant-dto';
   styleUrls: ['./reservation-form-component.scss'],
 })
 export class ReservationFormComponent {
+
+  readonly authService = inject(AuthService);
+  readonly currentUser = this.authService.currentUser();
+
   // Inputs
   festivalName = input<string>();
   festivalId = input<number>();
-  
+  readOnly = computed(() => {
+    return this.currentUser?.role !== 'admin' && this.currentUser?.role !== 'super-organizer';
+  });
+
   // Outputs
   closeForm = output<void>();
   reservationCreated = output<void>();
@@ -49,6 +57,8 @@ export class ReservationFormComponent {
     this.loadExistingReservants();
     this.updateValidators();
   }
+
+
 
 
   loadExistingReservants(): void {

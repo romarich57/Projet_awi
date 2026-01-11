@@ -20,7 +20,7 @@ describe('AdminUserDetailEditComponent', () => {
             lastName: new FormControl(''),
             email: new FormControl(''),
             phone: new FormControl(''),
-            role: new FormControl('visiteur'),
+            role: new FormControl('benevole'),
             emailVerified: new FormControl(false)
         });
         fixture.componentRef.setInput('editForm', formGroup);

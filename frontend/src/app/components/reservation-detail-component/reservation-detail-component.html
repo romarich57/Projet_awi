@@ -37,6 +37,7 @@
                   class="toggle-btn"
                   [class.active]="zone.inputMode === 'tables'"
                   (click)="toggleInputMode(zone.zone_tarifaire_id)"
+                  [disabled]="readOnly()"
                 >
                   {{ zone.inputMode === 'tables' ? 'Tables' : 'm²' }}
                 </button>
@@ -49,6 +50,7 @@
                   [min]="0"
                   [max]="zone.available_tables"
                   (input)="onTablesChange(zone.zone_tarifaire_id, $event)"
+                  [readonly]="readOnly()"
                 />
               } @else {
                 <label>m² :</label>
@@ -59,6 +61,7 @@
                   [max]="tablesToM2(zone.available_tables)"
                   [step]="0.5"
                   (input)="onM2Change(zone.zone_tarifaire_id, $event)"
+                  [readonly]="readOnly()"
                 />
                 <span class="conversion-info">
                   (= {{ zone.nb_tables_reservees }} tables, max {{ tablesToM2(zone.available_tables) | number:'1.1-1' }} m²)
@@ -85,6 +88,7 @@
           [value]="nbPrises()"
           [min]="0"
           (input)="onPrisesChange($event)"
+          [readonly]="readOnly()"
         />
         <span class="price-info">{{ prixParPrise | currency:'EUR':'symbol':'1.0-2' }} / prise</span>
         <span class="subtotal">
@@ -105,6 +109,7 @@
           [min]="0"
           [max]="totalTables()"
           (input)="onTableDiscountChange($event)"
+          [readonly]="readOnly()"
         />
         <span class="price-info">
           @if (tableDiscountAmount() > 0) {
@@ -123,6 +128,7 @@
           [min]="0"
           [step]="0.01"
           (input)="onDirectDiscountChange($event)"
+          [readonly]="readOnly()"
         />
         @if (directDiscount() > 0) {
           <span class="price-info">- {{ directDiscount() | currency:'EUR':'symbol':'1.2-2' }}</span>
@@ -136,6 +142,7 @@
           (input)="onNoteChange($event)"
           placeholder="Ajouter une note (optionnel)"
           rows="2"
+          [readonly]="readOnly()"
         ></textarea>
       </div>
     </div>
@@ -170,14 +177,16 @@
       </p>
     }
     
-    <div class="actions">
-      <button 
-        class="save-btn" 
-        (click)="saveReservation()" 
-        [disabled]="saving()">
-        {{ saving() ? 'Sauvegarde...' : 'Sauvegarder' }}
-      </button>
-    </div>
+    @if (!readOnly()) {
+      <div class="actions">
+        <button 
+          class="save-btn" 
+          (click)="saveReservation()" 
+          [disabled]="saving()">
+          {{ saving() ? 'Sauvegarde...' : 'Sauvegarder' }}
+        </button>
+      </div>
+    }
   } @else {
     <p class="no-data">Aucune réservation trouvée.</p>
   }

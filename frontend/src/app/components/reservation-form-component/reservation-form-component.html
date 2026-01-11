@@ -22,6 +22,7 @@
                             value="new"
                             formControlName="reservant_mode"
                             (change)="onModeChange()"
+                            [disabled]="readOnly()"
                         >
                         <span>Créer un nouveau réservant</span>
                     </label>
@@ -31,6 +32,7 @@
                             value="existing"
                             formControlName="reservant_mode"
                             (change)="onModeChange()"
+                            [disabled]="readOnly()"
                         >
                         <span>Choisir un réservant existant</span>
                     </label>
@@ -44,7 +46,7 @@
                         } @else {
                             <label class="field full">
                                 <span>Sélectionner un réservant *</span>
-                                <select formControlName="existing_reservant_id">
+                                <select formControlName="existing_reservant_id" [disabled]="readOnly()">
                                     <option value="">-- Choisir un réservant --</option>
                                     @for (reservant of existingReservants; track reservant.id) {
                                         <option [value]="reservant.id">
@@ -70,6 +72,7 @@
                                     type="text" 
                                     formControlName="reservant_name" 
                                     placeholder="Nom ou raison sociale"
+                                    [readonly]="readOnly()"
                                 >
                                 @if (reservationForm.get('reservant_name')?.touched && reservationForm.get('reservant_name')?.errors) {
                                     <small class="error">Le nom est requis</small>
@@ -82,6 +85,7 @@
                                     type="email" 
                                     formControlName="reservant_email" 
                                     placeholder="email@example.com"
+                                    [readonly]="readOnly()"
                                 >
                                 @if (reservationForm.get('reservant_email')?.touched && reservationForm.get('reservant_email')?.errors) {
                                     <small class="error">Un email valide est requis</small>
@@ -90,7 +94,7 @@
 
                             <label class="field">
                                 <span>Type de réservant *</span>
-                                <select formControlName="reservant_type">
+                                <select formControlName="reservant_type" [disabled]="readOnly()">
                                     <option value="editeur">Éditeur</option>
                                     <option value="prestataire">Prestataire</option>
                                     <option value="boutique">Boutique</option>
@@ -105,6 +109,7 @@
                                     type="tel" 
                                     formControlName="phone_number" 
                                     placeholder="0123456789"
+                                    [readonly]="readOnly()"
                                 >
                             </label>
 
@@ -114,6 +119,7 @@
                                     formControlName="address" 
                                     placeholder="Adresse complète"
                                     rows="3"
+                                    [readonly]="readOnly()"
                                 ></textarea>
                             </label>
 
@@ -123,6 +129,7 @@
                                     type="text" 
                                     formControlName="siret" 
                                     placeholder="12345678901234"
+                                    [readonly]="readOnly()"
                                 >
                             </label>
                         </div>
@@ -137,6 +144,7 @@
                             formControlName="note" 
                             placeholder="Informations complémentaires sur la réservation"
                             rows="3"
+                            [readonly]="readOnly()"
                         ></textarea>
                     </label>
                 </div>
@@ -150,15 +158,17 @@
 
             <div class="form-actions">
                 <button type="button" class="cancel-btn" (click)="cancel()" [disabled]="isSubmitting">
-                    Annuler
+                    {{ readOnly() ? 'Fermer' : 'Annuler' }}
                 </button>
-                <button type="submit" class="submit-btn" [disabled]="isSubmitting || reservationForm.invalid">
-                    @if (isSubmitting) {
-                        Création en cours...
-                    } @else {
-                        Créer la réservation
-                    }
-                </button>
+                @if (!readOnly()) {
+                    <button type="submit" class="submit-btn" [disabled]="isSubmitting || reservationForm.invalid">
+                        @if (isSubmitting) {
+                            Création en cours...
+                        } @else {
+                            Créer la réservation
+                        }
+                    </button>
+                }
             </div>
         </form>
     }

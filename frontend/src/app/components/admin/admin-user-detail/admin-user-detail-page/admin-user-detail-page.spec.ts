@@ -55,7 +55,7 @@ describe('AdminUserDetailPageComponent', () => {
             firstName: 'Test',
             lastName: 'User',
             email: 'test@example.com',
-            role: 'visiteur'
+            role: 'benevole'
         }]);
 
         fixture.detectChanges();
@@ -68,7 +68,7 @@ describe('AdminUserDetailPageComponent', () => {
         userServiceMock.users.set([{
             id: 1,
             login: 'test',
-            role: 'visiteur'
+            role: 'benevole'
         }]);
         fixture.detectChanges();
 

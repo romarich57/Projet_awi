@@ -15,7 +15,7 @@ describe('UserProfileInfoComponent', () => {
   const testUser: UserDto = {
     id: 1,
     login: 'profileuser',
-    role: 'visiteur',
+    role: 'benevole',
     firstName: 'Profile',
     lastName: 'User',
     email: 'profile@example.com',
@@ -54,11 +54,10 @@ describe('UserProfileInfoComponent', () => {
   });
 
   it('should have role labels defined', () => {
-    expect(component.roleLabels['visiteur']).toBe('Visiteur');
+    expect(component.roleLabels['benevole']).toBe('Bénévole');
     expect(component.roleLabels['admin']).toBe('Admin');
     expect(component.roleLabels['organizer']).toBe('Organisateur');
     expect(component.roleLabels['super-organizer']).toBe('Super-organisateur');
-    expect(component.roleLabels['benevole']).toBe('Benevole');
   });
 
   it('should return avatar URL using upload service', () => {

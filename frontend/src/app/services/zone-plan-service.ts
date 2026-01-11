@@ -14,11 +14,13 @@ export interface ZonePlanReservationAllocation {
   reservation_id: number;
   zone_plan_id: number;
   nb_tables: number;
+  nb_chaises: number;
 }
 
 export interface ZonePlanAllocationSummary {
   zone_plan_id: number;
   nb_tables: number;
+  nb_chaises: number;
 }
 
 @Injectable({
@@ -141,11 +143,12 @@ export class ZonePlanService {
   setReservationAllocation(
     reservationId: number,
     zonePlanId: number,
-    nbTables: number
+    nbTables: number,
+    nbChaises: number = 0
   ): Observable<ZonePlanReservationAllocation> {
     return this.http.put<ZonePlanReservationAllocation>(
       `/api/zone-plan/reservation/${reservationId}/allocations/${zonePlanId}`,
-      { nb_tables: nbTables },
+      { nb_tables: nbTables, nb_chaises: nbChaises },
       { withCredentials: true }
     );
   }

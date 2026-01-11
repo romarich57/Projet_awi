@@ -69,7 +69,7 @@ describe('AdminUserCreateFormComponent', () => {
         component.createForm.controls['firstName'].setValue('First');
         component.createForm.controls['lastName'].setValue('Last');
         component.createForm.controls['email'].setValue('test@example.com');
-        component.createForm.controls['role'].setValue('visiteur');
+        component.createForm.controls['role'].setValue('benevole');
         expect(component.createForm.valid).toBeTrue();
     });
 
@@ -81,7 +81,7 @@ describe('AdminUserCreateFormComponent', () => {
             lastName: 'Last',
             email: 'email@test.com',
             phone: '',
-            role: 'visiteur'
+            role: 'benevole'
         });
 
         component.submit();

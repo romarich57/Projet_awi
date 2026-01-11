@@ -3,6 +3,7 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { ZonePlanService, ZonePlanAllocationSummary, ZonePlanReservationAllocation } from '@app/services/zone-plan-service';
 import { ZoneTarifaireService } from '@app/services/zone-tarifaire.service';
+import { ReservationService } from '@app/services/reservation.service';
 import { ZoneTarifaireDto } from '@app/types/zone-tarifaire-dto';
 import { ZonePlanDto } from '@app/types/zone-plan-dto';
 import type { ReservationWithZones } from '@app/services/reservation.service';
@@ -22,6 +23,7 @@ export class ZonePlanSimple {
 
   private readonly zonePlanService = inject(ZonePlanService);
   private readonly zoneTarifaireService = inject(ZoneTarifaireService);
+  private readonly reservationService = inject(ReservationService);
 
   readonly zonePlans = this.zonePlanService.zonePlans;
   readonly zoneTarifaires = signal<ZoneTarifaireDto[]>([]);
@@ -36,7 +38,11 @@ export class ZonePlanSimple {
   readonly inputMode = signal<'tables' | 'm2'>('tables');
   readonly tablesInput = signal<number>(0);
   readonly m2Input = signal<number>(0);
+  readonly chaisesInput = signal<number>(0);
   readonly loading = signal(false);
+
+  // Stock de chaises pour le festival (total et disponible)
+  readonly chaisesStock = signal<{ total: number; available: number }>({ total: 0, available: 0 });
 
   readonly tablesToM2 = tablesToM2;
 
@@ -55,6 +61,14 @@ export class ZonePlanSimple {
     const result: Record<number, number> = {};
     for (const allocation of this.allocations()) {
       result[allocation.zone_plan_id] = Number(allocation.nb_tables) || 0;
+    }
+    return result;
+  });
+
+  readonly chaisesAlloueesParZone = computed(() => {
+    const result: Record<number, number> = {};
+    for (const allocation of this.allocations()) {
+      result[allocation.zone_plan_id] = Number(allocation.nb_chaises) || 0;
     }
     return result;
   });
@@ -112,6 +126,7 @@ export class ZonePlanSimple {
       this.zonePlanService.getZonePlans(id);
       this.loadZoneTarifaires(id);
       this.loadAllocationsSummary(id);
+      this.loadChaisesStock(id);
     });
 
     effect(() => {
@@ -139,6 +154,20 @@ export class ZonePlanSimple {
     this.zonePlanService.getFestivalAllocationsSummary(festivalId).subscribe({
       next: (allocations) => this.allocationsSummary.set(allocations),
       error: (err) => console.error('Erreur chargement allocations globales', err)
+    });
+  }
+
+  private loadChaisesStock(festivalId: number): void {
+    this.reservationService.getStockByFestival(festivalId).subscribe({
+      next: (stock) => {
+        if (stock.chaises) {
+          this.chaisesStock.set({
+            total: stock.chaises.total,
+            available: stock.chaises.available
+          });
+        }
+      },
+      error: (err) => console.error('Erreur chargement stock chaises', err)
     });
   }
 
@@ -172,10 +201,12 @@ export class ZonePlanSimple {
     this.selectedZone.set(zone);
     this.inputMode.set('tables');
     const currentTables = this.tablesAlloueesParZone()[zone.id] || 0;
+    const currentChaises = this.chaisesAlloueesParZone()[zone.id] || 0;
     const availableTables = this.tablesDisponiblesPourZone(zone);
     const initialTables = currentTables || (availableTables > 0 ? 1 : 0);
     this.tablesInput.set(initialTables);
     this.m2Input.set(tablesToM2(initialTables));
+    this.chaisesInput.set(currentChaises);
     this.showAllocationModal.set(true);
   }
 
@@ -201,14 +232,34 @@ export class ZonePlanSimple {
     this.tablesInput.set(tables);
   }
 
+  onChaisesInputChange(value: number): void {
+    const chaises = Math.max(0, Math.floor(value || 0));
+    // Limiter au stock disponible + chaises déjà allouées pour cette zone
+    const zone = this.selectedZone();
+    if (!zone) return;
+    const currentChaises = this.chaisesAlloueesParZone()[zone.id] || 0;
+    const maxChaises = this.chaisesStock().available + currentChaises;
+    this.chaisesInput.set(Math.min(chaises, maxChaises));
+  }
+
+  chaisesDisponibles(): number {
+    const zone = this.selectedZone();
+    if (!zone) return 0;
+    const currentChaises = this.chaisesAlloueesParZone()[zone.id] || 0;
+    return this.chaisesStock().available + currentChaises;
+  }
+
   saveAllocation(): void {
     const zone = this.selectedZone();
     const reservation = this.reservation();
     if (!zone || !reservation) return;
 
     const nbTables = Math.max(0, Math.floor(this.tablesInput()));
+    const nbChaises = Math.max(0, Math.floor(this.chaisesInput()));
     const maxTables = this.tablesDisponiblesPourZone(zone);
-    if (nbTables <= 0) return;
+    
+    // Permettre allocation avec 0 tables si des chaises sont allouées
+    if (nbTables <= 0 && nbChaises <= 0) return;
 
     if (nbTables > maxTables) {
       alert(`Pas assez de tables disponibles. Max: ${maxTables}, Demandées: ${nbTables}`);
@@ -216,9 +267,14 @@ export class ZonePlanSimple {
     }
 
     this.loading.set(true);
-    this.zonePlanService.setReservationAllocation(reservation.id, zone.id, nbTables).subscribe({
+    this.zonePlanService.setReservationAllocation(reservation.id, zone.id, nbTables, nbChaises).subscribe({
       next: () => {
         this.refreshAllocations();
+        // Recharger le stock de chaises
+        const festivalId = this.festivalId();
+        if (festivalId != null) {
+          this.loadChaisesStock(festivalId);
+        }
         this.closeAllocationModal();
       },
       error: (err) => {

@@ -2,7 +2,8 @@
     <h3>État de la réservation</h3>
     <!-- Affichage des informations du workflow -->
     @if (workflow()) {
-        <select class="workflow-steps" [value]="workflow()!.etatcourant" (change)="onStateChange($event)">
+        <select class="workflow-steps" [value]="workflow()!.etatcourant" (change)="onStateChange($event)"
+            [disabled]="readOnly()">
             <option value="Pas_de_contact">Pas de contact</option>
             <option value="Contact_pris">Contact pris</option>
             <option value="Discussion_en_cours">Discussion en cours</option>
@@ -12,7 +13,8 @@
         </select>
 
         <div class="contact-section">
-            <button (click)="onContacted()">Contacté</button>
+            
+            <button (click)="onContacted()" [disabled]="readOnly()">Contacté</button>
             
             @if (contactMessage()) {
                 <p class="contact-message" [class.success]="contactMessage()!.includes('succès')" [class.error]="!contactMessage()!.includes('succès')">
@@ -35,19 +37,19 @@
         <h3>Presence et reception des jeux</h3>
         <div class="game-presence">
             <label>
-                <input type="checkbox" [checked]="workflow()!.liste_jeux_demandee" (change)="onCheckboxChange('liste_jeux_demandee', $event)" />
+                <input type="checkbox" [checked]="workflow()!.liste_jeux_demandee"  (change)="onCheckboxChange('liste_jeux_demandee', $event)" [disabled]="readOnly()" />
                 Liste jeux demandées
             </label>
             <label>
-                <input type="checkbox" [checked]="workflow()!.liste_jeux_obtenue" (change)="onCheckboxChange('liste_jeux_obtenue', $event)" />
+                <input type="checkbox" [checked]="workflow()!.liste_jeux_obtenue" (change)="onCheckboxChange('liste_jeux_obtenue', $event)" [disabled]="readOnly()" />
                 Liste jeux obtenus
             </label>
             <label>
-                <input type="checkbox" [checked]="workflow()!.jeux_recus" (change)="onCheckboxChange('jeux_recus', $event)" />
+                <input type="checkbox" [checked]="workflow()!.jeux_recus" (change)="onCheckboxChange('jeux_recus', $event)" [disabled]="readOnly()" />
                 Jeux recus
             </label>
             <label>
-                <input type="checkbox" [checked]="workflow()!.presentera_jeux" (change)="onCheckboxChange('presentera_jeux', $event)" />
+                <input type="checkbox" [checked]="workflow()!.presentera_jeux" (change)="onCheckboxChange('presentera_jeux', $event)" [disabled]="readOnly()" />
                 Présentera jeux au festival ?
             </label>
         </div>

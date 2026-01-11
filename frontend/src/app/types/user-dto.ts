@@ -1,7 +1,6 @@
-export type UserRole = 'admin' | 'visiteur' | 'benevole' | 'organizer' | 'super-organizer';
+export type UserRole = 'admin' | 'benevole' | 'organizer' | 'super-organizer';
 
 export const USER_ROLES: UserRole[] = [
-  'visiteur',
   'benevole',
   'organizer',
   'super-organizer',

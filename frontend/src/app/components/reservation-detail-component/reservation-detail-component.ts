@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReservationService, ReservationWithZones } from '@app/services/reservation.service';
 import { M2_PER_TABLE, m2ToTables, tablesToM2 } from '@app/shared/utils/table-conversion';
+import { AuthService } from '@app/services/auth.service';
 
 interface ZoneSelection {
   zone_tarifaire_id: number;
@@ -27,6 +28,13 @@ export class ReservationDetailComponent {
   reservationLoaded = output<ReservationWithZones>();
 
   private readonly reservationService = inject(ReservationService);
+  private readonly authService = inject(AuthService);
+
+  // Signal pour savoir si le formulaire est en lecture seule
+  readonly readOnly = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.role !== 'admin' && user?.role !== 'super-organizer';
+  });
 
   // Données de la réservation
   reservation = signal<ReservationWithZones | null>(null);
@@ -123,9 +131,9 @@ export class ReservationDetailComponent {
         
         // Charger le stock disponible pour le festival
         this.reservationService.getStockByFestival(reservation.festival_id).subscribe({
-          next: (stock) => {
+          next: (stockResponse) => {
             // Fusionner le stock avec les réservations existantes
-            const zonesWithSelection: ZoneSelection[] = stock.map(s => {
+            const zonesWithSelection: ZoneSelection[] = stockResponse.zones.map(s => {
               const existingZone = reservation.zones_tarifaires.find(
                 z => z.zone_tarifaire_id === s.id
               );
@@ -254,7 +262,8 @@ export class ReservationDetailComponent {
       .filter(z => z.nb_tables_reservees > 0)
       .map(z => ({
         zone_tarifaire_id: z.zone_tarifaire_id,
-        nb_tables_reservees: z.nb_tables_reservees
+        nb_tables_reservees: z.nb_tables_reservees,
+        nb_chaises_reservees: 0
       }));
 
     this.reservationService.updateReservation(reservation.id, {
@@ -274,6 +283,7 @@ export class ReservationDetailComponent {
             .map(z => ({
               zone_tarifaire_id: z.zone_tarifaire_id,
               nb_tables_reservees: z.nb_tables_reservees,
+              nb_chaises_reservees: 0,
               zone_name: z.name,
               price_per_table: z.price_per_table,
               nb_tables_available: z.available_tables

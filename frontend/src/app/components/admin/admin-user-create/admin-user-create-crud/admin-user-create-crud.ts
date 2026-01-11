@@ -10,8 +10,7 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { UserRole, USER_ROLES } from '@app/types/user-dto';
 
 const ROLE_LABELS: Record<UserRole, string> = {
-    visiteur: 'Visiteur',
-    benevole: 'Benevole',
+    benevole: 'Bénévole',
     organizer: 'Organisateur',
     'super-organizer': 'Super-organisateur',
     admin: 'Admin',

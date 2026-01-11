@@ -66,7 +66,7 @@ export class AdminUserCreateFormComponent {
             validators: [Validators.required, Validators.email],
         }),
         phone: new FormControl('', { nonNullable: true }),
-        role: new FormControl<UserRole>('visiteur', {
+        role: new FormControl<UserRole>('benevole', {
             nonNullable: true,
             validators: [Validators.required],
         }),
@@ -175,7 +175,7 @@ export class AdminUserCreateFormComponent {
             lastName: '',
             email: '',
             phone: '',
-            role: 'visiteur',
+            role: 'benevole',
         });
         this.selectedFile.set(null);
         this.avatarPreview.set(DEFAULT_AVATAR_URL);

@@ -16,6 +16,17 @@ export interface ZoneStock {
   price_per_table: number;
 }
 
+export interface ChaisesStock {
+  total: number;
+  available: number;
+  reserved: number;
+}
+
+export interface StockResponse {
+  zones: ZoneStock[];
+  chaises: ChaisesStock;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -42,8 +53,8 @@ export class ReservationService {
   }
 
   //Récupérer le stock disponible par zone tarifaire pour un festival
-  getStockByFestival(festivalId: number): Observable<ZoneStock[]> {
-    return this.http.get<ZoneStock[]>(`${environment.apiUrl}/reservation/stock/${festivalId}`,
+  getStockByFestival(festivalId: number): Observable<StockResponse> {
+    return this.http.get<StockResponse>(`${environment.apiUrl}/reservation/stock/${festivalId}`,
        { withCredentials: true });
   }
 
@@ -55,7 +66,7 @@ export class ReservationService {
     table_discount_offered?: number;
     direct_discount?: number;
     note?: string;
-    zones_tarifaires?: { zone_tarifaire_id: number; nb_tables_reservees: number }[];
+    zones_tarifaires?: { zone_tarifaire_id: number; nb_tables_reservees: number; nb_chaises_reservees: number }[];
   }): Observable<{message: string, reservation: ReservationDto}> {
     return this.http.put<{message: string, reservation: ReservationDto}>(
       `${environment.apiUrl}/reservation/reservation/${reservationId}`,
@@ -94,8 +105,13 @@ export interface ReservationWithZones {
   zones_tarifaires: {
     zone_tarifaire_id: number;
     nb_tables_reservees: number;
+    nb_chaises_reservees: number;
     zone_name: string;
     price_per_table: number;
     nb_tables_available: number;
   }[];
+  chaises_stock?: {
+    total: number;
+    available: number;
+  };
 }  

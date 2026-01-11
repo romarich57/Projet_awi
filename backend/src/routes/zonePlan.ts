@@ -12,7 +12,7 @@ router.get('/reservation/:reservation_id/allocations', async (req, res) => {
 
     try {
         const { rows } = await pool.query(
-            `SELECT reservation_id, zone_plan_id, nb_tables
+            `SELECT reservation_id, zone_plan_id, nb_tables, nb_chaises
              FROM reservation_zone_plan
              WHERE reservation_id = $1
              ORDER BY zone_plan_id`,
@@ -29,13 +29,15 @@ router.get('/reservation/:reservation_id/allocations', async (req, res) => {
 router.put('/reservation/:reservation_id/allocations/:zone_plan_id', async (req, res) => {
     const reservationId = Number(req.params.reservation_id);
     const zonePlanId = Number(req.params.zone_plan_id);
-    const nbTables = Number(req.body?.nb_tables);
+    const nbTables = Number(req.body?.nb_tables ?? 0);
+    const nbChaises = Number(req.body?.nb_chaises ?? 0);
 
     if (!Number.isFinite(reservationId) || !Number.isFinite(zonePlanId)) {
         return res.status(400).json({ error: 'Identifiant invalide' });
     }
-    if (!Number.isFinite(nbTables) || nbTables <= 0) {
-        return res.status(400).json({ error: 'nb_tables doit être positif' });
+    // Au moins une table ou une chaise doit être allouée
+    if ((nbTables <= 0 && nbChaises <= 0) || nbTables < 0 || nbChaises < 0) {
+        return res.status(400).json({ error: 'nb_tables ou nb_chaises doit être positif' });
     }
 
     try {
@@ -58,12 +60,12 @@ router.put('/reservation/:reservation_id/allocations/:zone_plan_id', async (req,
         }
 
         const { rows } = await pool.query(
-            `INSERT INTO reservation_zone_plan (reservation_id, zone_plan_id, nb_tables)
-             VALUES ($1, $2, $3)
+            `INSERT INTO reservation_zone_plan (reservation_id, zone_plan_id, nb_tables, nb_chaises)
+             VALUES ($1, $2, $3, $4)
              ON CONFLICT (reservation_id, zone_plan_id)
-             DO UPDATE SET nb_tables = EXCLUDED.nb_tables
-             RETURNING reservation_id, zone_plan_id, nb_tables`,
-            [reservationId, zonePlanId, nbTables]
+             DO UPDATE SET nb_tables = EXCLUDED.nb_tables, nb_chaises = EXCLUDED.nb_chaises
+             RETURNING reservation_id, zone_plan_id, nb_tables, nb_chaises`,
+            [reservationId, zonePlanId, nbTables, nbChaises]
         );
 
         res.json(rows[0]);
@@ -107,7 +109,9 @@ router.get('/festival/:festival_id/allocations-simple', async (req, res) => {
 
     try {
         const { rows } = await pool.query(
-            `SELECT rzp.zone_plan_id, COALESCE(SUM(rzp.nb_tables), 0) AS nb_tables
+            `SELECT rzp.zone_plan_id, 
+                    COALESCE(SUM(rzp.nb_tables), 0) AS nb_tables,
+                    COALESCE(SUM(rzp.nb_chaises), 0) AS nb_chaises
              FROM reservation_zone_plan rzp
              JOIN reservation r ON r.id = rzp.reservation_id
              WHERE r.festival_id = $1

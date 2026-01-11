@@ -66,7 +66,7 @@ test('POST /users - should create user with default role', async () => {
   assert.strictEqual(mockRes.statusCode, 201)
 
   const { rows } = await pool.query('SELECT role FROM users WHERE login = $1', [login])
-  assert.strictEqual(rows[0].role, 'visiteur')
+  assert.strictEqual(rows[0].role, 'benevole')
 })
 
 test('PUT /users/:id - should update user role and status', async () => {

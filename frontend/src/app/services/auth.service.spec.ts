@@ -14,7 +14,7 @@ describe('AuthService', () => {
         id: 1,
         login: 'testuser',
         email: 'test@example.com',
-        role: 'visiteur',
+        role: 'benevole',
         firstName: 'Test',
         lastName: 'User',
         emailVerified: true,

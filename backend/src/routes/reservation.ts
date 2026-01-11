@@ -8,7 +8,8 @@ router.get('/stock/:festivalId', async (req, res) => {
     const { festivalId } = req.params;
 
     try {
-        const { rows } = await pool.query(
+        // Récupérer les zones tarifaires
+        const zonesResult = await pool.query(
             `SELECT 
                 zt.id,
                 zt.name,
@@ -22,7 +23,26 @@ router.get('/stock/:festivalId', async (req, res) => {
             [festivalId]
         );
 
-        res.json(rows);
+        // Récupérer le stock de chaises du festival
+        const festivalResult = await pool.query(
+            `SELECT 
+                stock_chaises as total_chaises,
+                stock_chaises_available as available_chaises
+             FROM festival
+             WHERE id = $1`,
+            [festivalId]
+        );
+
+        const chaisesStock = festivalResult.rows[0] || { total_chaises: 0, available_chaises: 0 };
+
+        res.json({
+            zones: zonesResult.rows,
+            chaises: {
+                total: chaisesStock.total_chaises,
+                available: chaisesStock.available_chaises,
+                reserved: chaisesStock.total_chaises - chaisesStock.available_chaises
+            }
+        });
     } catch (err) {
         console.error('Erreur lors de la récupération du stock:', err);
         res.status(500).json({ error: 'Erreur serveur' });
@@ -110,6 +130,7 @@ router.get('/detail/:reservationId', async (req, res) => {
             `SELECT 
                 rzt.zone_tarifaire_id,
                 rzt.nb_tables_reservees,
+                rzt.nb_chaises_reservees,
                 zt.name as zone_name,
                 zt.price_per_table,
                 zt.nb_tables_available
@@ -118,10 +139,26 @@ router.get('/detail/:reservationId', async (req, res) => {
              WHERE rzt.reservation_id = $1`,
             [reservationId]
         );
+
+        // Récupérer le stock de chaises du festival
+        const festivalResult = await pool.query(
+            `SELECT 
+                stock_chaises as total_chaises,
+                stock_chaises_available as available_chaises
+             FROM festival
+             WHERE id = $1`,
+            [reservation.festival_id]
+        );
+
+        const chaisesStock = festivalResult.rows[0] || { total_chaises: 0, available_chaises: 0 };
         
         res.json({
             ...reservation,
-            zones_tarifaires: zonesResult.rows
+            zones_tarifaires: zonesResult.rows,
+            chaises_stock: {
+                total: chaisesStock.total_chaises,
+                available: chaisesStock.available_chaises
+            }
         });
     } catch (err) {
         console.error('Erreur lors de la récupération de la réservation:', err);
@@ -237,9 +274,11 @@ router.post('/reservation', async (req, res) => {
         const reservationId = reservationResult.rows[0].id;
 
         // 5. Insérer les relations avec les zones tarifaires et mettre à jour le stock
+        let totalChaisesReservees = 0;
+        
         if (zones_tarifaires && zones_tarifaires.length > 0) {
             for (const zone of zones_tarifaires) {
-                // Vérifier le stock disponible
+                // Vérifier le stock de tables disponible
                 const stockCheck = await client.query(
                     `SELECT nb_tables_available FROM zone_tarifaire WHERE id = $1 FOR UPDATE`,
                     [zone.zone_tarifaire_id]
@@ -254,14 +293,17 @@ router.post('/reservation', async (req, res) => {
                     throw new Error(`Stock insuffisant pour la zone tarifaire ${zone.zone_tarifaire_id}. Disponible: ${stockDisponible}, Demandé: ${zone.nb_tables_reservees}`);
                 }
 
-                // Insérer la réservation de zone tarifaire
+                const nbChaises = zone.nb_chaises_reservees || 0;
+                totalChaisesReservees += nbChaises;
+
+                // Insérer la réservation de zone tarifaire avec les chaises
                 await client.query(
-                    `INSERT INTO reservation_zones_tarifaires (reservation_id, zone_tarifaire_id, nb_tables_reservees)
-                     VALUES ($1, $2, $3)`,
-                    [reservationId, zone.zone_tarifaire_id, zone.nb_tables_reservees]
+                    `INSERT INTO reservation_zones_tarifaires (reservation_id, zone_tarifaire_id, nb_tables_reservees, nb_chaises_reservees)
+                     VALUES ($1, $2, $3, $4)`,
+                    [reservationId, zone.zone_tarifaire_id, zone.nb_tables_reservees, nbChaises]
                 );
 
-                // Mettre à jour le stock disponible
+                // Mettre à jour le stock de tables disponible
                 await client.query(
                     `UPDATE zone_tarifaire 
                      SET nb_tables_available = nb_tables_available - $1 
@@ -269,6 +311,26 @@ router.post('/reservation', async (req, res) => {
                     [zone.nb_tables_reservees, zone.zone_tarifaire_id]
                 );
             }
+        }
+
+        // Vérifier et mettre à jour le stock de chaises du festival
+        if (totalChaisesReservees > 0) {
+            const chaisesCheck = await client.query(
+                `SELECT stock_chaises_available FROM festival WHERE id = $1 FOR UPDATE`,
+                [festival_id]
+            );
+            
+            const chaisesDisponibles = chaisesCheck.rows[0]?.stock_chaises_available || 0;
+            if (chaisesDisponibles < totalChaisesReservees) {
+                throw new Error(`Stock de chaises insuffisant. Disponible: ${chaisesDisponibles}, Demandé: ${totalChaisesReservees}`);
+            }
+
+            await client.query(
+                `UPDATE festival 
+                 SET stock_chaises_available = stock_chaises_available - $1 
+                 WHERE id = $2`,
+                [totalChaisesReservees, festival_id]
+            );
         }
 
         // 6. Si le réservant est lié à un éditeur, créer automatiquement les allocations de jeux
@@ -346,21 +408,46 @@ router.put('/reservation/:id', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+
+        // Récupérer le festival_id de la réservation
+        const reservationInfo = await client.query(
+            `SELECT festival_id FROM reservation WHERE id = $1`,
+            [id]
+        );
+        if (reservationInfo.rows.length === 0) {
+            throw new Error('Réservation introuvable');
+        }
+        const festivalId = reservationInfo.rows[0].festival_id;
+
         // 1. Récupérer les anciennes réservations de zones pour restaurer le stock
         const oldZones = await client.query(
-            `SELECT zone_tarifaire_id, nb_tables_reservees 
+            `SELECT zone_tarifaire_id, nb_tables_reservees, nb_chaises_reservees 
              FROM reservation_zones_tarifaires 
              WHERE reservation_id = $1`,
             [id]
         );
 
-        // 2. Restaurer le stock des anciennes zones
+        // Calculer le total des anciennes chaises
+        let oldTotalChaises = 0;
+
+        // 2. Restaurer le stock des anciennes zones (tables)
         for (const oldZone of oldZones.rows) {
             await client.query(
                 `UPDATE zone_tarifaire 
                  SET nb_tables_available = nb_tables_available + $1 
                  WHERE id = $2`,
                 [oldZone.nb_tables_reservees, oldZone.zone_tarifaire_id]
+            );
+            oldTotalChaises += oldZone.nb_chaises_reservees || 0;
+        }
+
+        // 2b. Restaurer le stock de chaises du festival
+        if (oldTotalChaises > 0) {
+            await client.query(
+                `UPDATE festival 
+                 SET stock_chaises_available = stock_chaises_available + $1 
+                 WHERE id = $2`,
+                [oldTotalChaises, festivalId]
             );
         }
 
@@ -387,8 +474,10 @@ router.put('/reservation/:id', async (req, res) => {
         );
 
         // 5. Ajouter les nouvelles zones et décrémenter le stock
+        let newTotalChaises = 0;
+
         for (const zone of zones_tarifaires) {
-            // Vérifier le stock disponible
+            // Vérifier le stock de tables disponible
             const stockCheck = await client.query(
                 `SELECT nb_tables_available FROM zone_tarifaire WHERE id = $1 FOR UPDATE`,
                 [zone.zone_tarifaire_id]
@@ -403,19 +492,42 @@ router.put('/reservation/:id', async (req, res) => {
                 throw new Error(`Stock insuffisant pour la zone tarifaire ${zone.zone_tarifaire_id}. Disponible: ${stockDisponible}, Demandé: ${zone.nb_tables_reservees}`);
             }
 
-            // Insérer la nouvelle réservation de zone
+            const nbChaises = zone.nb_chaises_reservees || 0;
+            newTotalChaises += nbChaises;
+
+            // Insérer la nouvelle réservation de zone avec les chaises
             await client.query(
-                `INSERT INTO reservation_zones_tarifaires (reservation_id, zone_tarifaire_id, nb_tables_reservees)
-                 VALUES ($1, $2, $3)`,
-                [id, zone.zone_tarifaire_id, zone.nb_tables_reservees]
+                `INSERT INTO reservation_zones_tarifaires (reservation_id, zone_tarifaire_id, nb_tables_reservees, nb_chaises_reservees)
+                 VALUES ($1, $2, $3, $4)`,
+                [id, zone.zone_tarifaire_id, zone.nb_tables_reservees, nbChaises]
             );
 
-            // Décrémenter le stock
+            // Décrémenter le stock de tables
             await client.query(
                 `UPDATE zone_tarifaire 
                  SET nb_tables_available = nb_tables_available - $1 
                  WHERE id = $2`,
                 [zone.nb_tables_reservees, zone.zone_tarifaire_id]
+            );
+        }
+
+        // 5b. Vérifier et mettre à jour le stock de chaises du festival
+        if (newTotalChaises > 0) {
+            const chaisesCheck = await client.query(
+                `SELECT stock_chaises_available FROM festival WHERE id = $1 FOR UPDATE`,
+                [festivalId]
+            );
+            
+            const chaisesDisponibles = chaisesCheck.rows[0]?.stock_chaises_available || 0;
+            if (chaisesDisponibles < newTotalChaises) {
+                throw new Error(`Stock de chaises insuffisant. Disponible: ${chaisesDisponibles}, Demandé: ${newTotalChaises}`);
+            }
+
+            await client.query(
+                `UPDATE festival 
+                 SET stock_chaises_available = stock_chaises_available - $1 
+                 WHERE id = $2`,
+                [newTotalChaises, festivalId]
             );
         }
 
@@ -441,15 +553,26 @@ router.delete('/reservation/:id', async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. Récupérer les zones tarifaires de la réservation pour restaurer le stock
+        // 1. Récupérer le festival_id de la réservation
+        const reservationInfo = await client.query(
+            `SELECT festival_id FROM reservation WHERE id = $1`,
+            [id]
+        );
+        if (reservationInfo.rows.length === 0) {
+            throw new Error('Réservation introuvable');
+        }
+        const festivalId = reservationInfo.rows[0].festival_id;
+
+        // 2. Récupérer les zones tarifaires de la réservation pour restaurer le stock
         const zonesToRestore = await client.query(
-            `SELECT zone_tarifaire_id, nb_tables_reservees 
+            `SELECT zone_tarifaire_id, nb_tables_reservees, nb_chaises_reservees 
              FROM reservation_zones_tarifaires 
              WHERE reservation_id = $1`,
             [id]
         );
 
-        // 2. Restaurer le stock des zones tarifaires
+        // 3. Restaurer le stock des zones tarifaires et calculer les chaises
+        let totalChaisesToRestore = 0;
         for (const zone of zonesToRestore.rows) {
             await client.query(
                 `UPDATE zone_tarifaire 
@@ -457,15 +580,26 @@ router.delete('/reservation/:id', async (req, res) => {
                  WHERE id = $2`,
                 [zone.nb_tables_reservees, zone.zone_tarifaire_id]
             );
+            totalChaisesToRestore += zone.nb_chaises_reservees || 0;
         }
 
-        // 3. Supprimer les associations zones tarifaires
+        // 3b. Restaurer le stock de chaises du festival
+        if (totalChaisesToRestore > 0) {
+            await client.query(
+                `UPDATE festival 
+                 SET stock_chaises_available = stock_chaises_available + $1 
+                 WHERE id = $2`,
+                [totalChaisesToRestore, festivalId]
+            );
+        }
+
+        // 4. Supprimer les associations zones tarifaires
         await client.query(
             `DELETE FROM reservation_zones_tarifaires WHERE reservation_id = $1`,
             [id]
         );
 
-        // 4. Supprimer la réservation
+        // 5. Supprimer la réservation
         const deleteResult = await client.query(
             `DELETE FROM reservation WHERE id = $1 RETURNING *`,
             [id]

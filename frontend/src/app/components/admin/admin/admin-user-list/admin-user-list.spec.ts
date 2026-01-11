@@ -14,7 +14,7 @@ describe('AdminUserListComponent', () => {
         {
             id: 1,
             login: 'alice',
-            role: 'visiteur',
+            role: 'benevole',
             firstName: 'Alice',
             lastName: 'Martin',
             email: 'alice@example.com',

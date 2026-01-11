@@ -13,7 +13,7 @@ describe('AdminUserCrudComponent', () => {
         firstName: 'Test',
         lastName: 'User',
         email: 'test@example.com',
-        role: 'visiteur',
+        role: 'benevole',
         emailVerified: true,
         avatarUrl: null,
         phone: null,
@@ -47,7 +47,7 @@ describe('AdminUserCrudComponent', () => {
 
     it('should not emit roleChanged if role is same', () => {
         spyOn(component.roleChanged, 'emit');
-        const event = { target: { value: 'visiteur' } } as any;
+        const event = { target: { value: 'benevole' } } as any;
         component.updateUserRole(event);
         expect(component.roleChanged.emit).not.toHaveBeenCalled();
     });
