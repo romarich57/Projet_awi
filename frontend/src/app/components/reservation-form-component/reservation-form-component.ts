@@ -43,6 +43,8 @@ export class ReservationFormComponent {
     reservant_mode: new FormControl<'new' | 'existing'>('new'),
     // Sélection du réservant existant
     existing_reservant_id: new FormControl<string | null>(null),
+    represent_editor: new FormControl<'no' | 'yes'>('no'),
+    represented_editor_id: new FormControl<string | null>(null),
     // Informations du réservant (pour nouveau réservant)
     reservant_name: new FormControl(''),
     reservant_email: new FormControl(''),
@@ -56,6 +58,22 @@ export class ReservationFormComponent {
   constructor() {
     this.loadExistingReservants();
     this.updateValidators();
+    this.setupRepresentedEditorWatchers();
+  }
+
+  private setupRepresentedEditorWatchers(): void {
+    this.reservationForm.get('reservant_type')?.valueChanges.subscribe(() => {
+      this.handleRepresentedEditorVisibility();
+    });
+    this.reservationForm.get('existing_reservant_id')?.valueChanges.subscribe(() => {
+      this.handleRepresentedEditorVisibility();
+    });
+    this.reservationForm.get('represent_editor')?.valueChanges.subscribe(() => {
+      this.updateRepresentedEditorValidators();
+      if (this.reservationForm.get('represent_editor')?.value === 'no') {
+        this.reservationForm.patchValue({ represented_editor_id: null }, { emitEvent: false });
+      }
+    });
   }
 
 
@@ -68,6 +86,7 @@ export class ReservationFormComponent {
         this.existingReservants = reservants;
         this.loadingReservants = false;
         console.log('Réservants chargés:', reservants.length, reservants);
+        this.handleRepresentedEditorVisibility();
       },
       error: (error) => {
         console.error('Erreur lors du chargement des réservants:', error);
@@ -85,6 +104,8 @@ export class ReservationFormComponent {
     // Réinitialiser les valeurs
     this.reservationForm.patchValue({
       existing_reservant_id: null,
+      represent_editor: 'no',
+      represented_editor_id: null,
       reservant_name: '',
       reservant_email: '',
       reservant_type: 'boutique',
@@ -92,6 +113,7 @@ export class ReservationFormComponent {
       address: '',
       siret: ''
     });
+    this.handleRepresentedEditorVisibility();
   }
 
   updateValidators(): void {
@@ -119,10 +141,66 @@ export class ReservationFormComponent {
     nameControl?.updateValueAndValidity();
     emailControl?.updateValueAndValidity();
     typeControl?.updateValueAndValidity();
+
+    this.updateRepresentedEditorValidators();
   }
 
   get isExistingMode(): boolean {
     return this.reservationForm.get('reservant_mode')?.value === 'existing';
+  }
+
+  get editorReservants(): ReservantDto[] {
+    return this.existingReservants.filter(reservant => reservant.type === 'editeur');
+  }
+
+  get selectedReservantType(): ReservantDto['type'] | null {
+    if (this.isExistingMode) {
+      const existingId = this.reservationForm.get('existing_reservant_id')?.value;
+      if (!existingId) return null;
+      const selected = this.existingReservants.find(r => r.id === Number(existingId));
+      return selected?.type ?? null;
+    }
+    return this.reservationForm.get('reservant_type')?.value ?? null;
+  }
+
+  shouldShowRepresentedEditorQuestion(): boolean {
+    const type = this.selectedReservantType;
+    return type === 'animateur' || type === 'prestataire' || type === 'association';
+  }
+
+  onReservantTypeChange(): void {
+    this.handleRepresentedEditorVisibility();
+  }
+
+  onExistingReservantChange(): void {
+    this.handleRepresentedEditorVisibility();
+  }
+
+  onRepresentEditorChange(): void {
+    this.updateRepresentedEditorValidators();
+  }
+
+  private handleRepresentedEditorVisibility(): void {
+    if (!this.shouldShowRepresentedEditorQuestion()) {
+      this.reservationForm.patchValue(
+        { represent_editor: 'no', represented_editor_id: null },
+        { emitEvent: false }
+      );
+    }
+    this.updateRepresentedEditorValidators();
+  }
+
+  private updateRepresentedEditorValidators(): void {
+    const representedEditorControl = this.reservationForm.get('represented_editor_id');
+    const shouldShow = this.shouldShowRepresentedEditorQuestion();
+    const shouldRequire = this.reservationForm.get('represent_editor')?.value === 'yes';
+
+    if (shouldShow && shouldRequire) {
+      representedEditorControl?.setValidators([Validators.required]);
+    } else {
+      representedEditorControl?.clearValidators();
+    }
+    representedEditorControl?.updateValueAndValidity();
   }
 
 
@@ -144,6 +222,10 @@ export class ReservationFormComponent {
 
       const formValues = this.reservationForm.value;
       let reservation;
+      const representedEditorId =
+        formValues.represent_editor === 'yes' && formValues.represented_editor_id
+          ? Number(formValues.represented_editor_id)
+          : null;
 
       if (formValues.reservant_mode === 'existing' && formValues.existing_reservant_id) {
         // Utiliser un réservant existant
@@ -168,6 +250,7 @@ export class ReservationFormComponent {
           address: selectedReservant.address || '',
           siret: selectedReservant.siret || '',
           note: formValues.note || '',
+          represented_editor_id: representedEditorId,
           festival_id: festivalId,
           // Prix par défaut à 0
           start_price: 0,
@@ -187,6 +270,7 @@ export class ReservationFormComponent {
           address: formValues.address || '',
           siret: formValues.siret || '',
           note: formValues.note || '',
+          represented_editor_id: representedEditorId,
           festival_id: festivalId,
           // Prix par défaut à 0
           start_price: 0,
@@ -218,5 +302,11 @@ export class ReservationFormComponent {
         this.reservationForm.get(key)?.markAsTouched();
       });
     }
+
+
+    //on reloade la liste des réservations après création
+    
+
+
   }
 }

@@ -22,34 +22,7 @@
     }
   </section>
 
-  @if (isPageContext) {
-  <section class="card workflow">
-    <div class="workflow-row">
-      <span class="label">Etat actuel</span>
-      <span class="value">{{ workflowStateLabel(reservantData.workflow_state) }}</span>
-    </div>
-    <div class="workflow-row">
-      <label for="workflow-state">Changer l'etat</label>
-      <select id="workflow-state" [value]="reservantData.workflow_state"
-        (change)="onWorkflowStateChange($any($event.target).value)">
-        @for (state of workflowStates; track state.value) {
-        <option [value]="state.value">{{ state.label }}</option>
-        }
-      </select>
-    </div>
-    <div class="workflow-flags">
-      <p class="label">Suivi des jeux</p>
-      @for (flag of workflowFlags; track flag.key) {
-      <label class="flag-toggle">
-        <input type="checkbox" [checked]="workflowFlagValue(reservantData, flag.key)"
-          (change)="onWorkflowFlagToggle(flag.key, $any($event.target).checked)" />
-        <span>{{ flag.label }}</span>
-      </label>
-      }
-    </div>
-  </section>
-  }
-
+ 
   @if (isPageContext) {
   <section class="card allocations">
     <div class="alloc-header">

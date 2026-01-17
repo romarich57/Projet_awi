@@ -95,8 +95,12 @@ export class ZonePlanService {
   }
 
   // Récupérer les jeux non alloués à aucune zone pour un festival
-  getJeuxNonAlloues(festivalId: number): Observable<AllocatedGameWithReservant[]> {
-    return this.http.get<AllocatedGameWithReservant[]>(`/api/zone-plan/festival/${festivalId}/jeux-non-alloues`, { withCredentials: true });
+  getJeuxNonAlloues(festivalId: number, reservationId?: number): Observable<AllocatedGameWithReservant[]> {
+    const reservationParam = reservationId ? `?reservationId=${reservationId}` : '';
+    return this.http.get<AllocatedGameWithReservant[]>(
+      `/api/zone-plan/festival/${festivalId}/jeux-non-alloues${reservationParam}`,
+      { withCredentials: true }
+    );
   }
 
   // Récupérer le stock global de tables par type depuis le festival
@@ -110,16 +114,16 @@ export class ZonePlanService {
     zonePlanId: number | null, 
     nbTablesOccupees?: number,
     nbExemplaires?: number,
-    tailleTableRequise?: 'standard' | 'grande' | 'mairie'
+    tailleTableRequise?: 'standard' | 'grande' | 'mairie' | 'aucun'
   ): Observable<AllocatedGameWithReservant> {
-    const payload: { 
+    const payload: {  // Playload sert à envoyer les données nécessaires à la mise à jour de l'allocation de jeu
       zone_plan_id: number | null; 
       nb_tables_occupees?: number;
       nb_exemplaires?: number;
       taille_table_requise?: string;
     } = { zone_plan_id: zonePlanId };
     
-    if (nbTablesOccupees !== undefined) {
+    if (nbTablesOccupees !== undefined) { // Vérifie si nbTablesOccupees est défini avant de l'ajouter au payload 
       payload.nb_tables_occupees = nbTablesOccupees;
     }
     if (nbExemplaires !== undefined) {
@@ -128,6 +132,7 @@ export class ZonePlanService {
     if (tailleTableRequise !== undefined) {
       payload.taille_table_requise = tailleTableRequise;
     }
+    //patch est utilisé pour mettre à jour partiellement une ressource existante sur le serveur
     return this.http.patch<AllocatedGameWithReservant>(`/api/jeux_alloues/${allocationId}`, payload, { withCredentials: true });
   }
 
@@ -168,6 +173,14 @@ export class ZonePlanService {
   getFestivalAllocationsSummary(festivalId: number): Observable<ZonePlanAllocationSummary[]> {
     return this.http.get<ZonePlanAllocationSummary[]>(
       `/api/zone-plan/festival/${festivalId}/allocations-simple`,
+      { withCredentials: true }
+    );
+  }
+
+  // Récupérer les allocations globales (simples + jeux) par zone
+  getFestivalAllocationsGlobal(festivalId: number): Observable<ZonePlanAllocationSummary[]> {
+    return this.http.get<ZonePlanAllocationSummary[]>(
+      `/api/zone-plan/festival/${festivalId}/allocations-global`,
       { withCredentials: true }
     );
   }

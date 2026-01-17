@@ -1,6 +1,6 @@
 import type { MechanismDto } from './mechanism-dto';
 
-export type TableSize = 'standard' | 'grande' | 'mairie';
+export type TableSize = 'standard' | 'grande' | 'mairie' | 'aucun';
 
 export interface AllocatedGameDto {
   allocation_id: number;

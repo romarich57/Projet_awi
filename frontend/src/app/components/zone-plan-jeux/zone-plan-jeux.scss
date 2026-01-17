@@ -16,6 +16,77 @@ h3 {
   font-size: 1.05rem;
 }
 
+.chaises-stock-global {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 0.75rem;
+}
+
+.chaises-stock-global .chaises-label {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.chaises-stock-global .chaises-count {
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.chaises-stock-global .chaises-count.low-stock {
+  color: #dc2626;
+}
+
+.chaises-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.chaises-section label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #7c3aed;
+  font-weight: 500;
+}
+
+.chaises-section label input {
+  width: 80px;
+}
+
+.chaises-section .hint-text {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.input-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.input-toggle .toggle-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 60px;
+}
+
+.input-toggle .toggle-btn.active {
+  background: rgba(11, 87, 208, 0.12);
+  color: #0b57d0;
+  border-color: rgba(11, 87, 208, 0.35);
+}
+
 .jeux-non-alloues {
   background: var(--card-bg);
   border: 1px solid var(--border);
@@ -195,6 +266,14 @@ h3 {
 .empty-zone {
   margin: 0;
   color: var(--muted);
+}
+
+.empty-zone.warning-message {
+  background: rgba(234, 179, 8, 0.18);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  border-radius: 0.8rem;
+  color: #92400e;
+  padding: 0.75rem;
 }
 
 .jeux-table {

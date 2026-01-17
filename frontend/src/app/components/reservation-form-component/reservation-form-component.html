@@ -46,7 +46,7 @@
                         } @else {
                             <label class="field full">
                                 <span>Sélectionner un réservant *</span>
-                                <select formControlName="existing_reservant_id" [disabled]="readOnly()">
+                                <select formControlName="existing_reservant_id" [disabled]="readOnly()" (change)="onExistingReservantChange()">
                                     <option value="">-- Choisir un réservant --</option>
                                     @for (reservant of existingReservants; track reservant.id) {
                                         <option [value]="reservant.id">
@@ -94,7 +94,7 @@
 
                             <label class="field">
                                 <span>Type de réservant *</span>
-                                <select formControlName="reservant_type" [disabled]="readOnly()">
+                                <select formControlName="reservant_type" [disabled]="readOnly()" (change)="onReservantTypeChange()">
                                     <option value="editeur">Éditeur</option>
                                     <option value="prestataire">Prestataire</option>
                                     <option value="boutique">Boutique</option>
@@ -133,6 +133,35 @@
                                 >
                             </label>
                         </div>
+                    </div>
+                }
+
+                @if (shouldShowRepresentedEditorQuestion()) {
+                    <div class="represent-editor-section">
+                        <label class="field full">
+                            <span>Représentez-vous un éditeur ?</span>
+                            <select formControlName="represent_editor" [disabled]="readOnly()" (change)="onRepresentEditorChange()">
+                                <option value="no">Non</option>
+                                <option value="yes">Oui</option>
+                            </select>
+                        </label>
+
+                        @if (reservationForm.get('represent_editor')?.value === 'yes') {
+                            <label class="field full">
+                                <span>Éditeur représenté *</span>
+                                <select formControlName="represented_editor_id" [disabled]="readOnly()">
+                                    <option value="">-- Choisir un éditeur --</option>
+                                    @for (reservant of editorReservants; track reservant.id) {
+                                        <option [value]="reservant.id">
+                                            {{ reservant.name }} - {{ reservant.email }}
+                                        </option>
+                                    }
+                                </select>
+                                @if (reservationForm.get('represented_editor_id')?.touched && reservationForm.get('represented_editor_id')?.errors) {
+                                    <small class="error">Veuillez sélectionner un éditeur</small>
+                                }
+                            </label>
+                        }
                     </div>
                 }
 

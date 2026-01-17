@@ -3,7 +3,7 @@
 
 -- Créer le type ENUM si il n'existe pas
 DO $$ BEGIN
-    CREATE TYPE table_type_enum AS ENUM ('standard', 'grande', 'mairie');
+    CREATE TYPE table_type_enum AS ENUM ('standard', 'grande', 'mairie', 'aucun');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;

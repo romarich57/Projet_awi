@@ -41,7 +41,7 @@ function validateAllocationPayload(body: any): { errors: string[], payload: any 
             errors.push('zone_plan_id invalide');
         }
     }
-    if (tailleTable && !['standard', 'grande', 'mairie'].includes(tailleTable)) {
+    if (tailleTable && !['standard', 'grande', 'mairie', 'aucun'].includes(tailleTable)) {
         errors.push('taille_table_requise invalide');
     }
 
@@ -105,6 +105,7 @@ router.get('/:id/stock-tables', async (req, res) => {
              FROM jeux_alloues ja
              JOIN reservation r ON r.id = ja.reservation_id
              WHERE r.festival_id = $1 AND ja.zone_plan_id IS NOT NULL
+               AND ja.taille_table_requise != 'aucun'
              GROUP BY ja.taille_table_requise`,
             [id]
         );

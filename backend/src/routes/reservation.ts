@@ -26,21 +26,32 @@ router.get('/stock/:festivalId', async (req, res) => {
         // Récupérer le stock de chaises du festival
         const festivalResult = await pool.query(
             `SELECT 
-                stock_chaises as total_chaises,
-                stock_chaises_available as available_chaises
+                stock_chaises as total_chaises
              FROM festival
              WHERE id = $1`,
             [festivalId]
         );
 
-        const chaisesStock = festivalResult.rows[0] || { total_chaises: 0, available_chaises: 0 };
+        const totalChaises = festivalResult.rows[0]?.total_chaises || 0;
+
+        // Calculer dynamiquement le total des chaises ALLOUÉES aux zones de plan
+        const chaisesAlloueesResult = await pool.query(
+            `SELECT COALESCE(SUM(rzp.nb_chaises), 0) as total_allouees
+             FROM reservation_zone_plan rzp
+             JOIN zone_plan zp ON rzp.zone_plan_id = zp.id
+             WHERE zp.festival_id = $1`,
+            [festivalId]
+        );
+
+        const totalAllouees = Number(chaisesAlloueesResult.rows[0]?.total_allouees || 0);
+        const availableCalculated = Math.max(0, totalChaises - totalAllouees);
 
         res.json({
             zones: zonesResult.rows,
             chaises: {
-                total: chaisesStock.total_chaises,
-                available: chaisesStock.available_chaises,
-                reserved: chaisesStock.total_chaises - chaisesStock.available_chaises
+                total: totalChaises,
+                available: availableCalculated,
+                allocated: totalAllouees
             }
         });
     } catch (err) {
@@ -56,7 +67,7 @@ router.get('/reservations/:festivalId', async (req, res) => {
         const { rows } = await pool.query(
             `SELECT 
                 r.id, r.start_price, r.final_price, r.statut_paiement,
-                r.date_facturation, r.note, r.nb_prises,
+                r.date_facturation, r.note, r.nb_prises, r.represented_editor_id,
                 res.id as reservant_id,
                 res.name as reservant_name, res.email as reservant_email,
                 res.type as reservant_type, res.phone_number, res.address,
@@ -84,7 +95,7 @@ router.get('/reservations/:festivalId', async (req, res) => {
              LEFT JOIN zone_tarifaire zt ON rzt.zone_tarifaire_id = zt.id
              WHERE r.festival_id = $1
              GROUP BY r.id, r.start_price, r.final_price, r.statut_paiement,
-                r.date_facturation, r.note, r.nb_prises,
+                r.date_facturation, r.note, r.nb_prises, r.represented_editor_id,
                 res.id, res.name, res.email, res.type, res.phone_number, res.address,
                 e.id, e.name, e.email,
                 sw.state, sw.liste_jeux_demandee, sw.liste_jeux_obtenue,
@@ -107,7 +118,7 @@ router.get('/detail/:reservationId', async (req, res) => {
         // Récupérer la réservation
         const reservationResult = await pool.query(
             `SELECT 
-                r.id, r.reservant_id, r.festival_id, r.workflow_id,
+                r.id, r.reservant_id, r.festival_id, r.workflow_id, r.represented_editor_id,
                 r.start_price, r.table_discount_offered, r.direct_discount,
                 r.nb_prises, r.date_facturation, r.final_price, r.statut_paiement, r.note,
                 res.name as reservant_name, res.email as reservant_email, res.type as reservant_type,
@@ -196,6 +207,7 @@ router.post('/reservation', async (req, res) => {
         start_price, nb_prises, final_price,
         table_discount_offered = 0, direct_discount = 0,
         note, phone_number, address, siret,
+        represented_editor_id,
         zones_tarifaires = [] // Nouvelle structure pour les zones tarifaires
     } = req.body;
 
@@ -208,6 +220,36 @@ router.post('/reservation', async (req, res) => {
         await client.query('BEGIN');
 
         let editorId = null;
+        let representedEditorId: number | null = null;
+        let representedEditorEditorId: number | null = null;
+
+        if (represented_editor_id !== undefined && represented_editor_id !== null && represented_editor_id !== '') {
+            const representedEditorIdParsed = Number(represented_editor_id);
+            if (!Number.isFinite(representedEditorIdParsed)) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: 'Identifiant éditeur représenté invalide' });
+            }
+
+            const representedEditorResult = await client.query(
+                `SELECT id, editor_id
+                 FROM reservant
+                 WHERE id = $1 AND type = 'editeur'`,
+                [representedEditorIdParsed]
+            );
+
+            if (representedEditorResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: 'Éditeur représenté introuvable' });
+            }
+
+            representedEditorId = representedEditorIdParsed;
+            representedEditorEditorId = representedEditorResult.rows[0].editor_id;
+
+            if (!representedEditorEditorId) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: 'Éditeur représenté sans fiche éditeur associée' });
+            }
+        }
 
         // 1. Si le réservant est de type 'editeur', créer/récupérer l'éditeur
         if (reservant_type === 'editeur' && editor_name && editor_email) {
@@ -263,12 +305,12 @@ router.post('/reservation', async (req, res) => {
             `INSERT INTO reservation (
                 reservant_id, festival_id, workflow_id,
                 start_price, table_discount_offered, direct_discount, 
-                nb_prises, final_price, note
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                nb_prises, final_price, note, represented_editor_id
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *`,
             [reservantId, festival_id, workflowId,
                 start_price, table_discount_offered, direct_discount,
-                nb_prises, final_price, note]
+                nb_prises, final_price, note, representedEditorId]
         );
 
         const reservationId = reservationResult.rows[0].id;
@@ -340,12 +382,13 @@ router.post('/reservation', async (req, res) => {
             [reservantId]
         );
         const reservantEditorId = reservantEditorResult.rows[0]?.editor_id;
+        const editorIdForGames = representedEditorEditorId || reservantEditorId;
 
-        if (reservantEditorId) {
+        if (editorIdForGames) {
             // Récupérer tous les jeux de cet éditeur
             const gamesResult = await client.query(
                 'SELECT id FROM games WHERE editor_id = $1',
-                [reservantEditorId]
+                [editorIdForGames]
             );
 
             // Créer une allocation pour chaque jeu (nb_exemplaires=1, nb_tables_occupees=1 par défaut)
@@ -359,7 +402,7 @@ router.post('/reservation', async (req, res) => {
             }
 
             if (gamesResult.rows.length > 0) {
-                console.log(`✅ ${gamesResult.rows.length} jeux auto-alloués pour la réservation ${reservationId} (éditeur ${reservantEditorId})`);
+                console.log(`✅ ${gamesResult.rows.length} jeux auto-alloués pour la réservation ${reservationId} (éditeur ${editorIdForGames})`);
             }
         }
 

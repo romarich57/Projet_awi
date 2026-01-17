@@ -94,5 +94,14 @@ export class ReservationDashbordComponent {
     this.sortKey.set(value as 'name-asc' | 'name-desc');
   }
 
+  onReservationCreated(): void {
+    // Recharger la liste des réservations
+    const currentFestival = this.festivalState.currentFestival();
+    if (currentFestival) {
+      this.loadReservations(currentFestival.id);
+    }
+    // Fermer le formulaire
+    this.showReservationForm.set(false);
+  }
 
 }

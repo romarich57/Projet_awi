@@ -17,6 +17,20 @@ export async function runMigrations() {
     `);
     console.log('✅ Type table_type_enum vérifié/créé');
 
+    await client.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_enum
+          WHERE enumlabel = 'aucun'
+            AND enumtypid = 'table_type_enum'::regtype
+        ) THEN
+          ALTER TYPE table_type_enum ADD VALUE 'aucun';
+        END IF;
+      END $$;
+    `);
+    console.log('✅ Valeur "aucun" ajoutée au type table_type_enum');
+
     // S'assurer que la table festival existe (certains environnements n'ont pas appliqué init.sql)
     await client.query(`
       CREATE TABLE IF NOT EXISTS festival (
@@ -201,6 +215,7 @@ export async function runMigrations() {
       CREATE TABLE IF NOT EXISTS reservation (
         id SERIAL PRIMARY KEY,
         reservant_id INTEGER REFERENCES reservant(id),
+        represented_editor_id INTEGER REFERENCES reservant(id),
         festival_id INTEGER REFERENCES festival(id),
         workflow_id INTEGER REFERENCES suivi_workflow(id),
         start_price NUMERIC NOT NULL,
@@ -213,6 +228,11 @@ export async function runMigrations() {
         note TEXT,
         UNIQUE(reservant_id, festival_id)
       );
+    `);
+
+    await client.query(`
+      ALTER TABLE reservation
+        ADD COLUMN IF NOT EXISTS represented_editor_id INTEGER REFERENCES reservant(id);
     `);
 
     // Créer la table jeux_alloues si elle n'existe pas

@@ -75,7 +75,7 @@ function parseUpdate(body: any): { errors: string[]; sets: string[]; params: any
   }
 
   if (body.taille_table_requise !== undefined) {
-    const allowed = ['standard', 'grande', 'mairie']
+    const allowed = ['standard', 'grande', 'mairie', 'aucun']
     if (!allowed.includes(body.taille_table_requise)) {
       errors.push('taille_table_requise invalide')
     } else {

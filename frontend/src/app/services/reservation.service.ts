@@ -98,6 +98,7 @@ export interface ReservationWithZones {
   final_price: number;
   statut_paiement: string;
   note?: string;
+  represented_editor_id?: number | null;
   reservant_name: string;
   reservant_email: string;
   reservant_type: string;

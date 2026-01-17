@@ -6,7 +6,7 @@ CREATE TYPE workflow_enum AS ENUM (
     'Facture', 'Facture_payee'
 );
 
-CREATE TYPE table_type_enum AS ENUM ('standard', 'grande', 'mairie');
+CREATE TYPE table_type_enum AS ENUM ('standard', 'grande', 'mairie', 'aucun');
 
 CREATE TABLE IF NOT EXISTS users (
  id SERIAL PRIMARY KEY,
@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS suivi_workflow ( --ca correspond au workflow par rés
 CREATE TABLE IF NOT EXISTS reservation ( 
     id SERIAL PRIMARY KEY,
     reservant_id INTEGER REFERENCES reservant(id),
+    represented_editor_id INTEGER REFERENCES reservant(id),
     festival_id INTEGER REFERENCES festival(id),
     workflow_id INTEGER REFERENCES suivi_workflow(id),
     start_price NUMERIC NOT NULL,
@@ -189,7 +190,6 @@ CREATE TABLE IF NOT EXISTS reservation_zones_tarifaires (
     reservation_id INTEGER REFERENCES reservation(id),
     zone_tarifaire_id INTEGER REFERENCES zone_tarifaire(id),
     nb_tables_reservees INTEGER NOT NULL,
-    nb_chaises_reservees INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (reservation_id, zone_tarifaire_id)
 );
 
@@ -197,5 +197,6 @@ CREATE TABLE IF NOT EXISTS reservation_zone_plan (
     reservation_id INTEGER REFERENCES reservation(id) ON DELETE CASCADE,
     zone_plan_id INTEGER REFERENCES zone_plan(id) ON DELETE CASCADE,
     nb_tables INTEGER NOT NULL,
+    nb_chaises INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (reservation_id, zone_plan_id)
 );

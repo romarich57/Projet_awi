@@ -42,7 +42,8 @@
         <app-reservation-form-component
           [festivalName]="festivalState.currentFestival()?.name"
           [festivalId]="festivalState.currentFestival()?.id"
-          (closeForm)="showReservationForm.set(false)"></app-reservation-form-component>
+          (closeForm)="showReservationForm.set(false)"
+          (reservationCreated)="onReservationCreated()"></app-reservation-form-component>
       </section>
     }
 

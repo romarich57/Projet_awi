@@ -11,4 +11,5 @@ export interface ReservationDto {
     final_price: number;
     statut_paiement: 'non_payé' | 'payé';
     note?: string;
+    represented_editor_id?: number | null;
 }

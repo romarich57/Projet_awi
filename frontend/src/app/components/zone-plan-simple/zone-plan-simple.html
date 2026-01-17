@@ -33,22 +33,18 @@
                   ➕ Affecter
                 </button>
                 <button class="btn-edit" (click)="openEditForm(zone)">✏️</button>
-                <button class="btn-delete" (click)="deleteZonePlan(zone.id)" [disabled]="(tablesAlloueesParZone()[zone.id] || 0) > 0">🗑️</button>
+                <button class="btn-delete" (click)="deleteZonePlan(zone.id)"
+                        [disabled]="(allocationsGlobalParZone()[zone.id]?.nb_tables || 0) > 0 || (allocationsGlobalParZone()[zone.id]?.nb_chaises || 0) > 0">🗑️</button>
               </div>
             </div>
             <div class="zone-content">
-              @if (isZoneEligible(zone)) {
+              @if (isZoneEligible(zone)) { 
                 @if ((tablesAlloueesParZone()[zone.id] || 0) > 0 || (chaisesAlloueesParZone()[zone.id] || 0) > 0) {
                   <p class="allocation-summary">
                     Réservé pour ce réservant : 
-                    @if ((tablesAlloueesParZone()[zone.id] || 0) > 0) {
-                      {{ tablesAlloueesParZone()[zone.id] }} table(s)
-                      ({{ tablesToM2(tablesAlloueesParZone()[zone.id]) | number:'1.1-1' }} m²)
-                    }
-                    @if ((chaisesAlloueesParZone()[zone.id] || 0) > 0) {
-                      @if ((tablesAlloueesParZone()[zone.id] || 0) > 0) { + }
-                      {{ chaisesAlloueesParZone()[zone.id] }} chaise(s) 🪑
-                    }
+                    {{ tablesAlloueesParZone()[zone.id] || 0 }} table(s)
+                    ({{ tablesToM2(tablesAlloueesParZone()[zone.id] || 0) | number:'1.1-1' }} m²)
+                    - {{ chaisesAlloueesParZone()[zone.id] || 0 }} chaise(s)
                   </p>
                   <button class="btn-remove" (click)="removeAllocation(zone)">Retirer</button>
                 } @else {
@@ -149,7 +145,8 @@
                       [ngModel]="chaisesInput()"
                       (ngModelChange)="onChaisesInputChange($event)"
                       min="0"
-                      step="1">
+                      step="1"
+                      max="{{ chaisesDisponibles() }}">
                   </label>
                   <small class="hint-text">
                     Disponibles : {{ chaisesDisponibles() }} / {{ chaisesStock().total }}

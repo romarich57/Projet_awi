@@ -31,16 +31,12 @@
 
     <div class="zone-plan-section">
       <h2>{{ showGameAllocation ? 'Zone et plan des jeux' : 'Zone et plan simple' }}</h2>
-      @if (showGameAllocation) {
-        <app-zone-plan-jeux
-          [festivalId]="festivalId()">
-        </app-zone-plan-jeux>
-      } @else {
-        <app-zone-plan-simple
-          [festivalId]="festivalId()"
-          [reservation]="reservationData()">
-        </app-zone-plan-simple>
-      }
+      <app-zone-plan-jeux
+        [festivalId]="festivalId()"
+        [reservation]="reservationData()"
+        [refreshToken]="reservationRefreshToken()"
+        [hasGames]="showGameAllocation">
+      </app-zone-plan-jeux>
     </div>
   }
   @else {
