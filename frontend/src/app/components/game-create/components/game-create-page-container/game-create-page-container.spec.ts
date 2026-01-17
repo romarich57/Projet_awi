@@ -53,12 +53,17 @@ describe('GameCreatePageContainerComponent', () => {
     await TestBed.configureTestingModule({
       imports: [GameCreatePageContainerComponent],
       providers: [
-        { provide: GameCreateStore, useValue: store },
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(GameCreatePageContainerComponent, {
+        set: {
+          providers: [{ provide: GameCreateStore, useValue: store }],
+        },
+      })
+      .compileComponents();
 
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.stub();

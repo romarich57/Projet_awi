@@ -26,6 +26,7 @@ describe('ReservantCardComponent - Additional Tests', () => {
 
     class MockReservantStore {
         reservants = signal([mockReservant]);
+        contacts = signal([]);
         loadById = jasmine.createSpy('loadById');
         loadContacts = jasmine.createSpy('loadContacts');
         createContact = jasmine.createSpy('createContact');
