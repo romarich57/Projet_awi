@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { ZonePlanAllocationSummary, ZonePlanService, AllocatedGameWithReservant, ZonePlanReservationAllocation } from '@app/services/zone-plan-service';
+import { ZonePlanAllocationSummary, ZonePlanService, AllocatedGameWithReservant, ZonePlanReservationAllocation, ZonePlanSimpleAllocation } from '@app/services/zone-plan-service';
 import { ZoneTarifaireService } from '@app/services/zone-tarifaire.service';
 import { ReservationService } from '@app/services/reservation.service';
 import { ZonePlanForm } from '../zone-plan-form/zone-plan-form';
@@ -9,11 +9,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { TableStockByType } from '@app/types/allocated-game-dto';
 import type { ReservationWithZones } from '@app/services/reservation.service';
-import { m2ToTables, tablesToM2 } from '@app/shared/utils/table-conversion';
+import { M2_PER_TABLE, m2ToTables, tablesToM2 } from '@app/shared/utils/table-conversion';
 
 // Interface pour une zone avec ses jeux alloués
 interface ZonePlanAvecJeux extends ZonePlanDto {
   jeuxAlloues: AllocatedGameWithReservant[];
+  simpleAllocations: ZonePlanSimpleAllocation[];
   expanded: boolean;
 }
 
@@ -44,10 +45,12 @@ export class ZonePlanJeux {
   readonly showAllocationModal = signal(false);
   readonly selectedZone = signal<ZonePlanAvecJeux | null>(null);
   readonly selectedGame = signal<AllocatedGameWithReservant | null>(null);
-  readonly placeOccupeeInput = signal<number>(1);
   readonly nbExemplairesInput = signal<number>(1);
   readonly tailleTableInput = signal<'aucun' | 'standard' | 'grande' | 'mairie'>('standard');
   readonly chaisesInput = signal<number>(0);
+  readonly gameInputMode = signal<'tables' | 'm2'>('tables');
+  readonly gameTablesInput = signal<number>(1);
+  readonly gameM2Input = signal<number>(tablesToM2(1));
   readonly simpleInputMode = signal<'tables' | 'm2'>('tables');
   readonly simpleTablesInput = signal<number>(0);
   readonly simpleM2Input = signal<number>(0);
@@ -142,11 +145,9 @@ export class ZonePlanJeux {
     return result;
   });
 
-  // Calcul automatique des tables occupées = place × exemplaires
+  // Tables occupées pour l'allocation du jeu
   readonly tablesCalculees = computed(() => {
-    const place = this.placeOccupeeInput();
-    const exemplaires = this.nbExemplairesInput();
-    return place * exemplaires;
+    return this.gameTablesInput();
   });
 
   // Filtrer les jeux disponibles pour la zone sélectionnée
@@ -315,6 +316,7 @@ export class ZonePlanJeux {
     const zonesAvec: ZonePlanAvecJeux[] = zones.map(z => ({
       ...z,
       jeuxAlloues: [],
+      simpleAllocations: [],
       expanded: false
     }));
     this.zonesAvecJeux.set(zonesAvec);
@@ -328,6 +330,15 @@ export class ZonePlanJeux {
           );
         },
         error: (err) => console.error(`Erreur chargement jeux zone ${zone.id}`, err)
+      });
+
+      this._zonePlanService.getZoneSimpleAllocations(zone.id).subscribe({
+        next: (allocations) => {
+          this.zonesAvecJeux.update(current =>
+            current.map(z => z.id === zone.id ? { ...z, simpleAllocations: allocations } : z)
+          );
+        },
+        error: (err) => console.error(`Erreur chargement allocations simples zone ${zone.id}`, err)
       });
     }
   }
@@ -388,11 +399,13 @@ export class ZonePlanJeux {
     }
     this.selectedZone.set(zone);
     this.selectedGame.set(null);
-    this.placeOccupeeInput.set(1);
     this.nbExemplairesInput.set(1);
     this.tailleTableInput.set('standard');
     // Initialiser avec les chaises déjà allouées pour cette zone
     this.chaisesInput.set(0);
+    this.gameInputMode.set('tables');
+    this.gameTablesInput.set(1);
+    this.gameM2Input.set(tablesToM2(1));
     this.showAllocationModal.set(true);
     // Le stock est déjà chargé au niveau du festival
   }
@@ -448,6 +461,38 @@ export class ZonePlanJeux {
     return this.chaisesStock().available + currentChaises;
   }
 
+  private gameM2ToTables(m2Value: number): number {
+    const tables = m2Value / M2_PER_TABLE;
+    return Math.round(tables * 2) / 2;
+  }
+
+  setGameInputMode(mode: 'tables' | 'm2'): void {
+    this.gameInputMode.set(mode);
+  }
+
+  onGameTablesInputChange(value: number): void {
+    const tables = Math.max(0, Number(value) || 0);
+    this.gameTablesInput.set(tables);
+    this.gameM2Input.set(tablesToM2(tables));
+  }
+
+  onGameM2InputChange(value: number): void {
+    const m2Value = Math.max(0, Number(value) || 0);
+    const tables = this.gameM2ToTables(m2Value);
+    this.gameM2Input.set(m2Value);
+    this.gameTablesInput.set(tables);
+  }
+
+  onNbExemplairesChange(value: number): void {
+    const nbExemplaires = Math.max(1, Math.floor(value || 1));
+    this.nbExemplairesInput.set(nbExemplaires);
+  }
+
+  chaisesPourReservation(zone: ZonePlanAvecJeux, reservationId: number): number {
+    const allocation = zone.simpleAllocations.find(a => a.reservation_id === reservationId);
+    return allocation ? (Number(allocation.nb_chaises) || 0) : 0;
+  }
+
   onChaisesInputChange(value: number): void {
     const chaises = Math.max(0, Math.floor(value || 0));
     // Limiter au stock disponible
@@ -462,7 +507,8 @@ export class ZonePlanJeux {
     const nbExemplaires = Number(game.nb_exemplaires) || 1;
     const nbTables = Number(game.nb_tables_occupees) || 1;
     this.nbExemplairesInput.set(nbExemplaires);
-    this.placeOccupeeInput.set(nbExemplaires > 0 ? nbTables / nbExemplaires : 1);
+    this.gameTablesInput.set(nbTables);
+    this.gameM2Input.set(tablesToM2(nbTables));
     this.tailleTableInput.set(game.taille_table_requise || 'standard');
     
     this.chaisesInput.set(0);
@@ -499,7 +545,7 @@ export class ZonePlanJeux {
         // Si des chaises sont allouées, mettre à jour l'allocation des chaises pour cette réservation
         if (nbChaises > 0 || this.chaisesAlloueesParZone()[zone.id] > 0) {
           // Récupérer les tables simples déjà allouées pour cette zone par cette réservation (s'il y en a)
-          const tablesSimples = this.tablesSimplesParZone()[zone.id] || 0;
+          const tablesSimples = this.tablesAlloueesParZoneReservation()[zone.id] || 0;
           this._zonePlanService.setReservationAllocation(game.reservation_id, zone.id, tablesSimples, nbChaises).subscribe({
             next: () => {
               this.refreshData();

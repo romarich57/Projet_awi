@@ -34,24 +34,26 @@
             </div>
         </div>
 
-        <h3>Presence et reception des jeux</h3>
-        <div class="game-presence">
-            <label>
-                <input type="checkbox" [checked]="workflow()!.liste_jeux_demandee"  (change)="onCheckboxChange('liste_jeux_demandee', $event)" [disabled]="readOnly()" />
-                Liste jeux demandées
-            </label>
-            <label>
-                <input type="checkbox" [checked]="workflow()!.liste_jeux_obtenue" (change)="onCheckboxChange('liste_jeux_obtenue', $event)" [disabled]="readOnly()" />
-                Liste jeux obtenus
-            </label>
-            <label>
-                <input type="checkbox" [checked]="workflow()!.jeux_recus" (change)="onCheckboxChange('jeux_recus', $event)" [disabled]="readOnly()" />
-                Jeux recus
-            </label>
-            <label>
-                <input type="checkbox" [checked]="workflow()!.presentera_jeux" (change)="onCheckboxChange('presentera_jeux', $event)" [disabled]="readOnly()" />
-                Présentera jeux au festival ?
-            </label>
-        </div>
+        @if (showGamePresence()) {
+            <h3>Presence et reception des jeux</h3>
+            <div class="game-presence">
+                <label>
+                    <input type="checkbox" [checked]="workflow()!.liste_jeux_demandee"  (change)="onCheckboxChange('liste_jeux_demandee', $event)" [disabled]="readOnly()" />
+                    Liste jeux demandées
+                </label>
+                <label>
+                    <input type="checkbox" [checked]="workflow()!.liste_jeux_obtenue" (change)="onCheckboxChange('liste_jeux_obtenue', $event)" [disabled]="readOnly()" />
+                    Liste jeux obtenus
+                </label>
+                <label>
+                    <input type="checkbox" [checked]="workflow()!.jeux_recus" (change)="onCheckboxChange('jeux_recus', $event)" [disabled]="readOnly()" />
+                    Jeux recus
+                </label>
+                <label>
+                    <input type="checkbox" [checked]="workflow()!.presentera_jeux" (change)="onCheckboxChange('presentera_jeux', $event)" [disabled]="readOnly()" />
+                    Présentera jeux au festival ?
+                </label>
+            </div>
+        }
     }
 </div>

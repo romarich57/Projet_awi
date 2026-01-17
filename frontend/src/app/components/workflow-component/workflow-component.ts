@@ -24,6 +24,7 @@ export class WorkflowComponent implements OnDestroy {
   });
 
   reservationId = input.required<number | null>();
+  showGamePresence = input<boolean>(true);
   workflowLoaded = output<WorkflowDto>();
 
   workflowService = inject(WorkflowService);

@@ -23,6 +23,7 @@
         <h2>Suivi du workflow</h2>
         <app-workflow-component
           [reservationId]="reservationId()"
+          [showGamePresence]="showGamePresenceChecklist"
           (workflowLoaded)="onWorkflowLoaded($event)">
         </app-workflow-component>
       </div>

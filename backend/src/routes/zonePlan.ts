@@ -195,6 +195,34 @@ router.get('/festival/:festival_id/allocations-global', async (req, res) => {
     }
 });
 
+// Récupérer les allocations simples d'une zone de plan (toutes réservations)
+router.get('/:zone_plan_id/allocations-simples', async (req, res) => {
+    const zonePlanId = Number(req.params.zone_plan_id);
+    if (!Number.isFinite(zonePlanId)) {
+        return res.status(400).json({ error: 'Identifiant invalide' });
+    }
+
+    try {
+        const { rows } = await pool.query(
+            `SELECT rzp.reservation_id,
+                    rzp.zone_plan_id,
+                    rzp.nb_tables,
+                    rzp.nb_chaises,
+                    res.name AS reservant_name
+             FROM reservation_zone_plan rzp
+             JOIN reservation r ON r.id = rzp.reservation_id
+             JOIN reservant res ON res.id = r.reservant_id
+             WHERE rzp.zone_plan_id = $1
+             ORDER BY res.name ASC`,
+            [zonePlanId]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Erreur lors de la récupération des allocations simples de zone:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 // Récupérer toutes les zones de plan d'un festival
 router.get('/:festival_id', async (req, res) => {
     const { festival_id } = req.params;

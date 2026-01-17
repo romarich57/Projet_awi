@@ -23,6 +23,10 @@ export interface ZonePlanAllocationSummary {
   nb_chaises: number;
 }
 
+export interface ZonePlanSimpleAllocation extends ZonePlanReservationAllocation {
+  reservant_name: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -173,6 +177,14 @@ export class ZonePlanService {
   getFestivalAllocationsSummary(festivalId: number): Observable<ZonePlanAllocationSummary[]> {
     return this.http.get<ZonePlanAllocationSummary[]>(
       `/api/zone-plan/festival/${festivalId}/allocations-simple`,
+      { withCredentials: true }
+    );
+  }
+
+  // Récupérer les allocations simples d'une zone de plan (toutes réservations)
+  getZoneSimpleAllocations(zonePlanId: number): Observable<ZonePlanSimpleAllocation[]> {
+    return this.http.get<ZonePlanSimpleAllocation[]>(
+      `/api/zone-plan/${zonePlanId}/allocations-simples`,
       { withCredentials: true }
     );
   }

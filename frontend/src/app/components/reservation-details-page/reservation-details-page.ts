@@ -59,4 +59,17 @@ export class ReservationDetailsPage implements OnInit {
 
     return false;
   }
+
+  get showGamePresenceChecklist(): boolean {
+    const type = this.reservantType();
+    const reservation = this.reservationData();
+
+    if (type === 'editeur') return true;
+    if (type === 'boutique') return false;
+    if (type === 'animateur' || type === 'prestataire' || type === 'association') {
+      return Boolean(reservation?.represented_editor_id);
+    }
+
+    return false;
+  }
 }
