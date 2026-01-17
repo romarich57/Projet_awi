@@ -27,19 +27,26 @@
         (ngModelChange)="updateForm({ type: $event })"
         required />
     </label>
-    <label>
-      <span>Éditeur *</span>
-      <select
-        name="editor"
-        [ngModel]="localFormData().editor_id"
-        (ngModelChange)="updateForm({ editor_id: $event })"
-        required>
-        <option value="" disabled>Choisir un éditeur</option>
-        @for (editor of editors(); track editor.id) {
-          <option [value]="editor.id">{{ editor.name }}</option>
-        }
-      </select>
-    </label>
+    @if (lockEditor()) {
+      <label>
+        <span>Éditeur *</span>
+        <input type="text" [value]="lockedEditorName() || 'Éditeur associé'" disabled />
+      </label>
+    } @else {
+      <label>
+        <span>Éditeur *</span>
+        <select
+          name="editor"
+          [ngModel]="localFormData().editor_id"
+          (ngModelChange)="updateForm({ editor_id: $event })"
+          required>
+          <option value="" disabled>Choisir un éditeur</option>
+          @for (editor of editors(); track editor.id) {
+            <option [value]="editor.id">{{ editor.name }}</option>
+          }
+        </select>
+      </label>
+    }
     <label>
       <span>Âge minimum *</span>
       <input

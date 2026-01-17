@@ -32,6 +32,8 @@ const DEFAULT_FORM: GameFormModel = {
 export class GameCreateFormComponent {
   readonly formData = input.required<GameFormModel>();
   readonly editors = input<readonly EditorDto[]>([]);
+  readonly lockEditor = input(false);
+  readonly lockedEditorName = input<string | null>(null);
   readonly saving = input(false);
   readonly error = input<string | null>(null);
   readonly imageSource = input<'url' | 'file'>('url');

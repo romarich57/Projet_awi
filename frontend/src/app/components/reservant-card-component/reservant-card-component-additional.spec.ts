@@ -1,10 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReservantCardComponent } from './reservant-card-component';
 import { ReservantStore } from '../../stores/reservant.store';
-import { ReservantWorkflowApi } from '../../services/reservant-workflow-api';
 import { ActivatedRoute } from '@angular/router';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 
@@ -12,7 +10,6 @@ describe('ReservantCardComponent - Additional Tests', () => {
     let component: ReservantCardComponent;
     let fixture: ComponentFixture<ReservantCardComponent>;
     let storeMock: any;
-    let workflowApiMock: any;
     let routeMock: any;
 
     const mockReservant = {
@@ -29,24 +26,13 @@ describe('ReservantCardComponent - Additional Tests', () => {
 
     class MockReservantStore {
         reservants = signal([mockReservant]);
-        currentReservant = signal(mockReservant);
-        contacts = signal([]);
-        contactTimeline = signal([]);
-        loading = signal(false);
-        error = signal(null);
         loadById = jasmine.createSpy('loadById');
-        changeWorkflowState = jasmine.createSpy('changeWorkflowState');
-        updateWorkflowFlags = jasmine.createSpy('updateWorkflowFlags');
         loadContacts = jasmine.createSpy('loadContacts');
-        loadContactTimeline = jasmine.createSpy('loadContactTimeline');
-        addContactEvent = jasmine.createSpy('addContactEvent');
+        createContact = jasmine.createSpy('createContact');
     }
 
     beforeEach(async () => {
         storeMock = new MockReservantStore();
-
-        workflowApiMock = jasmine.createSpyObj('ReservantWorkflowApi', ['updateState']);
-        workflowApiMock.updateState.and.returnValue(of({ success: true }));
 
         routeMock = { snapshot: { paramMap: { get: () => '1' } } };
 
@@ -56,7 +42,6 @@ describe('ReservantCardComponent - Additional Tests', () => {
                 provideHttpClient(),
                 provideHttpClientTesting(),
                 { provide: ReservantStore, useClass: MockReservantStore },
-                { provide: ReservantWorkflowApi, useValue: workflowApiMock },
                 { provide: ActivatedRoute, useValue: routeMock }
             ]
         }).compileComponents();
@@ -73,11 +58,6 @@ describe('ReservantCardComponent - Additional Tests', () => {
         expect(compiled.textContent).toContain('Test Reservant');
     });
 
-    it('should call store changeWorkflowState on state change', () => {
-        component.onWorkflowStateChange('Contact_pris');
-        expect(storeMock.changeWorkflowState).toHaveBeenCalledWith(1, 'Contact_pris');
-    });
-
     it('should display type label correctly', () => {
         expect(component.typeLabel('editeur')).toBe('Éditeur');
         expect(component.typeLabel('boutique')).toBe('Boutique');
@@ -88,13 +68,29 @@ describe('ReservantCardComponent - Additional Tests', () => {
         expect(component.displayValue('test')).toBe('test');
     });
 
-    it('should have workflow states', () => {
-        expect(component.workflowStates.length).toBeGreaterThan(0);
-    });
+    it('should normalize contact priority to 0 or 1', () => {
+        component.contactForm = {
+            name: 'Test',
+            email: 'contact@test.com',
+            phone_number: '0123456789',
+            job_title: 'Chef',
+            priority: 1
+        };
+        component.createContact();
+        expect(storeMock.createContact).toHaveBeenCalledWith(
+            1,
+            jasmine.objectContaining({ priority: 1 })
+        );
 
-    it('should trigger contact event add', () => {
-        component.selectedContactId = 1;
-        component.addContactEvent();
-        expect(storeMock.addContactEvent).toHaveBeenCalled();
+        component.contactForm = {
+            name: 'Test 2',
+            email: 'contact2@test.com',
+            phone_number: '0123456789',
+            job_title: 'Chef',
+            priority: 3
+        };
+        component.createContact();
+        const lastCall = storeMock.createContact.calls.mostRecent().args[1];
+        expect(lastCall.priority).toBe(0);
     });
 });
