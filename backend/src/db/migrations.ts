@@ -262,6 +262,29 @@ export async function runMigrations() {
         UNIQUE(reservant_id, festival_id)
       );
     `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS suivi_contact (
+        id SERIAL PRIMARY KEY,
+        contact_id INTEGER REFERENCES contact(id),
+        workflow_id INTEGER REFERENCES suivi_workflow(id),
+        date_contact TIMESTAMP NOT NULL
+      );
+    `);
+    await client.query(`
+      ALTER TABLE suivi_contact
+        ADD COLUMN IF NOT EXISTS contact_id INTEGER REFERENCES contact(id),
+        ADD COLUMN IF NOT EXISTS workflow_id INTEGER REFERENCES suivi_workflow(id),
+        ADD COLUMN IF NOT EXISTS date_contact TIMESTAMP;
+    `);
+    await client.query(`
+      UPDATE suivi_contact
+      SET date_contact = NOW()
+      WHERE date_contact IS NULL;
+    `);
+    await client.query(`
+      ALTER TABLE suivi_contact
+        ALTER COLUMN date_contact SET NOT NULL;
+    `);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS reservation (
