@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { UserProfileService } from './user-profile.service';
+import { UserProfileService } from '@services/user-profile.service';
 import { AuthService } from '@services/auth.service';
 import { createAuthServiceMock, AuthServiceMock } from '@testing/mocks/auth-service.mock';
 

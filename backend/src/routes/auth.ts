@@ -542,9 +542,9 @@ router.post('/password/reset', async (req, res) => {
 })
 
 // Role : Deconnecter l'utilisateur courant.
-// Preconditions : L'utilisateur est authentifie.
-// Postconditions : Revoque le refresh token et nettoie les cookies.
-router.post('/logout', verifyToken, async (req, res) => {
+// Preconditions : Aucune.
+// Postconditions : Revoque le refresh token si present et nettoie les cookies.
+router.post('/logout', async (req, res) => {
   const refresh = req.cookies?.refresh_token
   if (refresh) {
     try {

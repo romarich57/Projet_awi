@@ -1,7 +1,7 @@
 import { Component, inject, output } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FestivalDto } from '../../types/festival-dto';
-import { FestivalService } from '../../services/festival-service';
+import { FestivalService } from '@services/festival-service';
 import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
 
 @Component({

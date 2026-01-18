@@ -24,6 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     '/auth/resend-verification',
     '/auth/password/forgot',
     '/auth/password/reset',
+    '/auth/whoami',
   ];
   if (excluded.some((path) => request.url.includes(path))) {
     // passe directement

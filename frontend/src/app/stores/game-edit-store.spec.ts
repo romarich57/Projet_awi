@@ -5,7 +5,7 @@ import { of } from 'rxjs';
 import { GameEditStore } from './game-edit-store';
 import { GameApiService } from '@app/services/game-api';
 import { EditorApiService } from '@app/services/editor-api';
-import { UploadService } from '@app/services/upload.service';
+
 import type { GameDto } from '@app/types/game-dto';
 import type { GameFormModel } from '@app/types/game-edit.types';
 

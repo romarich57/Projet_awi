@@ -53,6 +53,32 @@ export class UserService {
   readonly mutationMessage = signal<string | null>(null);
   readonly mutationStatus = signal<'success' | 'error' | null>(null);
 
+  // Role : Verifier l'unicite d'un email dans la liste locale.
+  // Preconditions : email est une chaine non vide.
+  // Postconditions : Retourne true si l'email est deja utilise par un autre utilisateur.
+  private hasDuplicateEmail(email: string, userId?: number) {
+    const normalized = email.trim().toLowerCase();
+    return this.users().some((user) => {
+      if (userId !== undefined && user.id === userId) {
+        return false;
+      }
+      return user.email.trim().toLowerCase() === normalized;
+    });
+  }
+
+  // Role : Verifier l'unicite d'un login dans la liste locale.
+  // Preconditions : login est une chaine non vide.
+  // Postconditions : Retourne true si le login est deja utilise par un autre utilisateur.
+  private hasDuplicateLogin(login: string, userId?: number) {
+    const normalized = login.trim().toLowerCase();
+    return this.users().some((user) => {
+      if (userId !== undefined && user.id === userId) {
+        return false;
+      }
+      return user.login.trim().toLowerCase() === normalized;
+    });
+  }
+
   // Role : Charger la liste des utilisateurs.
   // Preconditions : L'API est accessible.
   // Postconditions : Les signaux users, error et isLoading sont mis a jour.
@@ -77,6 +103,16 @@ export class UserService {
   // Preconditions : payload contient les champs requis.
   // Postconditions : Lance la creation et rafraichit la liste si succes.
   createUser(payload: CreateUserPayload) {
+    if (payload.email && this.hasDuplicateEmail(payload.email)) {
+      this.mutationMessage.set('Email deja utilise');
+      this.mutationStatus.set('error');
+      return;
+    }
+    if (payload.login && this.hasDuplicateLogin(payload.login)) {
+      this.mutationMessage.set('Login deja utilise');
+      this.mutationStatus.set('error');
+      return;
+    }
     if (this.isMutating()) {
       return;
     }
@@ -109,6 +145,16 @@ export class UserService {
   // Preconditions : userId est valide et payload contient les champs a modifier.
   // Postconditions : Met a jour le store local et rafraichit la liste.
   updateUser(userId: number, payload: UpdateUserPayload) {
+    if (payload.email && this.hasDuplicateEmail(payload.email, userId)) {
+      this.mutationMessage.set('Email deja utilise');
+      this.mutationStatus.set('error');
+      return;
+    }
+    if (payload.login && this.hasDuplicateLogin(payload.login, userId)) {
+      this.mutationMessage.set('Login deja utilise');
+      this.mutationStatus.set('error');
+      return;
+    }
     if (this.isMutating()) {
       return;
     }

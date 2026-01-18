@@ -67,9 +67,9 @@ function validateAllocationPayload(body: any): { errors: string[], payload: any 
 }
 
 // Role : Lister les festivals.
-// Preconditions : Utilisateur authentifie avec un role backoffice.
+// Preconditions : Aucune.
 // Postconditions : Retourne la liste des festivals.
-router.get('/', requireBackoffice, async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : null;
     let query = 'SELECT id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date FROM festival ORDER BY start_date DESC';
 
@@ -82,9 +82,9 @@ router.get('/', requireBackoffice, async (req: Request, res: Response) => {
 })
 
 // Role : Obtenir les details d'un festival.
-// Preconditions : Utilisateur authentifie avec un role backoffice, id valide.
+// Preconditions : id valide.
 // Postconditions : Retourne le festival ou 404.
-router.get('/:id', requireBackoffice, async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response) => {
     const { id } = req.params
     const { rows } = await pool.query(
         'SELECT id, name, start_date, end_date, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises FROM festival WHERE id = $1',

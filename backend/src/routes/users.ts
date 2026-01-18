@@ -403,7 +403,13 @@ router.post('/', requireAdmin, async (req, res) => {
     res.status(201).json({ message: 'Utilisateur créé' })
   } catch (err: any) {
     if (err?.code === '23505') {
-      res.status(409).json({ error: 'Login ou email déjà existant' })
+      if (err?.constraint === 'users_email_key') {
+        return res.status(409).json({ error: 'Email deja utilise' })
+      }
+      if (err?.constraint === 'users_login_key') {
+        return res.status(409).json({ error: 'Login deja utilise' })
+      }
+      res.status(409).json({ error: 'Login ou email deja utilise' })
     } else {
       console.error('Erreur création utilisateur', err)
       res.status(500).json({ error: 'Erreur serveur' })
@@ -579,7 +585,13 @@ router.put('/:id', requireAdmin, async (req, res) => {
     res.json({ message: 'Utilisateur mis à jour', user })
   } catch (err: any) {
     if (err?.code === '23505') {
-      res.status(409).json({ error: 'Login ou email déjà utilisé' })
+      if (err?.constraint === 'users_email_key') {
+        return res.status(409).json({ error: 'Email deja utilise' })
+      }
+      if (err?.constraint === 'users_login_key') {
+        return res.status(409).json({ error: 'Login deja utilise' })
+      }
+      res.status(409).json({ error: 'Login ou email deja utilise' })
     } else {
       console.error('Erreur mise à jour utilisateur', err)
       res.status(500).json({ error: 'Erreur serveur' })

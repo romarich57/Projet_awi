@@ -11,6 +11,7 @@ import type { TableStockByType } from '@app/types/allocated-game-dto';
 import type { ReservationWithZones } from '@app/services/reservation.service';
 import { M2_PER_TABLE, m2ToTables, tablesToM2 } from '@app/shared/utils/table-conversion';
 
+
 // Interface pour une zone avec ses jeux alloués
 interface ZonePlanAvecJeux extends ZonePlanDto {
   jeuxAlloues: AllocatedGameWithReservant[];

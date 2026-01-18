@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { FestivalService } from './festival-service';
+import { FestivalService } from '@services/festival-service';
 import { FestivalDto } from '../types/festival-dto';
 import { ZoneTarifaireDto } from '../types/zone-tarifaire-dto';
 import { environment } from '../../environments/environment';
