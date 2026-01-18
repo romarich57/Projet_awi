@@ -23,6 +23,9 @@ interface ZoneSelection {
   templateUrl: './reservation-detail-component.html',
   styleUrl: './reservation-detail-component.scss'
 })
+// Role : Afficher et editer les details d'une reservation.
+// Préconditions : `reservationId` est fourni; ReservationService est disponible.
+// Postconditions : Les donnees de reservation sont chargees et mises a jour.
 export class ReservationDetailComponent {
   reservationId = input<number | null>(null);
   reservationLoaded = output<ReservationWithZones>();
@@ -116,6 +119,9 @@ export class ReservationDetailComponent {
     });
   }
 
+  // Role : Charger la reservation et initialiser les zones/valeurs associees.
+  // Préconditions : `reservationId` est un identifiant valide.
+  // Postconditions : Les signaux de reservation, zones et remises sont mis a jour.
   loadReservation(reservationId: number) {
     this.loading.set(true);
     
@@ -166,6 +172,9 @@ export class ReservationDetailComponent {
     });
   }
 
+  // Role : Mettre a jour le nombre de tables reservees pour une zone.
+  // Préconditions : `zoneId` reference une zone chargee.
+  // Postconditions : La zone est mise a jour et les m2 sont recalcules.
   onTablesChange(zoneId: number, event: Event) {
     const input = event.target as HTMLInputElement;
     const value = Math.max(0, parseInt(input.value, 10) || 0);
@@ -187,6 +196,9 @@ export class ReservationDetailComponent {
     );
   }
 
+  // Role : Mettre a jour la surface reservee (m2) pour une zone.
+  // Préconditions : `zoneId` reference une zone chargee.
+  // Postconditions : La zone est mise a jour et le nombre de tables est recalculé.
   onM2Change(zoneId: number, event: Event) {
     const input = event.target as HTMLInputElement;
     const m2Value = Math.max(0, parseFloat(input.value) || 0);
@@ -211,6 +223,9 @@ export class ReservationDetailComponent {
     );
   }
 
+  // Role : Basculer le mode de saisie (tables/m2) pour une zone.
+  // Préconditions : `zoneId` reference une zone chargee.
+  // Postconditions : Le mode de saisie est inverse pour la zone cible.
   toggleInputMode(zoneId: number) {
     this.zones.update(zones => 
       zones.map(z => {
@@ -225,12 +240,18 @@ export class ReservationDetailComponent {
     );
   }
 
+  // Role : Mettre a jour le nombre de prises.
+  // Préconditions : L'evenement provient d'un champ numerique.
+  // Postconditions : `nbPrises` est mis a jour.
   onPrisesChange(event: Event) {
     const input = event.target as HTMLInputElement;
     const value = Math.max(0, parseInt(input.value, 10) || 0);
     this.nbPrises.set(value);
   }
 
+  // Role : Mettre a jour la remise en tables offertes.
+  // Préconditions : L'evenement provient d'un champ numerique.
+  // Postconditions : `tableDiscountOffered` est mis a jour et borne.
   onTableDiscountChange(event: Event) {
     const input = event.target as HTMLInputElement;
     const value = Math.max(0, parseInt(input.value, 10) || 0);
@@ -238,6 +259,9 @@ export class ReservationDetailComponent {
     this.tableDiscountOffered.set(Math.min(value, this.totalTables()));
   }
 
+  // Role : Mettre a jour la remise directe en euros.
+  // Préconditions : L'evenement provient d'un champ numerique.
+  // Postconditions : `directDiscount` est mis a jour et borne par le prix possible.
   onDirectDiscountChange(event: Event) {
     const input = event.target as HTMLInputElement;
     const value = Math.max(0, parseFloat(input.value) || 0);
@@ -246,11 +270,17 @@ export class ReservationDetailComponent {
     this.directDiscount.set(Math.min(value, maxDiscount));
   }
 
+  // Role : Mettre a jour la note de reservation.
+  // Préconditions : L'evenement provient d'un textarea.
+  // Postconditions : `note` est mis a jour.
   onNoteChange(event: Event) {
     const input = event.target as HTMLTextAreaElement;
     this.note.set(input.value);
   }
 
+  // Role : Sauvegarder la reservation avec les zones et remises actuelles.
+  // Préconditions : Une reservation est chargee.
+  // Postconditions : Les donnees sont persistees et un message d'etat est affiche.
   saveReservation() {
     const reservation = this.reservation();
     if (!reservation) return;

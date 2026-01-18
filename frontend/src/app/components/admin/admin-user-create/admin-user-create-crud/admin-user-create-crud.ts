@@ -24,8 +24,11 @@ const ROLE_LABELS: Record<UserRole, string> = {
     templateUrl: './admin-user-create-crud.html',
     styleUrl: './admin-user-create-crud.scss',
 })
+// Role : Afficher le formulaire de creation d'utilisateur cote admin.
+// Préconditions : Le parent fournit le FormGroup et les etats d'upload/mutation.
+// Postconditions : Les actions utilisateur sont emises vers le parent.
 export class AdminUserCreateCrudComponent {
-    // Inputs from parent
+    // Inputs
     readonly createForm = input.required<FormGroup>();
     readonly isMutating = input<boolean>(false);
     readonly isUploading = input<boolean>(false);
@@ -41,14 +44,23 @@ export class AdminUserCreateCrudComponent {
     readonly roleOptions = USER_ROLES;
     readonly roleLabels = ROLE_LABELS;
 
+    // Role : Relayer la selection de fichier au parent.
+    // Préconditions : L'evenement provient d'un input file.
+    // Postconditions : `fileSelected` est emis.
     onFileSelected(event: Event) {
         this.fileSelected.emit(event);
     }
 
+    // Role : Indiquer la suppression de l'avatar selectionne.
+    // Préconditions : Un avatar est en cours de selection.
+    // Postconditions : `avatarRemoved` est emis.
     removeAvatar() {
         this.avatarRemoved.emit();
     }
 
+    // Role : Soumettre le formulaire de creation.
+    // Préconditions : Le formulaire est valide cote parent.
+    // Postconditions : `formSubmitted` est emis.
     submit() {
         this.formSubmitted.emit();
     }

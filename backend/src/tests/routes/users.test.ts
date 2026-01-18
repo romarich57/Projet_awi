@@ -1,3 +1,4 @@
+// Role : Tester les routes /users.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import pool from '../../db/database.js'
@@ -12,6 +13,9 @@ import {
 
 type Handler = (req: any, res: any, next: () => void) => Promise<void> | void
 
+// Role : Recuperer le handler pour une route et une methode.
+// Preconditions : path et method sont definis.
+// Postconditions : Retourne le handler ou undefined.
 function getRouteHandler(
   path: string,
   method: 'post' | 'put' | 'delete',

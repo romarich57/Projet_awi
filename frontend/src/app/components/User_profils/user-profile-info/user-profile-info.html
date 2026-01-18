@@ -24,6 +24,7 @@
       <dt>Statut email</dt>
       <dd>
         <span class="badge" [class.badge--warning]="!user().emailVerified">
+          <!-- Bloc conditionnel principal -->
           @if (user().emailVerified) {
             Vérifié
           } @else {

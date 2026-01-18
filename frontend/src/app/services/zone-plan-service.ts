@@ -36,7 +36,9 @@ export class ZonePlanService {
   http = inject(HttpClient);
   readonly zonePlans = signal<ZonePlanDto[]>([]);
 
-  //Méthode pour obtenir les zones de plans de jeux
+  // Role : Recuperer les zones de plan pour un festival.
+  // Preconditions : festivalId est valide.
+  // Postconditions : Met a jour le signal zonePlans avec les zones recues.
   getZonePlans(festivalId: number) {
     this.http.get<ZonePlanDto[]>(`/api/zone-plan/${festivalId}`, { withCredentials: true }).subscribe({
       next: (zonePlans) => {
@@ -49,7 +51,9 @@ export class ZonePlanService {
     });
   }
 
-  //méthode pour mettre à jour une zone de plan de jeux
+  // Role : Mettre a jour une zone de plan.
+  // Preconditions : zonePlanId et festivalId sont valides, data contient les champs a modifier.
+  // Postconditions : Recharge la liste des zones du festival.
   setZonePlan(zonePlanId: number, data: Partial<ZonePlanDto>, festivalId: number) {
     return this.http.put<ZonePlanDto>(`/api/zone-plan/${zonePlanId}`, data, { withCredentials: true }).subscribe({
       next: (updatedZonePlan) => {
@@ -64,7 +68,9 @@ export class ZonePlanService {
   }
 
 
-  //méthode pour ajouter une nouvelle zone de plan de jeux
+  // Role : Ajouter une nouvelle zone de plan.
+  // Preconditions : data est fourni et festivalId est valide.
+  // Postconditions : Recharge la liste des zones du festival.
   addZonePlan(data: Partial<ZonePlanDto>, festivalId: number) {
     const payload = { ...data, festival_id: festivalId };
     return this.http.post<ZonePlanDto>(`/api/zone-plan`, payload, { withCredentials: true }).subscribe({
@@ -80,6 +86,9 @@ export class ZonePlanService {
   }
 
 
+  // Role : Supprimer une zone de plan.
+  // Preconditions : zonePlanId et festivalId sont valides.
+  // Postconditions : Recharge la liste des zones du festival.
   deleteZonePlan(zonePlanId: number, festivalId: number) {
     return this.http.delete(`/api/zone-plan/${zonePlanId}`, { withCredentials: true }).subscribe({
       next: () => {
@@ -93,12 +102,16 @@ export class ZonePlanService {
     });
   }
 
-  // Récupérer les jeux alloués à une zone de plan
+  // Role : Recuperer les jeux alloues a une zone de plan.
+  // Preconditions : zonePlanId est valide.
+  // Postconditions : Retourne un Observable des jeux alloues.
   getJeuxAlloues(zonePlanId: number): Observable<AllocatedGameWithReservant[]> {
     return this.http.get<AllocatedGameWithReservant[]>(`/api/zone-plan/${zonePlanId}/jeux-alloues`, { withCredentials: true });
   }
 
-  // Récupérer les jeux non alloués à aucune zone pour un festival
+  // Role : Recuperer les jeux non alloues a une zone pour un festival.
+  // Preconditions : festivalId est valide, reservationId est optionnel.
+  // Postconditions : Retourne un Observable des jeux non alloues.
   getJeuxNonAlloues(festivalId: number, reservationId?: number): Observable<AllocatedGameWithReservant[]> {
     const reservationParam = reservationId ? `?reservationId=${reservationId}` : '';
     return this.http.get<AllocatedGameWithReservant[]>(
@@ -107,12 +120,16 @@ export class ZonePlanService {
     );
   }
 
-  // Récupérer le stock global de tables par type depuis le festival
+  // Role : Recuperer le stock global de tables par type pour un festival.
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne un Observable du stock.
   getStockTablesFestival(festivalId: number): Observable<ZoneTableStock> {
     return this.http.get<ZoneTableStock>(`/api/festivals/${festivalId}/stock-tables`, { withCredentials: true });
   }
 
-  // Assigner un jeu à une zone de plan
+  // Role : Assigner un jeu a une zone de plan.
+  // Preconditions : allocationId et zonePlanId sont valides, les valeurs optionnelles sont coherentes.
+  // Postconditions : Retourne un Observable de l'allocation mise a jour.
   assignerJeuAZone(
     allocationId: number, 
     zonePlanId: number | null, 
@@ -120,14 +137,14 @@ export class ZonePlanService {
     nbExemplaires?: number,
     tailleTableRequise?: 'standard' | 'grande' | 'mairie' | 'aucun'
   ): Observable<AllocatedGameWithReservant> {
-    const payload: {  // Playload sert à envoyer les données nécessaires à la mise à jour de l'allocation de jeu
+    const payload: {  // Le payload sert a envoyer les donnees necessaires a la mise a jour de l'allocation de jeu
       zone_plan_id: number | null; 
       nb_tables_occupees?: number;
       nb_exemplaires?: number;
       taille_table_requise?: string;
     } = { zone_plan_id: zonePlanId };
     
-    if (nbTablesOccupees !== undefined) { // Vérifie si nbTablesOccupees est défini avant de l'ajouter au payload 
+    if (nbTablesOccupees !== undefined) { // Verifie si nbTablesOccupees est defini avant de l'ajouter au payload 
       payload.nb_tables_occupees = nbTablesOccupees;
     }
     if (nbExemplaires !== undefined) {
@@ -136,11 +153,13 @@ export class ZonePlanService {
     if (tailleTableRequise !== undefined) {
       payload.taille_table_requise = tailleTableRequise;
     }
-    //patch est utilisé pour mettre à jour partiellement une ressource existante sur le serveur
+    // Patch pour mettre a jour partiellement une ressource existante sur le serveur
     return this.http.patch<AllocatedGameWithReservant>(`/api/jeux_alloues/${allocationId}`, payload, { withCredentials: true });
   }
 
-  // Récupérer les allocations simples (tables sans jeux) d'une réservation
+  // Role : Recuperer les allocations simples (tables sans jeux) d'une reservation.
+  // Preconditions : reservationId est valide.
+  // Postconditions : Retourne un Observable des allocations simples.
   getReservationAllocations(reservationId: number): Observable<ZonePlanReservationAllocation[]> {
     return this.http.get<ZonePlanReservationAllocation[]>(
       `/api/zone-plan/reservation/${reservationId}/allocations`,
@@ -148,7 +167,9 @@ export class ZonePlanService {
     );
   }
 
-  // Créer ou mettre à jour une allocation simple (tables sans jeux)
+  // Role : Creer ou mettre a jour une allocation simple (tables sans jeux).
+  // Preconditions : reservationId, zonePlanId et nbTables sont valides.
+  // Postconditions : Retourne un Observable de l'allocation mise a jour.
   setReservationAllocation(
     reservationId: number,
     zonePlanId: number,
@@ -162,7 +183,9 @@ export class ZonePlanService {
     );
   }
 
-  // Supprimer une allocation simple (tables sans jeux)
+  // Role : Supprimer une allocation simple (tables sans jeux).
+  // Preconditions : reservationId et zonePlanId sont valides.
+  // Postconditions : Retourne un Observable avec le message de suppression.
   deleteReservationAllocation(
     reservationId: number,
     zonePlanId: number
@@ -173,7 +196,9 @@ export class ZonePlanService {
     );
   }
 
-  // Récupérer les allocations simples globales par zone (toutes réservations du festival)
+  // Role : Recuperer les allocations simples globales par zone pour un festival.
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne un Observable des allocations globales simples.
   getFestivalAllocationsSummary(festivalId: number): Observable<ZonePlanAllocationSummary[]> {
     return this.http.get<ZonePlanAllocationSummary[]>(
       `/api/zone-plan/festival/${festivalId}/allocations-simple`,
@@ -181,7 +206,9 @@ export class ZonePlanService {
     );
   }
 
-  // Récupérer les allocations simples d'une zone de plan (toutes réservations)
+  // Role : Recuperer les allocations simples d'une zone de plan.
+  // Preconditions : zonePlanId est valide.
+  // Postconditions : Retourne un Observable des allocations simples.
   getZoneSimpleAllocations(zonePlanId: number): Observable<ZonePlanSimpleAllocation[]> {
     return this.http.get<ZonePlanSimpleAllocation[]>(
       `/api/zone-plan/${zonePlanId}/allocations-simples`,
@@ -189,7 +216,9 @@ export class ZonePlanService {
     );
   }
 
-  // Récupérer les allocations globales (simples + jeux) par zone
+  // Role : Recuperer les allocations globales (simples + jeux) par zone.
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne un Observable des allocations globales.
   getFestivalAllocationsGlobal(festivalId: number): Observable<ZonePlanAllocationSummary[]> {
     return this.http.get<ZonePlanAllocationSummary[]>(
       `/api/zone-plan/festival/${festivalId}/allocations-global`,

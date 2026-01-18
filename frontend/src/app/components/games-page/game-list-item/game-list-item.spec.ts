@@ -67,4 +67,25 @@ describe('GameListItemComponent', () => {
     const longDescription = 'a'.repeat(95);
     expect(component.descriptionSnippet({ ...game, description: longDescription })).toContain('…');
   });
+
+  it('should emit view on row click', () => {
+    const spy = spyOn(component.view, 'emit');
+
+    component.onRowClick();
+
+    expect(spy).toHaveBeenCalledWith(game);
+  });
+
+  it('should emit edit and delete without bubbling', () => {
+    const editSpy = spyOn(component.edit, 'emit');
+    const deleteSpy = spyOn(component.delete, 'emit');
+    const editEvent = new Event('click');
+    const deleteEvent = new Event('click');
+
+    component.onEdit(editEvent);
+    component.onDelete(deleteEvent);
+
+    expect(editSpy).toHaveBeenCalledWith(game);
+    expect(deleteSpy).toHaveBeenCalledWith(game);
+  });
 });

@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UserDto, UserRole } from '@app/types/user-dto';
-import { UserService } from '@users/user.service';
+import { UserService } from '@services/user.service';
 import { AdminUserFilterComponent, SortKey, SortDirection, StatusFilter, RoleFilter } from '../admin-user-filter/admin-user-filter';
 import { AdminUserCrudComponent } from '../admin-user-crud/admin-user-crud';
 
@@ -21,6 +21,9 @@ import { AdminUserCrudComponent } from '../admin-user-crud/admin-user-crud';
     templateUrl: './admin-user-list.html',
     styleUrl: './admin-user-list.scss',
 })
+// Role : Afficher et filtrer la liste des utilisateurs cote admin.
+// Préconditions : UserService est disponible et renvoie les utilisateurs.
+// Postconditions : Les actions de tri/filtre/mise a jour sont gerees.
 export class AdminUserListComponent {
     readonly userService = inject(UserService);
 
@@ -117,27 +120,44 @@ export class AdminUserListComponent {
         });
     }
 
-    // Filter event handlers
+    // Role : Mettre a jour la recherche texte.
+    // Préconditions : `query` est une chaine.
+    // Postconditions : Le filtre de recherche est mis a jour.
     onSearchQueryChange(query: string) {
         this.searchQuery.set(query);
     }
 
+    // Role : Mettre a jour le filtre de role.
+    // Préconditions : `role` est un role valide ou 'all'.
+    // Postconditions : Le filtre de role est mis a jour.
     onRoleFilterChange(role: RoleFilter) {
         this.roleFilter.set(role);
     }
 
+    // Role : Mettre a jour le filtre de statut.
+    // Préconditions : `status` est un statut valide.
+    // Postconditions : Le filtre de statut est mis a jour.
     onStatusFilterChange(status: StatusFilter) {
         this.statusFilter.set(status);
     }
 
+    // Role : Mettre a jour la cle de tri.
+    // Préconditions : `key` est une cle valide.
+    // Postconditions : Le tri est mis a jour.
     onSortKeyChange(key: SortKey) {
         this.sortKey.set(key);
     }
 
+    // Role : Mettre a jour la direction de tri.
+    // Préconditions : `direction` est valide.
+    // Postconditions : La direction de tri est mise a jour.
     onSortDirectionChange(direction: SortDirection) {
         this.sortDirection.set(direction);
     }
 
+    // Role : Reinitialiser tous les filtres et tris.
+    // Préconditions : Aucune.
+    // Postconditions : Les filtres reviennent aux valeurs par defaut.
     onResetFilters() {
         this.searchQuery.set('');
         this.roleFilter.set('all');
@@ -147,6 +167,9 @@ export class AdminUserListComponent {
     }
 
     // CRUD event handlers
+    // Role : Demander un changement de role utilisateur.
+    // Préconditions : Aucune mutation en cours.
+    // Postconditions : Le role est mis a jour via UserService.
     onRoleChanged(event: { user: UserDto; role: UserRole }) {
         if (this.isMutating()) {
             return;
@@ -155,6 +178,9 @@ export class AdminUserListComponent {
         this.userService.updateUser(event.user.id, { role: event.role });
     }
 
+    // Role : Demander la suppression d'un utilisateur.
+    // Préconditions : L'id est valide et aucune mutation en cours.
+    // Postconditions : La suppression est envoyee via UserService.
     onUserDeleted(event: { id: number; event?: Event }) {
         event.event?.stopPropagation();
         if (!Number.isInteger(event.id)) {

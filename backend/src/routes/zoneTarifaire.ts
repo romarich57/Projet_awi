@@ -1,9 +1,12 @@
+// Role : Gérer les routes des zones tarifaires.
 import { Router } from 'express'
 import pool from '../db/database.js'
 
 const router = Router();
 
-// zone tarifaire liste du festival courant 
+// Role : Lister les zones tarifaires d'un festival.
+// Preconditions : id de festival valide.
+// Postconditions : Retourne les zones tarifaires ou une erreur.
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -18,8 +21,9 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-// Zones tarifaires avec réservations pour un festival donné
-// Retourne uniquement les zones tarifaires où au moins une réservation existe
+// Role : Lister les zones tarifaires avec reservations pour un festival.
+// Preconditions : id de festival valide.
+// Postconditions : Retourne les zones tarifaires concernees ou une erreur.
 router.get('/:id/with-reservations', async (req, res) => {
     const { id } = req.params;
     try {
@@ -41,18 +45,20 @@ router.get('/:id/with-reservations', async (req, res) => {
     }
 })
 
-// Création d'une nouvelle zone tarifaire
+// Role : Creer une zone tarifaire.
+// Preconditions : Les champs requis sont fournis.
+// Postconditions : Retourne la zone creee ou une erreur.
 router.post('/', async (req, res) => {
     const { name, nb_tables, price_per_table, festival_id, nb_tables_available, m2_price } = req.body;
     if (!name || nb_tables === undefined || price_per_table === undefined || !festival_id) {
         return res.status(400).json({ error: 'Champs obligatoires manquants' });
     }
     try {
-        // Utiliser nb_tables comme valeur par défaut pour nb_tables_available si non fourni
+        // Utiliser nb_tables comme valeur par defaut pour nb_tables_available si non fourni
         const tablesAvailable = nb_tables_available !== undefined ? nb_tables_available : nb_tables;
         
-        // Calcul automatique du prix par m² si non fourni
-        // On considère qu'une table occupe environ 4.5 m² (table + espace circulation)
+        // Calcul automatique du prix au m2 si non fourni
+        // On considere qu'une table occupe environ 4.5 m2 (table + espace circulation)
         const M2_PER_TABLE = 4.5;
         const priceM2 = m2_price !== undefined ? m2_price : parseFloat((price_per_table / M2_PER_TABLE).toFixed(2));
         
@@ -63,13 +69,18 @@ router.post('/', async (req, res) => {
             [name, festival_id, nb_tables, price_per_table, tablesAvailable, priceM2]
         );
         res.status(201).json({ message: 'Zone tarifaire créée', zone_tarifaire: rows[0] });
-    } catch (err) {
+    } catch (err: any) {
+        if (err?.code === '23505') {
+            return res.status(409).json({ error: 'Une zone tarifaire avec ce nom existe deja pour ce festival' });
+        }
         console.error('Erreur lors de la création de la zone tarifaire:', err);
         res.status(500).json({ error: 'Erreur serveur', details: err instanceof Error ? err.message : 'Erreur inconnue' });
     }
 });
 
-//suppression d'une zone tarifaire par ID
+// Role : Supprimer une zone tarifaire par ID.
+// Preconditions : id valide.
+// Postconditions : Retourne un message de suppression ou une erreur.
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -87,7 +98,9 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-//mise à jour d'une zone tarifaire par ID
+// Role : Mettre a jour une zone tarifaire par ID.
+// Preconditions : id valide et champs fournis.
+// Postconditions : Retourne un message de mise a jour ou une erreur.
 router.put('/:id',  async (req, res) => {
     const { id } = req.params;
     const { name, nb_tables, price_per_table, nb_tables_available, m2_price } = req.body;

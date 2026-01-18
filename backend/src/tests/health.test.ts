@@ -1,3 +1,4 @@
+// Role : Verifier des tests de sante de base.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 

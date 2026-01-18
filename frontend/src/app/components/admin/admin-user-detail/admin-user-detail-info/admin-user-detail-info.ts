@@ -18,12 +18,18 @@ const ROLE_LABELS: Record<UserRole, string> = {
     templateUrl: './admin-user-detail-info.html',
     styleUrl: './admin-user-detail-info.scss',
 })
+// Role : Afficher les informations d'un utilisateur cote admin.
+// Préconditions : L'input `user` est fourni.
+// Postconditions : Les champs et l'avatar sont rendus.
 export class AdminUserDetailInfoComponent {
     readonly user = input.required<UserDto>();
     private readonly uploadService = inject(UploadService);
 
     readonly roleLabels = ROLE_LABELS;
 
+    // Role : Resoudre l'URL d'avatar a afficher.
+    // Préconditions : `avatarUrl` peut etre null ou vide.
+    // Postconditions : Retourne une URL valide ou l'avatar par defaut.
     getAvatarUrl(avatarUrl: string | null | undefined): string {
         return avatarUrl ? this.uploadService.getAvatarUrl(avatarUrl) : DEFAULT_AVATAR_URL;
     }

@@ -12,6 +12,9 @@ import { AuthService } from '@app/services/auth.service';
 })
 
 //on impléme,te OnDestroy pour gérer la sauvegarde des changements lorsque le composant est détruit/ la page est quittée
+// Role : Afficher et mettre a jour le workflow associe a une reservation.
+// Préconditions : `reservationId` est fourni; les services AuthService et WorkflowService sont disponibles.
+// Postconditions : Le workflow est charge, modifie, et sauvegarde si necessaire.
 export class WorkflowComponent implements OnDestroy {
 
 
@@ -44,6 +47,9 @@ export class WorkflowComponent implements OnDestroy {
     });
   }
 
+  // Role : Sauvegarder les changements en quittant le composant.
+  // Préconditions : Un workflow est charge et `hasChanges` est a true.
+  // Postconditions : Les modifications sont envoyees avant la destruction.
   ngOnDestroy(): void {
     // Sauvegarder les changements avant de quitter le composant
     if (this.hasChanges && this.workflow()) {
@@ -51,6 +57,9 @@ export class WorkflowComponent implements OnDestroy {
     }
   }
 
+  // Role : Charger le workflow lie a une reservation.
+  // Préconditions : `reservationId` est valide.
+  // Postconditions : Le workflow est stocke en signal et l'evenement est emis.
   getWorkflowByReservationId(reservationId: number) {
     // Appeler le service pour obtenir le workflow
     this.workflowService.getWorkflowByReservationId(reservationId).subscribe({
@@ -68,6 +77,9 @@ export class WorkflowComponent implements OnDestroy {
 
   contactMessage = signal<string | null>(null);
 
+  // Role : Enregistrer un contact pour le workflow courant.
+  // Préconditions : Un workflow est charge.
+  // Postconditions : La date de contact est ajoutee et un message est affiche.
   onContacted() {
     const wf = this.workflow();
     if (wf) {
@@ -90,6 +102,9 @@ export class WorkflowComponent implements OnDestroy {
     }
   }
 
+  // Role : Mettre a jour l'etat courant a partir d'une selection UI.
+  // Préconditions : L'evenement provient d'un select et un workflow est charge.
+  // Postconditions : L'etat est mis a jour et le flag de modification est active.
   onStateChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     const currentWorkflow = this.workflow();
@@ -102,6 +117,9 @@ export class WorkflowComponent implements OnDestroy {
     }
   }
 
+  // Role : Mettre a jour un booleen du workflow via une case a cocher.
+  // Préconditions : Le champ fait partie des cles autorisees et un workflow est charge.
+  // Postconditions : Le workflow est mis a jour, l'evenement est emis et `hasChanges` est true.
   onCheckboxChange(field: keyof Pick<WorkflowDto, 'liste_jeux_demandee' | 'liste_jeux_obtenue' | 'jeux_recus' | 'presentera_jeux'>, event: Event) {
     const checkbox = event.target as HTMLInputElement;
     const currentWorkflow = this.workflow();
@@ -115,6 +133,9 @@ export class WorkflowComponent implements OnDestroy {
     }
   }
 
+  // Role : Persister les changements du workflow courant.
+  // Préconditions : Un workflow est charge.
+  // Postconditions : Les changements sont sauvegardes et `hasChanges` repasse a false si succes.
   private saveChanges() {
     const currentWorkflow = this.workflow();
     if (!currentWorkflow) return;

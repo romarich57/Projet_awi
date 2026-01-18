@@ -1,3 +1,4 @@
+// Role : Initialiser le pool de connexions Postgres.
 import pkg from 'pg'
 const { Pool } = pkg
 

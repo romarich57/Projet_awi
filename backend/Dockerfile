@@ -1,3 +1,4 @@
+# // Role : Construire l'image backend.
 FROM node:22-alpine AS build
 WORKDIR /app
 

@@ -14,6 +14,9 @@ import type { ReservantDto } from '@app/types/reservant-dto';
   templateUrl: './reservation-details-page.html',
   styleUrl: './reservation-details-page.scss'
 })
+// Role : Afficher la page detail d'une reservation et ses sous-composants.
+// Préconditions : L'URL contient les parametres `id` et potentiellement `festivalId`.
+// Postconditions : Les signaux de page sont initialises et les donnees chargees sont stockees.
 export class ReservationDetailsPage implements OnInit {
   
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -25,6 +28,9 @@ export class ReservationDetailsPage implements OnInit {
   readonly presenteraJeux = signal<boolean | null>(null);
   readonly reservationRefreshToken = signal<number>(0);
 
+  // Role : Initialiser les ids depuis l'URL.
+  // Préconditions : La route active expose les parametres attendus.
+  // Postconditions : `reservationId` et `festivalId` sont renseignes si disponibles.
   ngOnInit(): void {
     // Récupérer l'ID de l'URL
     const id = this.activatedRoute.snapshot.params['id'];
@@ -38,12 +44,18 @@ export class ReservationDetailsPage implements OnInit {
     }
   }
 
+  // Role : Stocker la reservation chargee et mettre a jour les signaux derives.
+  // Préconditions : `reservation` est chargee par le composant enfant.
+  // Postconditions : Les donnees et le token de rafraichissement sont mis a jour.
   onReservationLoaded(reservation: ReservationWithZones): void {
     this.reservationData.set(reservation);
     this.reservantType.set(reservation.reservant_type as ReservantDto['type']);
     this.reservationRefreshToken.update((value) => value + 1);
   }
 
+  // Role : Stocker le workflow charge pour adapter l'affichage.
+  // Préconditions : `workflow` est charge par le composant enfant.
+  // Postconditions : `presenteraJeux` est mis a jour.
   onWorkflowLoaded(workflow: WorkflowDto): void {
     this.presenteraJeux.set(workflow.presentera_jeux);
   }

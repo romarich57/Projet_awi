@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminUserDetailPageComponent } from './admin-user-detail-page';
-import { UserService } from '@users/user.service';
+import { UserService } from '@services/user.service';
 import { createUserServiceMock } from '@testing/mocks/user-service.mock';
 import { UploadService } from '../../../../services/upload.service';
 import { provideRouter, ActivatedRoute } from '@angular/router';
@@ -48,18 +48,21 @@ describe('AdminUserDetailPageComponent', () => {
     });
 
     it('should load user data and find user if exists', () => {
-        // Setup mock data in service
         userServiceMock.users.set([{
             id: 1,
             login: 'test',
+            role: 'benevole',
             firstName: 'Test',
             lastName: 'User',
             email: 'test@example.com',
-            role: 'benevole'
+            phone: null,
+            avatarUrl: null,
+            emailVerified: true,
+            createdAt: new Date('2024-01-01').toISOString(),
         }]);
 
         fixture.detectChanges();
-        // Since signals are reactive, just checking computed
+        
         expect(component.user()).toBeTruthy();
         expect(component.user()?.login).toBe('test');
     });
@@ -68,7 +71,14 @@ describe('AdminUserDetailPageComponent', () => {
         userServiceMock.users.set([{
             id: 1,
             login: 'test',
-            role: 'benevole'
+            role: 'benevole',
+            firstName: 'Test',
+            lastName: 'User',
+            email: 'test@example.com',
+            phone: null,
+            avatarUrl: null,
+            emailVerified: true,
+            createdAt: new Date('2024-01-01').toISOString(),
         }]);
         fixture.detectChanges();
 

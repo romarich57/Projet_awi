@@ -1,3 +1,4 @@
+// Role : Tester les routes d'authentification.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import authRouter from '../../routes/auth.js'
@@ -9,12 +10,9 @@ import {
     teardownTests
 } from '../test-helpers.js'
 
-/**
- * Auth Routes Tests
- * Tests for /api/auth routes including register, login, and token management
- */
+// Tests des routes /api/auth (register, login, tokens)
 
-// Setup and teardown
+// Preparation et nettoyage
 test.before(async () => {
     await setupTests()
 })
@@ -23,9 +21,7 @@ test.after(async () => {
     await teardownTests()
 })
 
-// ============================================
-// POST /api/auth/register Tests (8 tests)
-// ============================================
+
 
 test('POST /register - should create new user with valid data', async () => {
     const mockReq = {
@@ -65,7 +61,7 @@ test('POST /register - should return 400 for missing required fields', async () 
     const mockReq = {
         body: {
             login: 'testuser'
-            // Missing firstName, lastName, email, password
+            // Champs firstName, lastName, email, password manquants
         }
     }
 
@@ -127,16 +123,16 @@ test('POST /register - should return 400 for invalid email format', async () => 
 test('POST /register - should return 409 for duplicate email', async () => {
     const email = generateTestEmail()
 
-    // Create first user
+    // Creer un premier utilisateur
     await createTestUser({ email })
 
-    // Try to create duplicate
+    // Tenter un doublon
     const mockReq = {
         body: {
             login: generateTestLogin(),
             firstName: 'Test',
             lastName: 'User',
-            email: email, // Duplicate
+            email: email, // Doublon
             password: 'SecurePass123!'
         }
     }
@@ -166,13 +162,13 @@ test('POST /register - should return 409 for duplicate email', async () => {
 test('POST /register - should return 409 for duplicate login', async () => {
     const login = generateTestLogin()
 
-    // Create first user
+    // Creer un premier utilisateur
     await createTestUser({ login })
 
-    // Try to create duplicate
+    // Tenter un doublon
     const mockReq = {
         body: {
-            login: login, // Duplicate
+            login: login, // Doublon
             firstName: 'Test',
             lastName: 'User',
             email: generateTestEmail(),
@@ -235,9 +231,9 @@ test('POST /register - should hash password before storing', async () => {
 
     assert.strictEqual(mockRes.statusCode, 201)
 
-    // Verify password was hashed (not stored as plain text)
-    // Note: In real implementation, check database directly
-    // Here we verify the registration succeeded
+    // Verifier que le mot de passe est hashe (pas en clair)
+    // Note : en implementation reelle, verifier en base
+    // Ici on verifie que l'inscription a reussi
     assert.ok(mockRes.jsonData?.message)
 })
 
@@ -307,7 +303,7 @@ test('POST /register - should return success message', async () => {
 })
 
 // ============================================
-// POST /api/auth/login Tests (6 tests)
+// Tests POST /api/auth/login (6 tests)
 // ============================================
 
 test('POST /login - should login with valid credentials', async () => {
@@ -450,7 +446,7 @@ test('POST /login - should return 401 for invalid password', async () => {
 test('POST /login - should return 400 for missing credentials', async () => {
     const mockReq = {
         body: {
-            // Missing identifier and password
+            // Identifiant et mot de passe manquants
         }
     }
 
@@ -509,9 +505,7 @@ test('POST /login - should return 403 for unverified email', async () => {
     assert.ok(mockRes.jsonData.error.includes('non vérifié'))
 })
 
-// ============================================
-// Token Validation Tests (2 tests)
-// ============================================
+
 
 test('Token validation - should have valid JWT structure', async () => {
     const password = 'SecurePass123!'
@@ -549,7 +543,7 @@ test('Token validation - should have valid JWT structure', async () => {
     assert.ok(mockRes.cookies.access_token)
     const token = mockRes.cookies.access_token
     const parts = token.split('.')
-    assert.strictEqual(parts.length, 3) // JWT has 3 parts
+    assert.strictEqual(parts.length, 3) // JWT en 3 parties
 })
 
 test('Token validation - should contain user info in payload', async () => {

@@ -10,5 +10,8 @@ import { FestivalListComponent } from '@app/components/festival-list-component/f
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
+// Role : Afficher la page d'accueil et la liste des festivals.
+// Préconditions : Les composants enfants sont importes.
+// Postconditions : L'interface d'accueil est rendue.
 export class HomeComponent {
 }

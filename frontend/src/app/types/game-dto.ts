@@ -1,5 +1,6 @@
 import type { MechanismDto } from './mechanism-dto';
 
+// Type : Decrit un jeu et ses attributs.
 export interface GameDto {
   id: number;
   title: string;

@@ -1,7 +1,7 @@
--- Migration: Ajout de represented_editor_id et du type "aucun" pour les tables
--- Date: 2025-12-05
+-- // Migration : ajout de represented_editor_id et du type "aucun" pour les tables
+-- // Date : 2025-12-05
 
--- Ajouter la valeur "aucun" au type ENUM si elle n'existe pas
+-- // Ajouter la valeur "aucun" au type ENUM si elle n'existe pas
 DO $$ BEGIN
     IF NOT EXISTS (
         SELECT 1
@@ -13,6 +13,6 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- Ajouter la colonne represented_editor_id sur reservation
+-- // Ajouter la colonne represented_editor_id sur reservation
 ALTER TABLE reservation
     ADD COLUMN IF NOT EXISTS represented_editor_id INTEGER REFERENCES reservant(id);

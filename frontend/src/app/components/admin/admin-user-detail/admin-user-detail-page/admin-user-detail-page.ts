@@ -12,7 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { UserDto, UserRole } from '@app/types/user-dto';
-import { UpdateUserPayload, UserService } from '@users/user.service';
+import { UpdateUserPayload, UserService } from '@services/user.service';
 import { UploadService, DEFAULT_AVATAR_URL } from '../../../../services/upload.service';
 import { AdminUserDetailInfoComponent } from '../admin-user-detail-info/admin-user-detail-info';
 import { AdminUserDetailEditComponent } from '../admin-user-detail-edit/admin-user-detail-edit';
@@ -35,6 +35,9 @@ type EditUserForm = {
     templateUrl: './admin-user-detail-page.html',
     styleUrl: './admin-user-detail-page.scss',
 })
+// Role : Afficher et editer le detail d'un utilisateur cote admin.
+// Préconditions : L'id utilisateur est present dans la route; UserService est disponible.
+// Postconditions : Les donnees sont chargees et les actions admin sont gerees.
 export class AdminUserDetailPageComponent {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
@@ -55,7 +58,7 @@ export class AdminUserDetailPageComponent {
     readonly lastMutation = signal<'update' | null>(null);
     readonly hasRequested = signal(false);
 
-    // Avatar file handling
+    
     readonly selectedFile = signal<File | null>(null);
     readonly avatarPreview = signal<string>(DEFAULT_AVATAR_URL);
     readonly uploadedAvatarUrl = signal<string | null>(null);
@@ -76,6 +79,18 @@ export class AdminUserDetailPageComponent {
         }
         const id = this.routeUserId();
         return this.users().find((item) => item.id === id) ?? null;
+    });
+
+    readonly isProtectedAdmin = computed(() => {
+        const user = this.user();
+        if (!user) {
+            return false;
+        }
+        return (
+            user.id === 1 ||
+            user.login === 'admin' ||
+            user.email.toLowerCase() === 'admin@secureapp.com'
+        );
     });
 
     readonly showNotFound = computed(() => {
@@ -126,6 +141,14 @@ export class AdminUserDetailPageComponent {
         });
 
         effect(() => {
+            if (this.isProtectedAdmin()) {
+                this.editForm.controls.role.disable({ emitEvent: false });
+                return;
+            }
+            this.editForm.controls.role.enable({ emitEvent: false });
+        });
+
+        effect(() => {
             const status = this.mutationStatus();
             const action = this.lastMutation();
             if (status === 'success' && action === 'update') {
@@ -139,10 +162,16 @@ export class AdminUserDetailPageComponent {
         });
     }
 
+    // Role : Resoudre l'URL d'avatar pour l'affichage.
+    // Préconditions : `avatarUrl` peut etre null.
+    // Postconditions : Retourne une URL complete.
     getAvatarUrl(avatarUrl: string | null | undefined): string {
         return this.uploadService.getAvatarUrl(avatarUrl);
     }
 
+    // Role : Gerer la selection d'un fichier avatar.
+    // Préconditions : L'evenement provient d'un input file.
+    // Postconditions : Le fichier est valide et l'aperçu est mis a jour.
     onFileSelected(event: Event) {
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
@@ -173,6 +202,9 @@ export class AdminUserDetailPageComponent {
         reader.readAsDataURL(file);
     }
 
+    // Role : Annuler l'avatar selectionne et restaurer l'avatar courant.
+    // Préconditions : Un utilisateur est charge.
+    // Postconditions : Les signaux d'avatar reviennent a l'etat initial.
     removeAvatar() {
         this.selectedFile.set(null);
         const user = this.user();
@@ -180,6 +212,9 @@ export class AdminUserDetailPageComponent {
         this.uploadedAvatarUrl.set(null);
     }
 
+    // Role : Basculer le mode edition et restaurer les valeurs si besoin.
+    // Préconditions : Un utilisateur est charge.
+    // Postconditions : Le formulaire est en mode edition ou lecture.
     toggleEdit() {
         if (!this.user()) {
             return;
@@ -193,6 +228,9 @@ export class AdminUserDetailPageComponent {
         }
     }
 
+    // Role : Annuler l'edition et restaurer le formulaire.
+    // Préconditions : Un utilisateur est charge.
+    // Postconditions : L'edition est annulee et l'avatar est restaure.
     cancelEdit() {
         const current = this.user();
         if (!current) {
@@ -204,6 +242,9 @@ export class AdminUserDetailPageComponent {
         this.avatarPreview.set(current.avatarUrl ? this.getAvatarUrl(current.avatarUrl) : DEFAULT_AVATAR_URL);
     }
 
+    // Role : Soumettre les modifications d'un utilisateur.
+    // Préconditions : Le formulaire est valide et l'utilisateur est charge.
+    // Postconditions : Les donnees sont envoyees et l'avatar est traite si besoin.
     submitEdit() {
         const selected = this.user();
         if (!selected) {
@@ -221,15 +262,23 @@ export class AdminUserDetailPageComponent {
         if (file) {
             // Upload avatar first, then update user
             this.uploadService.uploadAvatar(file).subscribe((url) => {
+                if (!url) {
+                    this.doUpdateUser(selected.id, selected.avatarUrl ?? null);
+                    return;
+                }
                 this.uploadedAvatarUrl.set(url);
                 this.doUpdateUser(selected.id, url);
             });
+            return;
         } else {
             // Keep current avatarUrl if no new file selected
             this.doUpdateUser(selected.id, selected.avatarUrl ?? null);
         }
     }
 
+    // Role : Construire la charge utile et appeler la mise a jour utilisateur.
+    // Préconditions : `userId` est valide.
+    // Postconditions : Une requete de mise a jour est declenchee.
     private doUpdateUser(userId: number, avatarUrl: string | null) {
         const value = this.editForm.getRawValue();
         const payload: UpdateUserPayload = {
@@ -247,6 +296,9 @@ export class AdminUserDetailPageComponent {
         this.lastMutation.set('update');
     }
 
+    // Role : Revenir a l'ecran precedent ou a la liste admin.
+    // Préconditions : Le routeur ou l'historique est disponible.
+    // Postconditions : La navigation retour est effectuee.
     goBack() {
         if (history.length > 1) {
             this.location.back();
@@ -255,6 +307,9 @@ export class AdminUserDetailPageComponent {
         this.router.navigate(['/admin']);
     }
 
+    // Role : Reinitialiser le formulaire d'edition avec les donnees utilisateur.
+    // Préconditions : `user` contient les champs requis.
+    // Postconditions : Le formulaire et l'aperçu d'avatar sont synchronises.
     private resetEditForm(user: UserDto) {
         this.editForm.reset({
             login: user.login,

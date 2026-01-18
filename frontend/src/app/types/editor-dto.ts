@@ -1,3 +1,4 @@
+// Type : Decrit un editeur.
 export interface EditorDto {
     id: number;
     name: string;

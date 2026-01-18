@@ -1,27 +1,28 @@
+// Role : Configuration TypeScript du backend.
 {
   "compilerOptions": {
-    // File layout
+    // Organisation des fichiers
     "rootDir": "./src",
     "outDir": "./dist",
 
-    /* === Module System === */
+    // === Systeme de modules ===
     "target": "es2022",
     "lib": ["es2022"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "verbatimModuleSyntax": true,
 
-    /* === Compatibilité Node ESM === */
+    // === Compatibilite Node ESM ===
     "types": ["node"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
 
-    /* === Compilation === */
+    // === Compilation ===
     "noEmit": false,
     "sourceMap": true,
     "skipLibCheck": true,
 
-    /* === Sécurité et style === */
+    // === Securite et style ===
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,

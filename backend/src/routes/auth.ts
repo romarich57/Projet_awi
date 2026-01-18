@@ -1,3 +1,4 @@
+// Role : Gérer les routes d'authentification et de session.
 import crypto from 'node:crypto'
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
@@ -45,8 +46,24 @@ type SafeUser = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PASSWORD_RESET_EXPIRATION_MS = 60 * 60 * 1000
+const COOKIE_BASE_OPTIONS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict' as const,
+}
+const ACCESS_COOKIE_OPTIONS = {
+  ...COOKIE_BASE_OPTIONS,
+  maxAge: 15 * 60 * 1000,
+}
+const REFRESH_COOKIE_OPTIONS = {
+  ...COOKIE_BASE_OPTIONS,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+}
 const router = Router()
 
+// Role : Construire un utilisateur sans champs sensibles.
+// Preconditions : row provient de la table users.
+// Postconditions : Retourne un SafeUser sans mot de passe ni tokens.
 function toSafeUser(row: DbUser): SafeUser {
   return {
     id: row.id,
@@ -62,14 +79,43 @@ function toSafeUser(row: DbUser): SafeUser {
   }
 }
 
+// Role : Nettoyer une valeur texte.
+// Preconditions : value peut etre de tout type.
+// Postconditions : Retourne une chaine nettoyee ou vide.
 function sanitize(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+// Role : Hasher un token de verification email.
+// Preconditions : token est une chaine non vide.
+// Postconditions : Retourne le hash SHA-256.
 function hashVerificationToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex')
 }
 
+// Role : Hasher un identifiant de refresh token.
+// Preconditions : tokenId est une chaine non vide.
+// Postconditions : Retourne le hash SHA-256.
+function hashRefreshTokenId(tokenId: string): string {
+  return crypto.createHash('sha256').update(tokenId).digest('hex')
+}
+
+type JwtDecoded = { exp?: number }
+
+// Role : Extraire la date d'expiration d'un JWT.
+// Preconditions : token est un JWT valide.
+// Postconditions : Retourne une date ou null si exp manquant.
+function getJwtExpiration(token: string): Date | null {
+  const decoded = jwt.decode(token) as JwtDecoded | null
+  if (!decoded?.exp) {
+    return null
+  }
+  return new Date(decoded.exp * 1000)
+}
+
+// Role : Authentifier un utilisateur et poser les cookies JWT.
+// Preconditions : identifier et password sont fournis.
+// Postconditions : Retourne l'utilisateur et definit les cookies si succes.
 router.post('/login', async (req, res) => {
   const identifier = sanitize(req.body?.identifier)
   const password = sanitize(req.body?.password)
@@ -101,16 +147,16 @@ router.post('/login', async (req, res) => {
     )
     const user = rows[0]
     if (!user) {
-      return res.status(401).json({ error: 'Utilisateur inconnu' })
+      return res.status(401).json({ error: 'Identifiants invalides' })
     }
 
     const match = await bcrypt.compare(password, user.password_hash)
     if (!match) {
-      return res.status(401).json({ error: 'Mot de passe incorrect' })
+      return res.status(401).json({ error: 'Identifiants invalides' })
     }
 
     if (!user.email_verified) {
-      return res.status(403).json({ error: 'Email non vérifié' })
+      return res.status(401).json({ error: 'Identifiants invalides' })
     }
 
     const payload: TokenPayload = {
@@ -119,20 +165,23 @@ router.post('/login', async (req, res) => {
       role: user.role,
     }
     const accessToken = createAccessToken(payload)
-    const refreshToken = createRefreshToken(payload)
+    const refreshTokenId = crypto.randomUUID()
+    const refreshToken = createRefreshToken({ ...payload, jti: refreshTokenId })
+    const refreshExpiresAt = getJwtExpiration(refreshToken)
+    if (!refreshExpiresAt) {
+      return res.status(500).json({ error: 'Erreur serveur' })
+    }
 
-    res.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000,
-    })
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    })
+    await pool.query(
+      `
+      INSERT INTO refresh_tokens (user_id, jti_hash, expires_at)
+      VALUES ($1, $2, $3)
+    `,
+      [user.id, hashRefreshTokenId(refreshTokenId), refreshExpiresAt],
+    )
+
+    res.cookie('access_token', accessToken, ACCESS_COOKIE_OPTIONS)
+    res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS)
 
     res.json({
       message: 'Authentification réussie',
@@ -144,6 +193,9 @@ router.post('/login', async (req, res) => {
   }
 })
 
+// Role : Creer un compte utilisateur et envoyer l'email de verification.
+// Preconditions : Les champs requis sont fournis et valides.
+// Postconditions : Retourne un message de creation ou une erreur.
 router.post('/register', async (req, res) => {
   const payload = {
     login: sanitize(req.body?.login),
@@ -252,6 +304,9 @@ router.post('/register', async (req, res) => {
   }
 })
 
+// Role : Renvoyer un email de verification.
+// Preconditions : email est fourni et valide.
+// Postconditions : Retourne un message de traitement.
 router.post('/resend-verification', async (req, res) => {
   const email = sanitize(req.body?.email).toLowerCase()
   if (!email || !EMAIL_REGEX.test(email)) {
@@ -308,6 +363,9 @@ router.post('/resend-verification', async (req, res) => {
   }
 })
 
+// Role : Verifier un email via un token.
+// Preconditions : token est fourni.
+// Postconditions : Active le compte et retourne l'utilisateur.
 router.get('/verify-email', async (req, res) => {
   const token = sanitize(req.query?.token)
   if (!token) {
@@ -356,6 +414,9 @@ router.get('/verify-email', async (req, res) => {
   }
 })
 
+// Role : Demander une reinitialisation de mot de passe.
+// Preconditions : email est fourni et valide.
+// Postconditions : Enregistre un token et envoie un email.
 router.post('/password/forgot', async (req, res) => {
   const email = sanitize(req.body?.email).toLowerCase()
   if (!email || !EMAIL_REGEX.test(email)) {
@@ -408,6 +469,9 @@ router.post('/password/forgot', async (req, res) => {
   }
 })
 
+// Role : Reinitialiser le mot de passe a partir d'un token.
+// Preconditions : token et nouveau mot de passe sont fournis.
+// Postconditions : Met a jour le mot de passe et invalide les refresh tokens.
 router.post('/password/reset', async (req, res) => {
   const token = sanitize(req.body?.token)
   const password =
@@ -425,73 +489,190 @@ router.post('/password/reset', async (req, res) => {
 
   try {
     const passwordHash = await bcrypt.hash(password, 10)
-    const { rows } = await pool.query<DbUser>(
-      `
-      UPDATE users
-      SET password_hash = $1,
-          password_reset_token = NULL,
-          password_reset_expires_at = NULL
-      WHERE password_reset_token = $2
-        AND password_reset_expires_at > NOW()
-      RETURNING
-        id,
-        login,
-        password_hash,
-        role,
-        first_name,
-        last_name,
-        email,
-        phone,
-        avatar_url,
-        email_verified,
-        created_at
-    `,
-      [passwordHash, tokenHash],
-    )
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      const { rows } = await client.query<DbUser>(
+        `
+        UPDATE users
+        SET password_hash = $1,
+            password_reset_token = NULL,
+            password_reset_expires_at = NULL
+        WHERE password_reset_token = $2
+          AND password_reset_expires_at > NOW()
+        RETURNING
+          id,
+          login,
+          password_hash,
+          role,
+          first_name,
+          last_name,
+          email,
+          phone,
+          avatar_url,
+          email_verified,
+          created_at
+      `,
+        [passwordHash, tokenHash],
+      )
 
-    const user = rows[0]
-    if (!user) {
-      return res.status(400).json({ error: 'Token invalide ou expiré' })
+      const user = rows[0]
+      if (!user) {
+        await client.query('ROLLBACK')
+        return res.status(400).json({ error: 'Token invalide ou expiré' })
+      }
+
+      await client.query(
+        'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL',
+        [user.id],
+      )
+
+      await client.query('COMMIT')
+      res.json({ message: 'Mot de passe mis à jour. Vous pouvez vous connecter.' })
+    } catch (error) {
+      await client.query('ROLLBACK')
+      throw error
+    } finally {
+      client.release()
     }
-
-    res.json({ message: 'Mot de passe mis à jour. Vous pouvez vous connecter.' })
   } catch (error) {
     console.error('Erreur réinitialisation mot de passe', error)
     res.status(500).json({ error: 'Erreur serveur' })
   }
 })
 
-router.post('/logout', (_req, res) => {
-  res.clearCookie('access_token')
-  res.clearCookie('refresh_token')
+// Role : Deconnecter l'utilisateur courant.
+// Preconditions : L'utilisateur est authentifie.
+// Postconditions : Revoque le refresh token et nettoie les cookies.
+router.post('/logout', verifyToken, async (req, res) => {
+  const refresh = req.cookies?.refresh_token
+  if (refresh) {
+    try {
+      const decoded = jwt.verify(refresh, JWT_SECRET) as TokenPayload
+      if (decoded?.jti) {
+        await pool.query(
+          'UPDATE refresh_tokens SET revoked_at = NOW() WHERE jti_hash = $1',
+          [hashRefreshTokenId(decoded.jti)],
+        )
+      }
+    } catch (error) {
+      console.warn('Refresh token invalide lors du logout', error)
+    }
+  }
+
+  res.clearCookie('access_token', COOKIE_BASE_OPTIONS)
+  res.clearCookie('refresh_token', COOKIE_BASE_OPTIONS)
   res.json({ message: 'Déconnexion réussie' })
 })
 
-router.post('/refresh', (req, res) => {
+// Role : Renouveler les tokens via le refresh token.
+// Preconditions : refresh_token est present et valide.
+// Postconditions : Retourne un nouveau access token et refresh token.
+router.post('/refresh', async (req, res) => {
   const refresh = req.cookies?.refresh_token
   if (!refresh) {
     return res.status(401).json({ error: 'Refresh token manquant' })
   }
 
+  let decoded: TokenPayload
   try {
-    const decoded = jwt.verify(refresh, JWT_SECRET) as TokenPayload
+    decoded = jwt.verify(refresh, JWT_SECRET) as TokenPayload
+  } catch {
+    return res.status(403).json({ error: 'Refresh token invalide ou expiré' })
+  }
+
+  if (!decoded?.jti) {
+    return res.status(403).json({ error: 'Refresh token invalide ou expiré' })
+  }
+
+  try {
+    const { rows } = await pool.query<{
+      id: number
+      user_id: number
+      expires_at: Date
+      revoked_at: Date | null
+    }>(
+      `
+      SELECT id, user_id, expires_at, revoked_at
+      FROM refresh_tokens
+      WHERE jti_hash = $1
+    `,
+      [hashRefreshTokenId(decoded.jti)],
+    )
+
+    const stored = rows[0]
+    if (!stored) {
+      await pool.query(
+        'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL',
+        [decoded.id],
+      )
+      return res.status(403).json({ error: 'Refresh token invalide ou expiré' })
+    }
+
+    const storedExpiresAt = new Date(stored.expires_at)
+    if (
+      stored.revoked_at ||
+      stored.user_id !== decoded.id ||
+      Number.isNaN(storedExpiresAt.getTime()) ||
+      storedExpiresAt <= new Date()
+    ) {
+      await pool.query(
+        'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL',
+        [decoded.id],
+      )
+      return res.status(403).json({ error: 'Refresh token invalide ou expiré' })
+    }
+
+    const newRefreshId = crypto.randomUUID()
+    const newRefreshToken = createRefreshToken({
+      id: decoded.id,
+      login: decoded.login,
+      role: decoded.role,
+      jti: newRefreshId,
+    })
+    const refreshExpiresAt = getJwtExpiration(newRefreshToken)
+    if (!refreshExpiresAt) {
+      return res.status(500).json({ error: 'Erreur serveur' })
+    }
+
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      await client.query('UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = $1', [
+        stored.id,
+      ])
+      await client.query(
+        `
+        INSERT INTO refresh_tokens (user_id, jti_hash, expires_at)
+        VALUES ($1, $2, $3)
+      `,
+        [decoded.id, hashRefreshTokenId(newRefreshId), refreshExpiresAt],
+      )
+      await client.query('COMMIT')
+    } catch (error) {
+      await client.query('ROLLBACK')
+      throw error
+    } finally {
+      client.release()
+    }
+
     const newAccess = createAccessToken({
       id: decoded.id,
       login: decoded.login,
       role: decoded.role,
     })
-    res.cookie('access_token', newAccess, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000,
-    })
+    res.cookie('access_token', newAccess, ACCESS_COOKIE_OPTIONS)
+    res.cookie('refresh_token', newRefreshToken, REFRESH_COOKIE_OPTIONS)
     res.json({ message: 'Token renouvelé' })
-  } catch {
-    res.status(403).json({ error: 'Refresh token invalide ou expiré' })
+  } catch (error) {
+    console.error('Erreur lors du refresh token', error)
+    res.status(500).json({ error: 'Erreur serveur' })
   }
 })
 
+// Role : Retourner l'utilisateur courant.
+// Preconditions : L'utilisateur est authentifie.
+// Postconditions : Retourne les informations de l'utilisateur ou une erreur.
 router.get('/whoami', verifyToken, async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Utilisateur non authentifié' })

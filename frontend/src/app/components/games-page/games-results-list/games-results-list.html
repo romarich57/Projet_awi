@@ -1,5 +1,6 @@
 <div class="table-head">
   <div class="head-title">Titre</div>
+  <!-- Bloc conditionnel principal -->
   @if (visibleColumns()['type']) { <div>Type</div> }
   @if (visibleColumns()['editor']) { <div>Éditeur</div> }
   @if (visibleColumns()['age']) { <div>Âge</div> }
@@ -18,6 +19,7 @@
     <app-game-list-item
       [game]="game"
       [visibleColumns]="visibleColumns()"
+      (view)="view.emit($event)"
       (edit)="edit.emit($event)"
       (delete)="delete.emit($event)" />
   }

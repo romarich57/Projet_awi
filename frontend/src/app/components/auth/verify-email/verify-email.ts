@@ -22,6 +22,9 @@ import { UserDto } from '@app/types/user-dto';
   templateUrl: './verify-email.html',
   styleUrl: './verify-email.scss',
 })
+// Role : Verifier l'email via un token.
+// Préconditions : Un token peut etre fourni dans l'URL ou saisi manuellement.
+// Postconditions : Le compte est verifie et l'etat UI est mis a jour.
 export class VerifyEmailComponent {
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
@@ -46,6 +49,9 @@ export class VerifyEmailComponent {
     }
   }
 
+  // Role : Soumettre le token de verification.
+  // Préconditions : Le formulaire est valide et un token est present.
+  // Postconditions : La verification est lancee et l'etat est mis a jour.
   submit(auto = false) {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -79,6 +85,9 @@ export class VerifyEmailComponent {
     });
   }
 
+  // Role : Reinitialiser l'etat pour une nouvelle tentative.
+  // Préconditions : Aucune.
+  // Postconditions : Le formulaire et les messages reviennent a l'etat initial.
   retry() {
     this.status.set('idle');
     this.message.set('Collez le token reçu par email ou ouvrez directement le lien.');
@@ -86,6 +95,9 @@ export class VerifyEmailComponent {
     this.form.reset();
   }
 
+  // Role : Nettoyer le token dans l'URL apres verification.
+  // Préconditions : Le routeur est disponible.
+  // Postconditions : Les query params sont supprimes.
   private clearTokenFromUrl() {
     this.router.navigate([], {
       queryParams: {},

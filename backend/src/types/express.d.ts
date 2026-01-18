@@ -1,12 +1,14 @@
 import type { TokenPayload } from './token-payload.js'
+
+// Role : Etendre le type Express.Request avec les champs auth.
 declare global {
-namespace Express { // on rajoute user au type Request de express
-interface Request {
-// pour aider VSCode (ds cookie-parser mais pas vu par VSCode)
-cookies?: Record<string, string>
-user?: TokenPayload // il peut y avoir un req.user
+  namespace Express {
+    // On ajoute user au type Request d'Express
+    interface Request {
+      cookies?: Record<string, string>
+      user?: TokenPayload // Peut etre defini par verifyToken
+    }
+  }
 }
- }
-}
-// Nécessaire pour que TypeScript traite ce fichier comme un module
-export {} 
+
+export {}

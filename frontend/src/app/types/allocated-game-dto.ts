@@ -1,7 +1,9 @@
 import type { MechanismDto } from './mechanism-dto';
 
+// Type : Decrit les tailles de table possibles.
 export type TableSize = 'standard' | 'grande' | 'mairie' | 'aucun';
 
+// Type : Decrit un jeu alloue et ses informations associees.
 export interface AllocatedGameDto {
   allocation_id: number;
   reservation_id: number;
@@ -28,6 +30,7 @@ export interface AllocatedGameDto {
   zones_tarifaires_reservees?: number[];
 }
 
+// Type : Decrit le stock de tables par type.
 export interface TableStockByType {
   table_type: TableSize;
   total: number;
@@ -35,6 +38,7 @@ export interface TableStockByType {
   restantes: number;
 }
 
+// Type : Decrit le stock de tables d'un festival.
 export interface ZoneTableStock {
   festival_id: number;
   stock: TableStockByType[];

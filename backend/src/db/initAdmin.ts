@@ -2,6 +2,9 @@ import bcrypt from 'bcryptjs'
 import pool from './database.js'
 import { ADMIN_EMAIL } from '../config/env.js'
 
+// Role : Garantir l'existence du compte administrateur principal.
+// Preconditions : La connexion a la base est disponible et les variables d'environnement sont chargees.
+// Postconditions : Le compte admin est cree ou mis a jour avec les valeurs definies.
 export async function ensureAdmin(): Promise<void> {
   const login = process.env.ADMIN_LOGIN ?? 'admin'
   const password = process.env.ADMIN_PASSWORD ?? 'adminadmin'

@@ -1,12 +1,12 @@
--- Migration UC-R4 : enrichissement jeux/éditeurs et mécanismes
+-- // Migration UC-R4 : enrichissement jeux/editeurs et mecanismes
 
--- Colonnes supplémentaires pour les éditeurs
+-- // Colonnes supplementaires pour les editeurs
 ALTER TABLE editor
   ADD COLUMN IF NOT EXISTS logo_url TEXT,
   ADD COLUMN IF NOT EXISTS is_exhibitor BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS is_distributor BOOLEAN NOT NULL DEFAULT false;
 
--- Colonnes supplémentaires pour les jeux
+-- // Colonnes supplementaires pour les jeux
 ALTER TABLE games
   ADD COLUMN IF NOT EXISTS min_players INTEGER,
   ADD COLUMN IF NOT EXISTS max_players INTEGER,
@@ -17,21 +17,21 @@ ALTER TABLE games
   ADD COLUMN IF NOT EXISTS image_url TEXT,
   ADD COLUMN IF NOT EXISTS rules_video_url TEXT;
 
--- Table des mécanismes
+-- // Table des mecanismes
 CREATE TABLE IF NOT EXISTS mechanism(
   id SERIAL PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
   description TEXT
 );
 
--- Table de liaison jeux <-> mécanismes
+-- // Table de liaison jeux <-> mecanismes
 CREATE TABLE IF NOT EXISTS game_mechanism(
   game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
   mechanism_id INTEGER NOT NULL REFERENCES mechanism(id) ON DELETE CASCADE,
   PRIMARY KEY (game_id, mechanism_id)
 );
 
--- Empêcher la suppression d'un jeu alloué à une réservation
+-- // Empecher la suppression d'un jeu alloue a une reservation
 ALTER TABLE jeux_alloues
   DROP CONSTRAINT IF EXISTS jeux_alloues_game_id_fkey;
 ALTER TABLE jeux_alloues

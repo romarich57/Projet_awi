@@ -28,16 +28,14 @@ describe('ReservantApiService', () => {
   });
 
   afterEach(() => {
-    httpMock.verify(); // Ensure no outstanding HTTP requests
+    httpMock.verify(); 
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  // ============================================
-  // HTTP GET TESTS (2 tests)
-  // ============================================
+
 
   describe('GET Operations', () => {
     it('should fetch all reservants via GET /reservant', () => {
@@ -64,9 +62,7 @@ describe('ReservantApiService', () => {
     });
   });
 
-  // ============================================
-  // HTTP POST TESTS (2 tests)
-  // ============================================
+ 
 
   describe('POST Operations', () => {
     it('should create a reservant via POST /reservant', () => {
@@ -103,9 +99,7 @@ describe('ReservantApiService', () => {
     });
   });
 
-  // ============================================
-  // HTTP PUT TESTS (3 tests)
-  // ============================================
+
 
   describe('PUT Operations', () => {
     it('should update a reservant via PUT /reservant/:id', () => {
@@ -148,9 +142,7 @@ describe('ReservantApiService', () => {
     });
   });
 
-  // ============================================
-  // HTTP DELETE TESTS (2 tests)
-  // ============================================
+
 
   describe('DELETE Operations', () => {
     it('should delete a reservant via DELETE /reservant/:id', () => {
@@ -174,9 +166,7 @@ describe('ReservantApiService', () => {
     });
   });
 
-  // ============================================
-  // ERROR HANDLING TESTS (4 tests)
-  // ============================================
+
 
   describe('Error Handling', () => {
     it('should handle HTTP 404 error gracefully', () => {

@@ -1,5 +1,8 @@
 import pool from './database.js'
 
+// Role : S'assurer que des festivals par defaut existent dans la base.
+// Preconditions : La connexion a la base est disponible.
+// Postconditions : Cree des festivals si la table est vide.
 export async function ensureFestivals(): Promise<void> {
   try {
     const { rows } = await pool.query('SELECT COUNT(*) FROM festival')
@@ -9,10 +12,19 @@ export async function ensureFestivals(): Promise<void> {
       console.log('Aucun festival trouvé, création des festivals par défaut...')
 
       await pool.query(`
-                INSERT INTO festival (name, start_date, end_date, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises)
+                INSERT INTO festival (
+                  name,
+                  start_date,
+                  end_date,
+                  stock_tables_standard,
+                  stock_tables_grande,
+                  stock_tables_mairie,
+                  stock_chaises,
+                  stock_chaises_available
+                )
                 VALUES 
-                    ('Rock en Seine', '2025-08-22', '2025-08-25', 200, 50, 20, 1000),
-                    ('Festival de Cannes du Jeu', '2025-02-14', '2025-02-16', 150, 30, 15, 800)
+                    ('Rock en Seine', '2025-08-22', '2025-08-25', 200, 50, 20, 1000, 1000),
+                    ('Festival de Cannes du Jeu', '2025-02-14', '2025-02-16', 150, 30, 15, 800, 800)
             `)
 
       console.log('✅ Festivals créés avec succès')

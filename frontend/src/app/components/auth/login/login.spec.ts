@@ -27,12 +27,10 @@ describe('LoginComponent', () => {
     fixture.detectChanges();
   });
 
-  // ✅ 1. Création du composant
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  // ✅ 2. Formulaire réactif créé
   describe('Form Initialization', () => {
     it('should create a reactive form with identifier and password controls', () => {
       expect(component.form).toBeDefined();
@@ -46,7 +44,6 @@ describe('LoginComponent', () => {
     });
   });
 
-  // ✅ 3. Validation : identifier requis
   describe('Identifier Field Validation', () => {
     it('should be invalid when identifier is empty', () => {
       const identifierControl = component.form.get('identifier');
@@ -63,7 +60,6 @@ describe('LoginComponent', () => {
     });
   });
 
-  // ✅ 4. Validation : password requis
   describe('Password Field Validation', () => {
     it('should be invalid when password is empty', () => {
       const passwordControl = component.form.get('password');
@@ -80,7 +76,6 @@ describe('LoginComponent', () => {
     });
   });
 
-  // ✅ 5. Soumission du formulaire : appel authService.login()
   describe('Form Submission', () => {
     it('should call authService.login() with correct credentials when form is valid', () => {
       component.form.patchValue({
@@ -128,12 +123,9 @@ describe('LoginComponent', () => {
 
       component.submit();
 
-      // Le login ne devrait pas être appelé car isLoading est true
       expect(authService.login).not.toHaveBeenCalled();
     });
   });
-
-  // ✅ 6. Redirection après connexion réussie
   describe('Navigation After Successful Login', () => {
     it('should navigate to /home when user is logged in', fakeAsync(() => {
       authService.isLoggedIn.set(true);
@@ -146,7 +138,6 @@ describe('LoginComponent', () => {
     }));
   });
 
-  // ✅ 7. Affichage erreur si connexion échoue
   describe('Error Handling', () => {
     it('should display error message when login fails', () => {
       authService.error.set('Identifiants invalides');
@@ -156,7 +147,6 @@ describe('LoginComponent', () => {
       const compiled = fixture.nativeElement as HTMLElement;
       const errorElement = compiled.querySelector('.error-message, .alert-danger, [class*="error"]');
       
-      // Vérifier que l'erreur est exposée dans le composant
       expect(component.error()).toBe('Identifiants invalides');
     });
 
@@ -165,7 +155,6 @@ describe('LoginComponent', () => {
     });
   });
 
-  // ✅ 8. Affichage erreur si email non vérifié (403)
   describe('Email Verification Error', () => {
     it('should handle 403 error for unverified email', () => {
       authService.error.set('Email non vérifié. Veuillez vérifier votre boîte mail.');
@@ -176,7 +165,6 @@ describe('LoginComponent', () => {
     });
   });
 
-  // ✅ 9. Bouton désactivé si formulaire invalide
   describe('Submit Button State', () => {
     it('should have submit button disabled when form is invalid', () => {
       component.form.patchValue({
@@ -216,7 +204,6 @@ describe('LoginComponent', () => {
     });
   });
 
-  // ✅ 10. Binding des champs (identifier, password)
   describe('Form Field Bindings', () => {
     it('should bind identifier input to form control', () => {
       const compiled = fixture.nativeElement as HTMLElement;
@@ -255,7 +242,6 @@ describe('LoginComponent', () => {
     });
   });
 
-  // ✅ Tests supplémentaires pour une couverture complète
   describe('Additional Coverage', () => {
     it('should expose isLoading from authService', () => {
       expect(component.isLoading).toBeDefined();
@@ -268,7 +254,7 @@ describe('LoginComponent', () => {
     });
 
     it('should accept both email and username as identifier', () => {
-      // Test avec email
+      
       component.form.patchValue({
         identifier: 'user@example.com',
         password: 'password123',
@@ -278,7 +264,6 @@ describe('LoginComponent', () => {
 
       authService.login.calls.reset();
 
-      // Test avec username
       component.form.patchValue({
         identifier: 'username',
         password: 'password123',

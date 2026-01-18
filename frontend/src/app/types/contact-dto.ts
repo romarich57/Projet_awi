@@ -1,3 +1,4 @@
+// Type : Decrit un contact associe a un reservant ou editeur.
 export interface ContactDto {
   id?: number;
   name: string;

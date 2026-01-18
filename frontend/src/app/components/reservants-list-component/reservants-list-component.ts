@@ -14,6 +14,9 @@ import { FestivalState } from '../../stores/festival-state';
   changeDetection: ChangeDetectionStrategy.OnPush,
 
 })
+// Role : Afficher la liste des reservants avec filtres et tri.
+// Préconditions : Le store ReservantStore est initialise et le festival courant est connu.
+// Postconditions : La liste est chargee et filtree selon les selections utilisateur.
 export class ReservantsListComponent {
   readonly reservantStore = inject(ReservantStore);
   private readonly festivalState = inject(FestivalState);
@@ -46,14 +49,23 @@ export class ReservantsListComponent {
     });
   }
 
+  // Role : Appliquer un filtre de type de reservant.
+  // Préconditions : `value` est un type valide ou 'all'.
+  // Postconditions : Le signal `typeFilter` est mis a jour.
   setTypeFilter(value: string): void {
     this.typeFilter.set(value as 'all' | ReservantDto['type']);
   }
 
+  // Role : Appliquer le tri sur la liste.
+  // Préconditions : `value` est un tri valide.
+  // Postconditions : Le signal `sortKey` est mis a jour.
   setSortKey(value: string): void {
     this.sortKey.set(value as 'name-asc' | 'name-desc');
   }
 
+  // Role : Construire un resume des informations de contact.
+  // Préconditions : `reservant` est renseigne.
+  // Postconditions : Retourne une chaine lisible pour l'affichage.
   contactInfo(reservant: ReservantDto): string {
     const contacts = [reservant.email, reservant.phone_number].filter(Boolean);
     return contacts.length > 0 ? contacts.join(' / ') : 'Contact non renseigné';

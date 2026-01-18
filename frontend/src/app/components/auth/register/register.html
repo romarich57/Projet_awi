@@ -2,7 +2,7 @@
   <h1>Inscription</h1>
   <p class="introduction">
     Créez votre compte avec les informations demandées. Un email de vérification vous sera envoyé
-    automatiquement.
+    automatiquement. L'avatar pourra être ajouté depuis le profil après connexion.
   </p>
 
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
@@ -63,28 +63,6 @@
         <input id="phone" type="tel" formControlName="phone" />
       </div>
 
-      <div class="field avatar-field">
-        <label>Avatar (optionnel)</label>
-        <div class="avatar-upload">
-          <img [src]="avatarPreview()" alt="Avatar preview" class="avatar-preview" />
-          <div class="avatar-actions">
-            <label class="file-input-label">
-              <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" (change)="onFileSelected($event)"
-                class="file-input" />
-              Choisir une image
-            </label>
-            @if (selectedFile()) {
-            <button type="button" class="btn-ghost" (click)="removeAvatar()">Supprimer</button>
-            }
-          </div>
-          @if (uploadError()) {
-          <span class="hint error">{{ uploadError() }}</span>
-          }
-          @if (isUploading()) {
-          <span class="upload-status">Upload en cours...</span>
-          }
-        </div>
-      </div>
     </div>
 
     <button type="submit" [disabled]="form.invalid || isSubmitting()">

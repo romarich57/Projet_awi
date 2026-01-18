@@ -11,6 +11,7 @@
         formControlName="identifier"
         [class.invalid]="form.controls.identifier.touched && form.controls.identifier.invalid"
       />
+      
       @if (form.controls.identifier.touched && form.controls.identifier.hasError('required')) {
         <p class="hint error">Email ou pseudo requis.</p>
       }

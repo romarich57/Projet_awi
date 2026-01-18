@@ -24,7 +24,6 @@ describe('AdminUserFilterComponent', () => {
         spyOn(component.searchQueryChange, 'emit');
         const input = fixture.debugElement.query(By.css('input[type="search"]'));
         if (!input) {
-            // If template not found or differs, test logic directly
             const event = { target: { value: 'test' } } as any;
             component.updateSearch(event);
             expect(component.searchQueryChange.emit).toHaveBeenCalledWith('test');
@@ -39,7 +38,6 @@ describe('AdminUserFilterComponent', () => {
     it('should emit roleFilterChange on role select', () => {
         spyOn(component.roleFilterChange, 'emit');
         const select = fixture.debugElement.query(By.css('select.role-filter'));
-        // Note: class might differ, calling method directly is safer for logic test
         const event = { target: { value: 'admin' } } as any;
         component.updateRoleFilter(event);
         expect(component.roleFilterChange.emit).toHaveBeenCalledWith('admin');
@@ -61,7 +59,6 @@ describe('AdminUserFilterComponent', () => {
 
     it('should emit sortDirectionChange on toggle', () => {
         spyOn(component.sortDirectionChange, 'emit');
-        // Initial is desc, toggle should emit asc
         component.toggleSortDirection();
         expect(component.sortDirectionChange.emit).toHaveBeenCalledWith('asc');
     });

@@ -91,16 +91,25 @@ export class GamesStore {
     });
   }
 
+  // Role : Initialiser le store en chargeant les filtres, les mecanismes, les editeurs et la liste des jeux.
+  // Preconditions : Aucune.
+  // Postconditions : Les listes de donnees sont chargees dans les signaux correspondants.
   init(): void {
     this.loadMechanisms();
     this.loadEditors();
     this.loadGames();
   }
 
+  // Role : Exposer une methode de chargement globale pour le store.
+  // Preconditions : Aucune.
+  // Postconditions : Delegue a init pour charger les donnees.
   loadAll(): void {
     this.init();
   }
 
+  // Role : Charger la liste des jeux selon les filtres courants.
+  // Preconditions : Les filtres sont initialises dans le store.
+  // Postconditions : Le signal _games est mis a jour et l'etat de chargement est ajuste.
   loadGames(): void {
     this._loading.set(true);
     this._error.set(null);
@@ -119,6 +128,9 @@ export class GamesStore {
       .add(() => this._loading.set(false));
   }
 
+  // Role : Charger la liste des mecanismes disponibles.
+  // Preconditions : GameApiService est disponible.
+  // Postconditions : Le signal _mechanisms est mis a jour.
   loadMechanisms(): void {
     this.gameApi.listMechanisms().subscribe({
       next: (items) => this._mechanisms.set(items),
@@ -126,6 +138,9 @@ export class GamesStore {
     });
   }
 
+  // Role : Charger la liste des editeurs disponibles.
+  // Preconditions : EditorApiService est disponible.
+  // Postconditions : Le signal _editors est mis a jour.
   loadEditors(): void {
     this.editorApi.list().subscribe({
       next: (items) => this._editors.set(items),
@@ -133,15 +148,24 @@ export class GamesStore {
     });
   }
 
+  // Role : Mettre a jour les filtres et relancer le chargement des jeux.
+  // Preconditions : Un objet de filtres valide est fourni.
+  // Postconditions : Les filtres sont stockes et la liste des jeux est rechargee.
   updateFilters(filters: GamesFilters): void {
     this._filters.set({ ...filters });
     this.loadGames();
   }
 
+  // Role : Mettre a jour les colonnes visibles du tableau.
+  // Preconditions : Un objet de colonnes valides est fourni.
+  // Postconditions : Le signal _visibleColumns est mis a jour.
   setVisibleColumns(columns: GamesVisibleColumns): void {
     this._visibleColumns.set({ ...columns });
   }
 
+  // Role : Supprimer un jeu et mettre a jour la liste locale.
+  // Preconditions : Le jeu cible existe et possede un id.
+  // Postconditions : Le jeu est retire du signal _games ou une erreur est exposee.
   deleteGame(game: GameDto): void {
     this._deleteError.set(null);
     this.gameApi.delete(game.id).subscribe({
@@ -158,6 +182,9 @@ export class GamesStore {
     });
   }
 
+  // Role : Charger les ids d'editeurs associes au festival pour filtrer les jeux.
+  // Preconditions : Un identifiant de festival valide est fourni.
+  // Postconditions : Le signal _festivalEditorIds est mis a jour.
   private loadFestivalEditors(festivalId: number): void {
     this.reservationService.getReservantsByFestival(festivalId).subscribe({
       next: (reservants) => {

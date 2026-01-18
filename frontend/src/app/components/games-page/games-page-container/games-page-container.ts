@@ -16,6 +16,9 @@ import type { GamesFilters, GamesVisibleColumns } from '@app/types/games-page.ty
   styleUrl: './games-page-container.scss',
   providers: [GamesStore],
 })
+// Role : Orchestrer la page liste des jeux, filtres et actions.
+// Préconditions : GamesStore est disponible et les routes sont configurees.
+// Postconditions : Les jeux sont charges et les actions de navigation/suppression sont gerees.
 export class GamesPageContainerComponent implements OnInit {
   private readonly router = inject(Router);
   readonly store = inject(GamesStore);
@@ -35,34 +38,65 @@ export class GamesPageContainerComponent implements OnInit {
     return game ? `Supprimer "${game.title}" ?` : '';
   });
 
+  // Role : Initialiser les donnees de la page via le store.
+  // Préconditions : GamesStore est injecte.
+  // Postconditions : Les jeux et metadonnees sont charges.
   ngOnInit(): void {
     this.store.init();
   }
 
+  // Role : Naviguer vers la page de creation de jeu.
+  // Préconditions : Le routeur est disponible.
+  // Postconditions : La navigation vers la page de creation est declenchee.
   startCreate(): void {
     this.router.navigate(['/games', 'new']);
   }
 
+  // Role : Mettre a jour les filtres de recherche.
+  // Préconditions : `filters` est un objet valide.
+  // Postconditions : Le store applique les filtres.
   onFiltersChanged(filters: GamesFilters): void {
     this.store.updateFilters(filters);
   }
 
+  // Role : Mettre a jour les colonnes visibles.
+  // Préconditions : `columns` est un objet valide.
+  // Postconditions : Les preferences de colonnes sont enregistrees dans le store.
   onVisibleColumnsChanged(columns: GamesVisibleColumns): void {
     this.store.setVisibleColumns(columns);
   }
 
+  // Role : Naviguer vers l'edition d'un jeu.
+  // Préconditions : `game` contient un identifiant.
+  // Postconditions : La navigation vers la page d'edition est declenchee.
   onEdit(game: GameDto): void {
     this.router.navigate(['/games', game.id, 'edit']);
   }
 
+  // Role : Naviguer vers la page detail d'un jeu.
+  // Préconditions : `game` contient un identifiant.
+  // Postconditions : La navigation vers la page detail est declenchee.
+  onView(game: GameDto): void {
+    this.router.navigate(['/games', game.id]);
+  }
+
+  // Role : Ouvrir la confirmation de suppression pour un jeu.
+  // Préconditions : `game` est defini.
+  // Postconditions : Le jeu est stocke dans `pendingDelete`.
   onDelete(game: GameDto): void {
     this.pendingDelete.set(game);
   }
 
+  // Role : Annuler la suppression en cours.
+  // Préconditions : Une suppression est en attente.
+  // Postconditions : `pendingDelete` est reinitialise.
   cancelDelete(): void {
     this.pendingDelete.set(null);
   }
 
+  // Role : Confirmer la suppression du jeu selectionne.
+  // Préconditions : `pendingDelete` contient un jeu.
+  // Postconditions : Le jeu est supprime via le store.
   confirmDelete(): void {
     const game = this.pendingDelete();
     if (!game) return;

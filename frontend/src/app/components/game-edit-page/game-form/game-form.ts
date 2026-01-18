@@ -6,6 +6,7 @@ import type { EditorDto } from '../../../types/editor-dto';
 import type { GameFormModel } from '@app/types/game-edit.types';
 import { GameMechanismsSelectComponent } from '@app/components/game-create/components/game-mechanisms-select/game-mechanisms-select';
 import { ensureHttpsUrl } from '@app/shared/utils/https-url';
+import { GameVideoPreviewComponent } from '@app/components/game-create/components/game-video-preview/game-video-preview';
 
 const DEFAULT_FORM: GameFormModel = {
   title: '',
@@ -28,10 +29,13 @@ const DEFAULT_FORM: GameFormModel = {
   selector: 'app-game-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, FormsModule, GameMechanismsSelectComponent],
+  imports: [CommonModule, FormsModule, GameMechanismsSelectComponent, GameVideoPreviewComponent],
   templateUrl: './game-form.html',
   styleUrl: './game-form.scss',
 })
+// Role : Gerer le formulaire d'edition d'un jeu.
+// Préconditions : Les donnees du jeu et les listes d'editeurs/mecanismes sont fournies.
+// Postconditions : Les modifications sont emises et les actions utilisateur sont notifiees.
 export class GameFormComponent {
   readonly formData = input.required<GameFormModel>();
   readonly editors = input<readonly EditorDto[]>([]);
@@ -60,6 +64,9 @@ export class GameFormComponent {
     });
   }
 
+  // Role : Mettre a jour le formulaire local et emettre les changements.
+  // Préconditions : `patch` contient des champs valides du modele.
+  // Postconditions : `localFormData` est mis a jour et l'evenement est emis.
   updateForm(patch: Partial<GameFormModel>): void {
     const next = { ...this.localFormData(), ...patch };
     if (patch.mechanismIds) {
@@ -69,10 +76,16 @@ export class GameFormComponent {
     this.formDataChanged.emit(next);
   }
 
+  // Role : Notifier la soumission du formulaire.
+  // Préconditions : Le parent ecoute `submitClicked`.
+  // Postconditions : L'evenement de soumission est emis.
   submit(): void {
     this.submitClicked.emit();
   }
 
+  // Role : Recuperer un fichier image choisi par l'utilisateur.
+  // Préconditions : L'evenement provient d'un input file.
+  // Postconditions : Le fichier est emis et l'input est reinitialise.
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
@@ -82,6 +95,9 @@ export class GameFormComponent {
     }
   }
 
+  // Role : Annuler l'edition et informer le parent.
+  // Préconditions : L'evenement provient du lien/bouton d'annulation.
+  // Postconditions : L'evenement `cancelClicked` est emis.
   onCancel(event: Event): void {
     event.preventDefault();
     this.cancelClicked.emit();

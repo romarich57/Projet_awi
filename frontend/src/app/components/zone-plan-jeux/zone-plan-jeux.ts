@@ -24,6 +24,9 @@ interface ZonePlanAvecJeux extends ZonePlanDto {
   templateUrl: './zone-plan-jeux.html',
   styleUrl: './zone-plan-jeux.scss'
 })
+// Role : Gerer l'allocation des zones et des jeux pour un festival.
+// Préconditions : `festivalId` et `reservation` sont fournis; les services associes sont disponibles.
+// Postconditions : Les stocks, allocations et jeux sont charges et mis a jour selon les actions.
 export class ZonePlanJeux {
 
   festivalId = input.required<number | null>();
@@ -256,6 +259,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Charger les zones tarifaires avec reservations.
+  // Préconditions : `festivalId` est valide.
+  // Postconditions : `zoneTarifaires` est mis a jour.
   private loadZoneTarifaires(festivalId: number): void {
     // Charger uniquement les zones tarifaires qui ont des réservations
     this._zoneTarifaireService.getZonesTarifairesWithReservations(festivalId).subscribe({
@@ -264,6 +270,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Charger les jeux non alloues pour une reservation.
+  // Préconditions : `festivalId` et `reservationId` sont valides.
+  // Postconditions : `jeuxNonAlloues` est mis a jour.
   private loadJeuxNonAlloues(festivalId: number, reservationId: number): void {
     this._zonePlanService.getJeuxNonAlloues(festivalId, reservationId).subscribe({
       next: (jeux) => this.jeuxNonAlloues.set(jeux),
@@ -271,12 +280,18 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Recharger les jeux non alloues selon la reservation courante.
+  // Préconditions : `festivalId` est valide et une reservation est chargee.
+  // Postconditions : La liste des jeux non alloues est rafraichie.
   private loadJeuxNonAllouesForRefresh(festivalId: number): void {
     const reservation = this.reservation();
     if (!reservation) return;
     this.loadJeuxNonAlloues(festivalId, reservation.id);
   }
 
+  // Role : Charger le stock de tables pour le festival.
+  // Préconditions : `festivalId` est valide.
+  // Postconditions : `stockTables` est mis a jour.
   private loadStockTablesFestival(festivalId: number): void {
     this._zonePlanService.getStockTablesFestival(festivalId).subscribe({
       next: (data) => this.stockTables.set(data.stock),
@@ -284,6 +299,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Charger le resume des allocations simples du festival.
+  // Préconditions : `festivalId` est valide.
+  // Postconditions : `allocationsSimple` est mis a jour.
   private loadAllocationsSimple(festivalId: number): void {
     this._zonePlanService.getFestivalAllocationsSummary(festivalId).subscribe({
       next: (allocations) => this.allocationsSimple.set(allocations),
@@ -291,6 +309,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Charger les allocations d'une reservation.
+  // Préconditions : `reservationId` est valide.
+  // Postconditions : `reservationAllocations` est mis a jour.
   private loadReservationAllocations(reservationId: number): void {
     this._zonePlanService.getReservationAllocations(reservationId).subscribe({
       next: (allocations) => this.reservationAllocations.set(allocations),
@@ -298,6 +319,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Charger le stock de chaises pour le festival.
+  // Préconditions : `festivalId` est valide.
+  // Postconditions : `chaisesStock` est mis a jour si des donnees sont presentes.
   private loadChaisesStock(festivalId: number): void {
     this._reservationService.getStockByFestival(festivalId).subscribe({
       next: (stock) => {
@@ -312,6 +336,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Construire la structure zones + jeux et charger leurs allocations.
+  // Préconditions : `zones` est une liste de zones valides.
+  // Postconditions : `zonesAvecJeux` est initialise et rempli par zone.
   private loadZonesAvecJeux(zones: ZonePlanDto[]): void {
     const zonesAvec: ZonePlanAvecJeux[] = zones.map(z => ({
       ...z,
@@ -370,10 +397,16 @@ export class ZonePlanJeux {
     return result;
   });
 
+  // Role : Verifier si une zone est eligible a l'allocation.
+  // Préconditions : `zone` est valide.
+  // Postconditions : Retourne true si des tables sont reservees dans la zone tarifaire.
   isZoneEligible(zone: ZonePlanDto): boolean {
     return (this.tablesReserveesParZoneTarifaire()[zone.id_zone_tarifaire] || 0) > 0;
   }
 
+  // Role : Calculer le nombre de tables disponibles pour une zone.
+  // Préconditions : `zone` est valide et les allocations sont chargees.
+  // Postconditions : Retourne un nombre de tables disponibles.
   tablesDisponiblesPourZone(zone: ZonePlanDto): number {
     const reservees = this.tablesReserveesParZoneTarifaire()[zone.id_zone_tarifaire] || 0;
     const alloueesDansZoneTarifaire = this.tablesAlloueesParZoneTarifaireReservation()[zone.id_zone_tarifaire] || 0;
@@ -384,6 +417,9 @@ export class ZonePlanJeux {
     return Math.max(0, Math.min(maxParReservation, maxParZone));
   }
 
+  // Role : Etendre ou reduire l'affichage d'une zone.
+  // Préconditions : `zoneId` reference une zone chargee.
+  // Postconditions : Le flag `expanded` est bascule.
   toggleZoneExpansion(zoneId: number): void {
     this.zonesAvecJeux.update(zones =>
       zones.map(z => z.id === zoneId ? { ...z, expanded: !z.expanded } : z)
@@ -391,6 +427,9 @@ export class ZonePlanJeux {
   }
 
   // Ouvrir le modal d'allocation pour une zone
+  // Role : Ouvrir le modal d'allocation (jeu ou simple).
+  // Préconditions : `zone` est valide.
+  // Postconditions : Les signaux de selection et de saisie sont initialises.
   openAllocationModal(zone: ZonePlanAvecJeux): void {
     if (!this.isGameMode()) {
       if (!this.isZoneEligible(zone)) return;
@@ -410,12 +449,18 @@ export class ZonePlanJeux {
     // Le stock est déjà chargé au niveau du festival
   }
 
+  // Role : Fermer le modal d'allocation et reinitialiser la selection.
+  // Préconditions : Le modal est ouvert.
+  // Postconditions : Les signaux de selection sont remis a null.
   closeAllocationModal(): void {
     this.showAllocationModal.set(false);
     this.selectedZone.set(null);
     this.selectedGame.set(null);
   }
 
+  // Role : Ouvrir le modal d'allocation simple (tables/chaises).
+  // Préconditions : `zone` est valide.
+  // Postconditions : Les champs de saisie simples sont initialises.
   private openSimpleAllocationModal(zone: ZonePlanAvecJeux): void {
     this.selectedZone.set(zone);
     this.selectedGame.set(null);
@@ -430,16 +475,25 @@ export class ZonePlanJeux {
     this.showAllocationModal.set(true);
   }
 
+  // Role : Choisir le mode de saisie simple (tables ou m2).
+  // Préconditions : `mode` est une valeur valide.
+  // Postconditions : `simpleInputMode` est mis a jour.
   setSimpleInputMode(mode: 'tables' | 'm2'): void {
     this.simpleInputMode.set(mode);
   }
 
+  // Role : Mettre a jour la saisie simple en tables.
+  // Préconditions : `value` est un nombre.
+  // Postconditions : Les valeurs tables/m2 sont synchronisees.
   onSimpleTablesInputChange(value: number): void {
     const tables = Math.max(0, Math.floor(value || 0));
     this.simpleTablesInput.set(tables);
     this.simpleM2Input.set(tablesToM2(tables));
   }
 
+  // Role : Mettre a jour la saisie simple en m2.
+  // Préconditions : `value` est un nombre.
+  // Postconditions : Les valeurs m2/tables sont synchronisees.
   onSimpleM2InputChange(value: number): void {
     const m2Value = Math.max(0, Number(value) || 0);
     const tables = m2ToTables(m2Value);
@@ -447,6 +501,9 @@ export class ZonePlanJeux {
     this.simpleTablesInput.set(tables);
   }
 
+  // Role : Mettre a jour le nombre de chaises pour l'allocation simple.
+  // Préconditions : `value` est un nombre.
+  // Postconditions : La valeur est bornee par le stock disponible.
   onSimpleChaisesInputChange(value: number): void {
     const chaises = Math.max(0, Math.floor(value || 0));
     const zone = this.selectedZone();
@@ -455,27 +512,42 @@ export class ZonePlanJeux {
     this.simpleChaisesInput.set(Math.min(chaises, maxChaises));
   }
 
+  // Role : Calculer les chaises disponibles pour la zone selectionnee.
+  // Préconditions : Une zone peut etre selectionnee.
+  // Postconditions : Retourne le nombre de chaises disponibles.
   simpleChaisesDisponibles(): number {
     const zone = this.selectedZone();
     const currentChaises = zone ? (this.chaisesAlloueesParZoneReservation()[zone.id] || 0) : 0;
     return this.chaisesStock().available + currentChaises;
   }
 
+  // Role : Convertir des m2 en nombre de tables pour un jeu.
+  // Préconditions : `m2Value` est un nombre.
+  // Postconditions : Retourne le nombre de tables arrondi au 0.5.
   private gameM2ToTables(m2Value: number): number {
     const tables = m2Value / M2_PER_TABLE;
     return Math.round(tables * 2) / 2;
   }
 
+  // Role : Choisir le mode de saisie pour l'allocation de jeu.
+  // Préconditions : `mode` est une valeur valide.
+  // Postconditions : `gameInputMode` est mis a jour.
   setGameInputMode(mode: 'tables' | 'm2'): void {
     this.gameInputMode.set(mode);
   }
 
+  // Role : Mettre a jour la saisie en tables pour un jeu.
+  // Préconditions : `value` est un nombre.
+  // Postconditions : Les valeurs tables/m2 sont synchronisees.
   onGameTablesInputChange(value: number): void {
     const tables = Math.max(0, Number(value) || 0);
     this.gameTablesInput.set(tables);
     this.gameM2Input.set(tablesToM2(tables));
   }
 
+  // Role : Mettre a jour la saisie en m2 pour un jeu.
+  // Préconditions : `value` est un nombre.
+  // Postconditions : Les valeurs m2/tables sont synchronisees.
   onGameM2InputChange(value: number): void {
     const m2Value = Math.max(0, Number(value) || 0);
     const tables = this.gameM2ToTables(m2Value);
@@ -483,16 +555,25 @@ export class ZonePlanJeux {
     this.gameTablesInput.set(tables);
   }
 
+  // Role : Mettre a jour le nombre d'exemplaires du jeu.
+  // Préconditions : `value` est un nombre.
+  // Postconditions : `nbExemplairesInput` est mis a jour (min 1).
   onNbExemplairesChange(value: number): void {
     const nbExemplaires = Math.max(1, Math.floor(value || 1));
     this.nbExemplairesInput.set(nbExemplaires);
   }
 
+  // Role : Recuperer le nombre de chaises allouees pour une reservation.
+  // Préconditions : `zone` et `reservationId` sont valides.
+  // Postconditions : Retourne un nombre (0 si absent).
   chaisesPourReservation(zone: ZonePlanAvecJeux, reservationId: number): number {
     const allocation = zone.simpleAllocations.find(a => a.reservation_id === reservationId);
     return allocation ? (Number(allocation.nb_chaises) || 0) : 0;
   }
 
+  // Role : Mettre a jour la saisie des chaises pour l'allocation de jeu.
+  // Préconditions : `value` est un nombre.
+  // Postconditions : La valeur est bornee par le stock disponible.
   onChaisesInputChange(value: number): void {
     const chaises = Math.max(0, Math.floor(value || 0));
     // Limiter au stock disponible
@@ -500,6 +581,9 @@ export class ZonePlanJeux {
     this.chaisesInput.set(Math.min(chaises, maxChaises));
   }
 
+  // Role : Selectionner un jeu et pre-remplir les champs d'allocation.
+  // Préconditions : `game` est valide.
+  // Postconditions : Les champs d'allocation sont initialises.
   selectGameForAllocation(game: AllocatedGameWithReservant): void {
     this.selectedGame.set(game);
     // Pré-remplir avec les valeurs existantes du jeu ou des valeurs par défaut
@@ -511,10 +595,13 @@ export class ZonePlanJeux {
     this.gameM2Input.set(tablesToM2(nbTables));
     this.tailleTableInput.set(game.taille_table_requise || 'standard');
     
-    this.chaisesInput.set(0);
+  this.chaisesInput.set(0);
   }
 
   // Allouer le jeu sélectionné à la zone
+  // Role : Assigner le jeu selectionne a une zone.
+  // Préconditions : Une zone et un jeu sont selectionnes.
+  // Postconditions : L'allocation est envoyee et les donnees sont rafraichies.
   allocateGame(): void {
     const zone = this.selectedZone();
     const game = this.selectedGame();
@@ -569,6 +656,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Sauvegarder une allocation simple (tables/chaises).
+  // Préconditions : Une zone et une reservation sont selectionnees.
+  // Postconditions : L'allocation est enregistree et les donnees sont rafraichies.
   saveSimpleAllocation(): void {
     const zone = this.selectedZone();
     const reservation = this.reservation();
@@ -598,6 +688,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Supprimer l'allocation simple d'une zone.
+  // Préconditions : Une reservation est chargee et une allocation existe.
+  // Postconditions : L'allocation est supprimee et les donnees sont rafraichies.
   removeSimpleAllocation(zoneId: number): void {
     const reservation = this.reservation();
     if (!reservation) return;
@@ -617,6 +710,9 @@ export class ZonePlanJeux {
   }
 
   // Retirer un jeu d'une zone (le remettre dans les non alloués)
+  // Role : Retirer un jeu de sa zone d'allocation.
+  // Préconditions : `game` est valide.
+  // Postconditions : Le jeu est desalloue et les donnees sont rafraichies.
   removeGameFromZone(game: AllocatedGameWithReservant): void {
     this.loading.set(true);
     this._zonePlanService.assignerJeuAZone(game.allocation_id, null).subscribe({
@@ -631,6 +727,9 @@ export class ZonePlanJeux {
   }
 
   // Modifier le nombre de tables pour un jeu
+  // Role : Mettre a jour le nombre de tables allouees pour un jeu.
+  // Préconditions : `nbTables` est positif et `game` est valide.
+  // Postconditions : L'allocation du jeu est mise a jour.
   updateNbTables(game: AllocatedGameWithReservant, nbTables: number): void {
     if (nbTables <= 0) return;
     
@@ -642,6 +741,9 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Rafraichir toutes les donnees apres une modification.
+  // Préconditions : `festivalId` est disponible; `reservation` peut etre chargee.
+  // Postconditions : Les stocks et allocations sont rechargees et `loading` est remis a false.
   private refreshData(): void {
     const id = this.festivalId();
     const reservation = this.reservation();
@@ -658,6 +760,9 @@ export class ZonePlanJeux {
     this.loading.set(false);
   }
 
+  // Role : Gerer les dependances apres retrait d'un jeu.
+  // Préconditions : `game` est valide.
+  // Postconditions : Les allocations de chaises sont nettoyees si necessaire.
   private afterGameRemoval(game: AllocatedGameWithReservant): void {
     const reservation = this.reservation();
     const zoneId = game.zone_plan_id;
@@ -703,21 +808,33 @@ export class ZonePlanJeux {
     });
   }
 
+  // Role : Ouvrir le formulaire de creation de zone.
+  // Préconditions : Aucune.
+  // Postconditions : Le formulaire est affiche et la zone a editer est remise a null.
   openForm(): void {
     this.zonePlanToEdit.set(null);
     this.showForm.set(true);
   }
 
+  // Role : Ouvrir le formulaire d'edition d'une zone.
+  // Préconditions : `zone` est valide.
+  // Postconditions : Le formulaire est affiche avec la zone selectionnee.
   openEditForm(zone: ZonePlanDto): void {
     this.zonePlanToEdit.set(zone);
     this.showForm.set(true);
   }
 
+  // Role : Fermer le formulaire de zone.
+  // Préconditions : Le formulaire est ouvert.
+  // Postconditions : Le formulaire est masque et la zone a editer est remise a null.
   closeForm(): void {
     this.zonePlanToEdit.set(null);
     this.showForm.set(false);
   }
 
+  // Role : Recharger les zones apres creation/modification.
+  // Préconditions : `festivalId` est disponible.
+  // Postconditions : La liste des zone plans est rechargee.
   onZonePlanCreated(): void {
     const id = this.festivalId();
     if (id !== null) {
@@ -725,6 +842,9 @@ export class ZonePlanJeux {
     }
   }
 
+  // Role : Supprimer un plan de zone.
+  // Préconditions : `zonePlanId` et `festivalId` sont valides.
+  // Postconditions : Le plan est supprime via le service.
   deleteZonePlan(zonePlanId: number): void {
     const id = this.festivalId();
     if (id !== null) {

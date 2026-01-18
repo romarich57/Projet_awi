@@ -1,22 +1,22 @@
--- Migration: Ajouter la gestion des chaises dans les réservations
--- Date: 2026-01-11
+-- // Migration : ajouter la gestion des chaises dans les reservations
+-- // Date : 2026-01-11
 
--- Étape 1: Ajouter la colonne nb_chaises_reservees dans reservation_zones_tarifaires
+-- // Etape 1 : ajouter la colonne nb_chaises_reservees dans reservation_zones_tarifaires
 ALTER TABLE reservation_zones_tarifaires 
     ADD COLUMN IF NOT EXISTS nb_chaises_reservees INTEGER NOT NULL DEFAULT 0;
 
--- Étape 2: Ajouter une colonne pour le stock de chaises disponibles dans festival
--- (stock_chaises existe déjà, on ajoute stock_chaises_available)
+-- // Etape 2 : ajouter une colonne pour le stock de chaises disponibles dans festival
+-- // (stock_chaises existe deja, on ajoute stock_chaises_available)
 ALTER TABLE festival 
     ADD COLUMN IF NOT EXISTS stock_chaises_available INTEGER NOT NULL DEFAULT 0;
 
--- Initialiser le stock disponible avec le stock total pour les festivals existants
+-- // Initialiser le stock disponible avec le stock total pour les festivals existants
 UPDATE festival 
 SET stock_chaises_available = stock_chaises 
 WHERE stock_chaises_available = 0 AND stock_chaises > 0;
 
--- Étape 3: Créer une vue pour faciliter le calcul du stock de chaises restant
--- Le stock de chaises est global par festival (pas par zone tarifaire)
+-- // Etape 3 : creer une vue pour faciliter le calcul du stock de chaises restant
+-- // Le stock de chaises est global par festival (pas par zone tarifaire)
 CREATE OR REPLACE VIEW festival_stock_chaises AS
 SELECT 
     f.id as festival_id,

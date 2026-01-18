@@ -12,12 +12,18 @@ export class WorkflowService {
 
 
   
+  // Role : Recuperer le workflow associe a une reservation.
+  // Preconditions : reservationId est valide.
+  // Postconditions : Retourne un Observable du workflow.
   getWorkflowByReservationId(reservationId: number) {
     return this.http.get<WorkflowDto>(`${environment.apiUrl}/workflow/reservation/${reservationId}`,
         { withCredentials: true }
     );
   }
 
+  // Role : Mettre a jour un workflow.
+  // Preconditions : id est valide et workflowData contient les champs requis.
+  // Postconditions : Retourne un Observable du workflow mis a jour.
   updateWorkflow(id: number, workflowData: {
     state: string;
     liste_jeux_demandee: boolean;
@@ -31,6 +37,9 @@ export class WorkflowService {
     );
   }
 
+  // Role : Ajouter une date de contact pour un workflow.
+  // Preconditions : id est valide.
+  // Postconditions : Retourne un Observable des dates de contact.
   addContactDate(id: number) {
     return this.http.post<string[]>(`${environment.apiUrl}/workflow/${id}/contact`,
         {},

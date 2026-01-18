@@ -1,5 +1,6 @@
 <div class="user-card__actions">
     <span class="badge" [class.badge--warning]="!user().emailVerified">
+        <!-- Bloc conditionnel principal -->
         @if (user().emailVerified) {
         Verifie
         } @else {
@@ -8,7 +9,11 @@
     </span>
     <label class="role-control">
         <span>Role</span>
-        <select [value]="user().role" (change)="updateUserRole($event)" [disabled]="isMutating()">
+        <select
+            [value]="user().role"
+            (change)="updateUserRole($event)"
+            [disabled]="isMutating() || isProtectedAdmin(user())"
+        >
             @for (role of roleOptions; track role) {
             <option [value]="role" [selected]="role === user().role">{{ roleLabels[role] }}</option>
             }

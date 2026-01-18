@@ -21,6 +21,9 @@ import { AuthService } from '@services/auth.service';
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.scss',
 })
+// Role : Demander un lien de reinitialisation de mot de passe.
+// Préconditions : L'utilisateur fournit une adresse email valide.
+// Postconditions : La demande est envoyee et l'etat UI est mis a jour.
 export class ForgotPasswordComponent {
   private readonly auth = inject(AuthService);
   private readonly fb = inject(NonNullableFormBuilder);
@@ -34,6 +37,9 @@ export class ForgotPasswordComponent {
   readonly status = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly message = signal<string | null>(null);
 
+  // Role : Soumettre la demande de reinitialisation.
+  // Préconditions : Le formulaire est valide et aucune requete en cours.
+  // Postconditions : La demande est envoyee via AuthService.
   submit() {
     if (this.form.invalid || this.status() === 'loading') {
       this.form.markAllAsTouched();

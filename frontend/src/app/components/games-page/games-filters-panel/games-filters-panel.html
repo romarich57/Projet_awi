@@ -15,6 +15,7 @@
       [ngModel]="localFilters().type"
       (ngModelChange)="updateFilter({ type: $event })">
       <option value="">Tous</option>
+      <!-- Boucle d affichage principale -->
       @for (type of types(); track type) {
         <option [value]="type">{{ type }}</option>
       }

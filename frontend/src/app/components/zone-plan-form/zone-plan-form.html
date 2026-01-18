@@ -5,6 +5,7 @@
       <div class="form-group">
         <label for="name">Nom de la zone:</label>
         <input id="name" type="text" formControlName="name" />
+        <!-- Bloc conditionnel principal -->
         @if (zonePlanForm.controls['name'].errors?.['required'] && zonePlanForm.controls['name'].touched) {
           <small class="error">Le nom est requis.</small>
         }

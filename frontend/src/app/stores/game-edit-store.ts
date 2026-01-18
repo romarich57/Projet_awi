@@ -56,6 +56,11 @@ export class GameEditStore {
   readonly isUploadingImage = this.uploadService.isUploading;
   readonly imageUploadError = this.uploadService.uploadError;
 
+ 
+
+  // Role : Initialiser le store pour l'edition d'un jeu.
+  // Preconditions : gameId doit etre valide.
+  // Postconditions : Charge les donnees de reference et les donnees du jeu.
   init(gameId: number): void {
     this.loadReferenceData();
     if (!Number.isFinite(gameId)) {
@@ -65,10 +70,16 @@ export class GameEditStore {
     this.fetchGame(gameId);
   }
 
+  // Role : Remplir le formulaire avec les donnees fournies.
+  // Preconditions : Un objet GameFormModel valide est fourni.
+  // Postconditions : Le signal _formData est mis a jour.
   setFormData(formData: GameFormModel): void {
     this._formData.set({ ...formData, mechanismIds: [...formData.mechanismIds] });
   }
 
+  // Role : Definir la source de l'image et reinitialiser l'apercu si besoin.
+  // Preconditions : La source est soit 'url' soit 'file'.
+  // Postconditions : Les signaux _imageSource et _imagePreview sont ajustes.
   setImageSource(source: ImageSource): void {
     this._imageSource.set(source);
     if (source === 'url') {
@@ -77,6 +88,9 @@ export class GameEditStore {
     }
   }
 
+  // Role : Traiter le fichier image selectionne par l'utilisateur.
+  // Preconditions : Le fichier doit etre une image valide et ne pas depasser 2 Mo.
+  // Postconditions : Si valide, uploade l'image et met a jour l'URL de l'image dans le formulaire. Sinon, signale une erreur.
   selectImageFile(file: File | null): void {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -104,6 +118,9 @@ export class GameEditStore {
     });
   }
 
+  // Role : Sauvegarder les modifications du jeu.
+  // Preconditions : gameId est valide et le formulaire contient les champs requis.
+  // Postconditions : L'API est appelee et l'etat de sauvegarde est mis a jour.
   save(gameId: number): Observable<void> {
     if (!Number.isFinite(gameId)) {
       this._error.set('Identifiant de jeu invalide');
@@ -128,6 +145,9 @@ export class GameEditStore {
     );
   }
 
+  // Role : Charger les donnees de reference (mecanismes, editeurs).
+  // Preconditions : GameApiService et EditorApiService sont disponibles.
+  // Postconditions : Les signaux _mechanisms et _editors sont mis a jour.
   private loadReferenceData(): void {
     this.gameApi.listMechanisms().subscribe({
       next: (items) => this._mechanisms.set(items),
@@ -139,6 +159,9 @@ export class GameEditStore {
     });
   }
 
+  // Role : Recuperer les donnees du jeu a editer.
+  // Preconditions : L'identifiant du jeu est valide.
+  // Postconditions : Les signaux _gameTitle et _formData sont mis a jour.
   private fetchGame(id: number): void {
     this._loading.set(true);
     this._error.set(null);
@@ -156,6 +179,9 @@ export class GameEditStore {
       .add(() => this._loading.set(false));
   }
 
+  // Role : Mapper les donnees du jeu vers le formulaire.
+  // Preconditions : Un objet GameDto est fourni.
+  // Postconditions : Le signal _formData est rempli et l'image est reinitialisee.
   private fillForm(game: GameDto): void {
     this._formData.set({
       title: game.title,
@@ -177,6 +203,9 @@ export class GameEditStore {
     this._imagePreview.set('');
   }
 
+  // Role : Construire l'objet payload a partir des donnees du formulaire.
+  // Preconditions : Les donnees du formulaire sont disponibles.
+  // Postconditions : Renvoie un GamePayload formate pour l'API.
   private buildPayload(): GamePayload {
     const form = this._formData();
     const toNumber = (value: number | null) =>

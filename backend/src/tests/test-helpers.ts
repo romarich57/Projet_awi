@@ -1,3 +1,4 @@
+// Role : Fournir des utilitaires pour les tests backend.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import pool from '../db/database.js'
@@ -6,33 +7,28 @@ import jwt from 'jsonwebtoken'
 import { JWT_SECRET } from '../config/env.js'
 import type { TokenPayload } from '../types/token-payload.js'
 
-/**
- * Test Helpers for Backend Tests
- * Provides utilities for creating, managing, and cleaning up test data
- */
-
-// Counter for unique test data
+// Compteur pour generer des donnees de test uniques
 let testCounter = 0
 
-/**
- * Generate unique test email
- */
+// Role : Generer un email de test unique.
+// Preconditions : Aucune.
+// Postconditions : Retourne un email unique.
 export function generateTestEmail(): string {
     testCounter++
     return `test${testCounter}_${Date.now()}@test.com`
 }
 
-/**
- * Generate unique test login
- */
+// Role : Generer un login de test unique.
+// Preconditions : Aucune.
+// Postconditions : Retourne un login unique.
 export function generateTestLogin(): string {
     testCounter++
     return `testuser${testCounter}_${Date.now()}`
 }
 
-/**
- * Create a test user in the database
- */
+// Role : Creer un utilisateur de test en base.
+// Preconditions : overrides peut fournir des champs optionnels.
+// Postconditions : Retourne l'utilisateur cree avec son mot de passe.
 export async function createTestUser(overrides: {
     login?: string
     email?: string
@@ -71,13 +67,13 @@ export async function createTestUser(overrides: {
 
     return {
         ...rows[0],
-        password // Return plain password for testing login
+        password // Mot de passe en clair pour les tests de connexion
     }
 }
 
-/**
- * Create a test reservant in the database
- */
+// Role : Creer un reservant de test en base.
+// Preconditions : overrides peut fournir des champs optionnels.
+// Postconditions : Retourne le reservant cree.
 export async function createTestReservant(overrides: {
     name?: string
     email?: string
@@ -114,45 +110,45 @@ export async function createTestReservant(overrides: {
     return rows[0]
 }
 
-/**
- * Create a valid access token for testing
- */
+// Role : Creer un token d'acces valide pour les tests.
+// Preconditions : payload est valide.
+// Postconditions : Retourne un JWT valide.
 export function createValidToken(payload: TokenPayload): string {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' })
 }
 
-/**
- * Create an expired access token for testing
- */
+// Role : Creer un token d'acces expire pour les tests.
+// Preconditions : payload est valide.
+// Postconditions : Retourne un JWT expire.
 export function createExpiredToken(payload: TokenPayload): string {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: '-1h' })
 }
 
-/**
- * Create an invalid token (wrong signature)
- */
+// Role : Creer un token invalide (mauvaise signature).
+// Preconditions : payload est valide.
+// Postconditions : Retourne un JWT invalide.
 export function createInvalidToken(payload: TokenPayload): string {
     return jwt.sign(payload, 'wrong-secret', { expiresIn: '15m' })
 }
 
-/**
- * Delete all test users (for cleanup)
- */
+// Role : Supprimer tous les utilisateurs de test.
+// Preconditions : Aucune.
+// Postconditions : Les utilisateurs de test sont supprimes.
 export async function deleteTestUsers() {
     await pool.query(`DELETE FROM users WHERE email LIKE '%@test.com'`)
     await pool.query(`DELETE FROM users WHERE login LIKE 'testuser%'`)
 }
 
-/**
- * Delete all test reservants (for cleanup)
- */
+// Role : Supprimer tous les reservants de test.
+// Preconditions : Aucune.
+// Postconditions : Les reservants de test sont supprimes.
 export async function deleteTestReservants() {
     await pool.query(`DELETE FROM reservant WHERE email LIKE '%@test.com'`)
 }
 
-/**
- * Create a test festival in the database
- */
+// Role : Creer un festival de test en base.
+// Preconditions : overrides peut fournir des champs optionnels.
+// Postconditions : Retourne le festival cree.
 export async function createTestFestival(overrides: {
     name?: string
     start_date?: Date
@@ -191,32 +187,32 @@ export async function createTestFestival(overrides: {
     return rows[0]
 }
 
-/**
- * Delete all test festivals (for cleanup)
- */
+// Role : Supprimer tous les festivals de test.
+// Preconditions : Aucune.
+// Postconditions : Les festivals de test sont supprimes.
 export async function deleteTestFestivals() {
     await pool.query(`DELETE FROM festival WHERE name LIKE 'Test Festival%'`)
 }
 
-/**
- * Clean up all test data
- */
+// Role : Nettoyer toutes les donnees de test.
+// Preconditions : Aucune.
+// Postconditions : Toutes les donnees de test sont supprimees.
 export async function cleanupTestData() {
     await deleteTestFestivals()
     await deleteTestReservants()
     await deleteTestUsers()
 }
 
-/**
- * Run cleanup before tests
- */
+// Role : Preparer les tests en nettoyant les donnees.
+// Preconditions : Aucune.
+// Postconditions : Les donnees de test sont nettoyees.
 export async function setupTests() {
     await cleanupTestData()
 }
 
-/**
- * Run cleanup after tests
- */
+// Role : Nettoyer apres les tests.
+// Preconditions : Aucune.
+// Postconditions : Les donnees de test sont nettoyees.
 export async function teardownTests() {
     await cleanupTestData()
 }

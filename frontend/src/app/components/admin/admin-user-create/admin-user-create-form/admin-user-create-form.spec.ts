@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminUserCreateFormComponent } from './admin-user-create-form';
-import { UserService } from '@users/user.service';
+import { UserService } from '@services/user.service';
 import { createUserServiceMock } from '@testing/mocks/user-service.mock';
-import { UploadService } from '../../../../services/upload.service'; // Adjust path if needed or use aliases if setup
+import { UploadService } from '../../../../services/upload.service';
 
 import { provideRouter } from '@angular/router';
 import { Location } from '@angular/common';
 
-// Define a simple mock for UploadService if not available globally
+
 const uploadServiceMock = {
     isUploading: jasmine.createSpy('isUploading').and.returnValue(function () { return false; }),
     uploadError: jasmine.createSpy('uploadError').and.returnValue(function () { return null; }),
     uploadAvatar: jasmine.createSpy('uploadAvatar').and.returnValue({ subscribe: (fn: any) => fn('http://avatar.url') }),
     getAvatarUrl: jasmine.createSpy('getAvatarUrl').and.callFake((url: string) => url)
 };
-// Fix signal inputs for mock
+
 Object.defineProperty(uploadServiceMock, 'isUploading', { value: jasmine.createSpy().and.returnValue(() => false), writable: true });
 Object.defineProperty(uploadServiceMock, 'uploadError', { value: { set: jasmine.createSpy() }, writable: true });
 
@@ -29,7 +29,6 @@ describe('AdminUserCreateFormComponent', () => {
         userServiceMock = createUserServiceMock();
         locationSpy = jasmine.createSpyObj('Location', ['back']);
 
-        // Mock proper signals for UploadService
         const uploadErrorSpy = jasmine.createSpy('uploadError').and.returnValue(null);
         (uploadErrorSpy as any).set = jasmine.createSpy('set');
 

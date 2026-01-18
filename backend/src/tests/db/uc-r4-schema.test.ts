@@ -1,3 +1,4 @@
+// Role : Verifier le schema UC-R4.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import pool from '../../db/database.js'

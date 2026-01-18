@@ -21,6 +21,7 @@
 </section>
 
 <section class="games-table card">
+  <!-- Bloc conditionnel principal -->
   @if (loading()) {
     <p class="muted">Chargement...</p>
   }
@@ -37,6 +38,7 @@
     <app-games-results-list
       [games]="games()"
       [visibleColumns]="visibleColumns()"
+      (view)="onView($event)"
       (edit)="onEdit($event)"
       (delete)="onDelete($event)" />
   }

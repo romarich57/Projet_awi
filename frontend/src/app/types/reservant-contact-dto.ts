@@ -1,3 +1,4 @@
+// Type : Decrit un evenement de contact d'un reservant.
 export interface ReservantContactDto {
   id: number;
   reservantId: number;
@@ -8,5 +9,5 @@ export interface ReservantContactDto {
   contactPhoneNumber: string;
   contactJobTitle: string;
   contactPriority: number;
-  dateContact: string; 
+  dateContact: string;
 }

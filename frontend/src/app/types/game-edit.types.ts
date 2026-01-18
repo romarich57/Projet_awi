@@ -1,3 +1,4 @@
+// Type : Decrit le modele de formulaire pour l'edition d'un jeu.
 export type GameFormModel = {
   title: string;
   type: string;

@@ -24,6 +24,9 @@ const ROLE_LABELS: Record<UserRole, string> = {
     templateUrl: './admin-user-detail-edit.html',
     styleUrl: './admin-user-detail-edit.scss',
 })
+// Role : Afficher le formulaire d'edition d'un utilisateur (admin).
+// Préconditions : Le parent fournit le FormGroup et les etats d'upload/mutation.
+// Postconditions : Les actions utilisateur sont emises vers le parent.
 export class AdminUserDetailEditComponent {
     readonly editForm = input.required<FormGroup>();
     readonly isMutating = input<boolean>(false);
@@ -40,18 +43,30 @@ export class AdminUserDetailEditComponent {
     readonly roleOptions = USER_ROLES;
     readonly roleLabels = ROLE_LABELS;
 
+    // Role : Relayer la selection de fichier au parent.
+    // Préconditions : L'evenement provient d'un input file.
+    // Postconditions : `fileSelected` est emis.
     onFileSelected(event: Event) {
         this.fileSelected.emit(event);
     }
 
+    // Role : Indiquer la suppression de l'avatar.
+    // Préconditions : Un avatar est affiche.
+    // Postconditions : `avatarRemoved` est emis.
     removeAvatar() {
         this.avatarRemoved.emit();
     }
 
+    // Role : Annuler l'edition.
+    // Préconditions : Le parent ecoute l'evenement.
+    // Postconditions : `cancelled` est emis.
     cancel() {
         this.cancelled.emit();
     }
 
+    // Role : Soumettre le formulaire.
+    // Préconditions : Le formulaire est valide cote parent.
+    // Postconditions : `submitted` est emis.
     submit() {
         this.submitted.emit();
     }

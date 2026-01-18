@@ -12,10 +12,14 @@ import { GameListItemComponent } from '../game-list-item/game-list-item';
   templateUrl: './games-results-list.html',
   styleUrl: './games-results-list.scss',
 })
+// Role : Afficher la liste des resultats de jeux.
+// Préconditions : `games` et `visibleColumns` sont fournis.
+// Postconditions : Les actions d'edition/suppression sont disponibles via evenements.
 export class GamesResultsListComponent {
   readonly games = input<readonly GameDto[]>([]);
   readonly visibleColumns = input.required<GamesVisibleColumns>();
 
+  readonly view = output<GameDto>();
   readonly edit = output<GameDto>();
   readonly delete = output<GameDto>();
 }

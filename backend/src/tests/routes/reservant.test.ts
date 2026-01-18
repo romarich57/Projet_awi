@@ -1,3 +1,4 @@
+// Role : Tester les routes /api/reservant.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import reservantRouter from '../../routes/reservant.js'
@@ -8,12 +9,9 @@ import {
     teardownTests
 } from '../test-helpers.js'
 
-/**
- * Reservant Routes Tests
- * Tests for /api/reservant CRUD operations
- */
+// Tests des routes /api/reservant (CRUD)
 
-// Setup and teardown
+// Preparation et nettoyage
 test.before(async () => {
     await setupTests()
 })
@@ -23,11 +21,11 @@ test.after(async () => {
 })
 
 // ============================================
-// GET /api/reservant Tests (4 tests)
+// Tests GET /api/reservant (4 tests)
 // ============================================
 
 test('GET / - should return all reservants', async () => {
-    // Create test data
+    // Creer des donnees de test
     await createTestReservant({ name: 'Reservant 1' })
     await createTestReservant({ name: 'Reservant 2' })
 
@@ -55,7 +53,7 @@ test('GET / - should return all reservants', async () => {
 })
 
 test('GET / - should return empty array when no data', async () => {
-    await teardownTests() // Clear all data
+    await teardownTests() // Vider toutes les donnees
     await setupTests()
 
     const mockReq = {}
@@ -140,7 +138,7 @@ test('GET / - should sort by name ASC', async () => {
 })
 
 // ============================================
-// GET /api/reservant/:id Tests (4 tests)
+// Tests GET /api/reservant/:id (4 tests)
 // ============================================
 
 test('GET /:id - should return specific reservant', async () => {
@@ -254,7 +252,7 @@ test('GET /:id - should return correct structure', async () => {
 })
 
 // ============================================
-// POST /api/reservant Tests (8 tests)
+// Tests POST /api/reservant (8 tests)
 // ============================================
 
 test('POST / - should create reservant with required fields', async () => {
@@ -494,7 +492,7 @@ test('POST / - should set optional fields to null if not provided', async () => 
 })
 
 // ============================================
-// PUT /api/reservant/:id Tests (6 tests)
+// Tests PUT /api/reservant/:id (6 tests)
 // ============================================
 
 test('PUT /:id - should update reservant', async () => {
@@ -601,7 +599,7 @@ test('PUT /:id - should reject duplicate email', async () => {
         params: { id: reservant2.id },
         body: {
             name: reservant2.name,
-            email: reservant1.email, // Duplicate
+            email: reservant1.email, // Doublon
             type: reservant2.type
         }
     }
@@ -703,7 +701,7 @@ test('PUT /:id - should handle null optional fields', async () => {
 })
 
 // ============================================
-// DELETE /api/reservant/:id Tests (5 tests)
+// Tests DELETE /api/reservant/:id (5 tests)
 // ============================================
 
 test('DELETE /:id - should delete reservant', async () => {
@@ -789,7 +787,7 @@ test('DELETE /:id - should return success message', async () => {
 test('DELETE /:id - should verify actually deleted from DB', async () => {
     const reservant = await createTestReservant()
 
-    // Delete
+    // Supprimer
     const mockReqDelete = {
         params: { id: reservant.id }
     }
@@ -810,7 +808,7 @@ test('DELETE /:id - should verify actually deleted from DB', async () => {
         .find((layer: any) => layer.route?.path === '/:id' && layer.route?.methods?.delete)
         ?.route?.stack[0]?.handle(mockReqDelete as any, mockResDelete as any, () => {})
 
-    // Try to get
+    // Tenter de recuperer
     const mockReqGet = {
         params: { id: reservant.id }
     }
@@ -835,9 +833,9 @@ test('DELETE /:id - should verify actually deleted from DB', async () => {
 })
 
 test('DELETE /:id - should reject if foreign key constraint', async () => {
-    // Note: This test requires creating related records (contacts, workflows, etc.)
-    // For now, we'll just test the basic delete works
-    // In a real scenario, you'd create related records first
+    // Note : ce test demande des donnees liees (contacts, workflows, etc.)
+    // Pour l'instant, on verifie la suppression de base
+    // En situation reelle, il faut creer les donnees liees avant
 
     const reservant = await createTestReservant()
 
@@ -861,6 +859,6 @@ test('DELETE /:id - should reject if foreign key constraint', async () => {
         .find((layer: any) => layer.route?.path === '/:id' && layer.route?.methods?.delete)
         ?.route?.stack[0]?.handle(mockReq as any, mockRes as any, () => {})
 
-    // Without FK violations, should succeed
+    // Sans violation de cle etrangere, la suppression reussit
     assert.strictEqual(mockRes.statusCode, 200)
 })

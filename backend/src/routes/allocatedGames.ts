@@ -1,8 +1,10 @@
+// Role : Gérer les routes des jeux alloués.
 import { Router } from 'express'
 import pool from '../db/database.js'
 
 const router = Router()
 
+// Requete de selection complete pour les allocations.
 const allocationSelect = `
     SELECT
         ja.id AS allocation_id,
@@ -38,6 +40,9 @@ const allocationSelect = `
     LEFT JOIN mechanism m ON m.id = gm.mechanism_id
 `
 
+// Role : Valider et transformer le payload de mise a jour.
+// Preconditions : body est l'objet req.body.
+// Postconditions : Retourne les erreurs, les SET SQL et les params.
 function parseUpdate(body: any): { errors: string[]; sets: string[]; params: any[] } {
   const errors: string[] = []
   const sets: string[] = []
@@ -87,6 +92,9 @@ function parseUpdate(body: any): { errors: string[]; sets: string[]; params: any
   return { errors, sets, params }
 }
 
+// Role : Mettre a jour une allocation de jeu.
+// Preconditions : id est valide et le payload contient des champs valides.
+// Postconditions : Retourne l'allocation mise a jour ou une erreur.
 router.patch('/:id', async (req, res) => {
   const allocationId = Number(req.params.id)
   if (!Number.isFinite(allocationId)) {
@@ -127,6 +135,9 @@ router.patch('/:id', async (req, res) => {
   }
 })
 
+// Role : Supprimer une allocation de jeu.
+// Preconditions : id est valide.
+// Postconditions : Retourne un message de suppression ou une erreur.
 router.delete('/:id', async (req, res) => {
   const allocationId = Number(req.params.id)
   if (!Number.isFinite(allocationId)) {

@@ -1,3 +1,4 @@
+-- // Role : Initialiser le schema de base.
 CREATE TYPE role_enum AS ENUM ('benevole', 'organizer', 'super-organizer', 'admin');
 
 CREATE TYPE workflow_enum AS ENUM (
@@ -38,7 +39,7 @@ CREATE TABLE IF NOT EXISTS festival (
     stock_chaises_available INTEGER NOT NULL DEFAULT 0
 );
 
--- Table des Éditeurs (créateurs de jeux)
+-- // Table des Editeurs (createurs de jeux)
 CREATE TABLE IF NOT EXISTS Editor(
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS Editor(
     is_distributor BOOLEAN NOT NULL DEFAULT false
 );
 
--- Table des Réservants (entités qui réservent des espaces)
+-- // Table des Reservants (entites qui reservent des espaces)
 CREATE TYPE reservant_type_enum AS ENUM ('editeur', 'prestataire', 'boutique', 'animateur', 'association');
 
 CREATE TABLE IF NOT EXISTS reservant(
@@ -58,7 +59,7 @@ CREATE TABLE IF NOT EXISTS reservant(
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     type reservant_type_enum NOT NULL,
-    editor_id INTEGER REFERENCES Editor(id), -- NULL si le réservant n'est pas un éditeur
+    editor_id INTEGER REFERENCES Editor(id), -- // NULL si le reservant n'est pas un editeur
     phone_number TEXT,
     address TEXT,
     siret TEXT,
@@ -71,13 +72,13 @@ CREATE TABLE IF NOT EXISTS contact (
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
     job_title TEXT NOT NULL,
-    editor_id INTEGER REFERENCES Editor(id), -- Contact d'un éditeur
-    reservant_id INTEGER REFERENCES reservant(id), -- Contact d'un réservant
+    editor_id INTEGER REFERENCES Editor(id), -- // Contact d'un editeur
+    reservant_id INTEGER REFERENCES reservant(id), -- // Contact d'un reservant
     priority INTEGER NOT NULL,
     CONSTRAINT contact_entity_check CHECK (
         (editor_id IS NOT NULL AND reservant_id IS NULL) OR
         (editor_id IS NULL AND reservant_id IS NOT NULL)
-    ) -- Un contact appartient soit à un éditeur, soit à un réservant
+    ) -- // Un contact appartient soit a un editeur, soit a un reservant
 );
 
 
@@ -112,7 +113,7 @@ CREATE TABLE IF NOT EXISTS game_mechanism(
 
 CREATE TABLE IF NOT EXISTS zone_tarifaire(
     id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
     festival_id INTEGER REFERENCES festival(id),
     nb_tables INTEGER NOT NULL,
     nb_tables_available INTEGER NOT NULL DEFAULT 0,
@@ -136,7 +137,7 @@ CREATE TABLE IF NOT EXISTS zone_plan (
     nb_tables INTEGER NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS suivi_workflow ( --ca correspond au workflow par réservant et par festival
+CREATE TABLE IF NOT EXISTS suivi_workflow ( -- // Ca correspond au workflow par reservant et par festival
     id SERIAL PRIMARY KEY,
     reservant_id INTEGER NOT NULL REFERENCES reservant(id),
     festival_id INTEGER NOT NULL REFERENCES festival(id),
@@ -146,7 +147,7 @@ CREATE TABLE IF NOT EXISTS suivi_workflow ( --ca correspond au workflow par rés
     jeux_recus BOOLEAN NOT NULL DEFAULT false,
     presentera_jeux BOOLEAN NOT NULL DEFAULT true,
 
-    UNIQUE(reservant_id, festival_id) -- Un seul workflow par réservant et par festival
+    UNIQUE(reservant_id, festival_id) -- // Un seul workflow par reservant et par festival
 );
 
 CREATE TABLE IF NOT EXISTS reservation ( 
@@ -163,7 +164,7 @@ CREATE TABLE IF NOT EXISTS reservation (
     final_price NUMERIC NOT NULL,
     statut_paiement TEXT CHECK (statut_paiement IN ('non_payé', 'payé')) NOT NULL DEFAULT 'non_payé',
     note TEXT,
-    UNIQUE(reservant_id, festival_id) -- Un réservant ne peut avoir qu'une réservation par festival
+    UNIQUE(reservant_id, festival_id) -- // Un reservant ne peut avoir qu'une reservation par festival
 );
 
 
@@ -185,11 +186,12 @@ CREATE TABLE IF NOT EXISTS jeux_alloues (
     UNIQUE (reservation_id, game_id)
 );
 
--- Nouvelle table de liaison pour les réservations et zones tarifaires
+-- // Nouvelle table de liaison pour les reservations et zones tarifaires
 CREATE TABLE IF NOT EXISTS reservation_zones_tarifaires (
     reservation_id INTEGER REFERENCES reservation(id),
     zone_tarifaire_id INTEGER REFERENCES zone_tarifaire(id),
     nb_tables_reservees INTEGER NOT NULL,
+    nb_chaises_reservees INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (reservation_id, zone_tarifaire_id)
 );
 

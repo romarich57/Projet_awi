@@ -1,3 +1,4 @@
+// Type : Decrit une reservation.
 export interface ReservationDto {
     id: number;
     reservant_id: number;

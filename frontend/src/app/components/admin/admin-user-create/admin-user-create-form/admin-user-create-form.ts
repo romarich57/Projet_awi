@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@ang
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserRole } from '@app/types/user-dto';
-import { CreateUserPayload, UserService } from '@users/user.service';
+import { CreateUserPayload, UserService } from '@services/user.service';
 import { UploadService, DEFAULT_AVATAR_URL } from '../../../../services/upload.service';
 import { AdminUserCreateCrudComponent } from '../admin-user-create-crud/admin-user-create-crud';
 
@@ -25,6 +25,9 @@ type CreateUserForm = {
     templateUrl: './admin-user-create-form.html',
     styleUrl: './admin-user-create-form.scss',
 })
+// Role : Gerer la creation d'un utilisateur cote admin.
+// Préconditions : UserService/UploadService sont disponibles.
+// Postconditions : L'utilisateur est cree et le formulaire est reinitialise en cas de succes.
 export class AdminUserCreateFormComponent {
     private readonly router = inject(Router);
     private readonly location = inject(Location);
@@ -85,6 +88,9 @@ export class AdminUserCreateFormComponent {
         });
     }
 
+    // Role : Gerer la selection d'un fichier avatar.
+    // Préconditions : L'evenement provient d'un input file.
+    // Postconditions : Le fichier est valide et l'aperçu est mis a jour.
     onFileSelected(event: Event) {
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
@@ -92,13 +98,11 @@ export class AdminUserCreateFormComponent {
             return;
         }
 
-        // Validate file type
         if (!file.type.startsWith('image/')) {
             this.uploadService.uploadError.set('Veuillez sélectionner une image');
             return;
         }
 
-        // Validate file size (2MB max)
         if (file.size > 2 * 1024 * 1024) {
             this.uploadService.uploadError.set('L\'image ne doit pas dépasser 2 Mo');
             return;
@@ -107,7 +111,6 @@ export class AdminUserCreateFormComponent {
         this.selectedFile.set(file);
         this.uploadService.uploadError.set(null);
 
-        // Preview
         const reader = new FileReader();
         reader.onload = () => {
             this.avatarPreview.set(reader.result as string);
@@ -115,12 +118,18 @@ export class AdminUserCreateFormComponent {
         reader.readAsDataURL(file);
     }
 
+    // Role : Annuler l'avatar selectionne.
+    // Préconditions : Un fichier est en cours de selection.
+    // Postconditions : L'aperçu revient a la valeur par defaut.
     removeAvatar() {
         this.selectedFile.set(null);
         this.avatarPreview.set(DEFAULT_AVATAR_URL);
         this.uploadedAvatarUrl.set(null);
     }
 
+    // Role : Soumettre la creation d'utilisateur.
+    // Préconditions : Le formulaire est valide et aucun upload/mutation en cours.
+    // Postconditions : L'utilisateur est cree avec ou sans avatar.
     submit() {
         if (this.isMutating() || this.isUploading()) {
             return;
@@ -132,16 +141,22 @@ export class AdminUserCreateFormComponent {
 
         const file = this.selectedFile();
         if (file) {
-            // Upload avatar first, then create user
             this.uploadService.uploadAvatar(file).subscribe((url) => {
+                if (!url) {
+                    return;
+                }
                 this.uploadedAvatarUrl.set(url);
                 this.createUserWithAvatar(url);
             });
+            return;
         } else {
             this.createUserWithAvatar(null);
         }
     }
 
+    // Role : Construire la charge utile et creer l'utilisateur.
+    // Préconditions : `avatarUrl` peut etre null.
+    // Postconditions : Le service lance la creation et la mutation est suivie.
     private createUserWithAvatar(avatarUrl: string | null) {
         const value = this.createForm.getRawValue();
         const payload: CreateUserPayload = {
@@ -159,6 +174,9 @@ export class AdminUserCreateFormComponent {
         this.lastMutation.set('create');
     }
 
+    // Role : Revenir a la liste admin.
+    // Préconditions : L'historique ou le routeur est disponible.
+    // Postconditions : La navigation retour est effectuee.
     goBack() {
         if (history.length > 1) {
             this.location.back();
@@ -167,6 +185,9 @@ export class AdminUserCreateFormComponent {
         this.router.navigate(['/admin']);
     }
 
+    // Role : Reinitialiser le formulaire et les etats d'avatar.
+    // Préconditions : Le formulaire est initialise.
+    // Postconditions : Les champs et signaux reviennent aux valeurs par defaut.
     private resetForm() {
         this.createForm.reset({
             login: '',

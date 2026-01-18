@@ -33,6 +33,9 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.scss',
 })
+// Role : Permettre la reinitialisation du mot de passe via token.
+// Préconditions : Un token est present dans l'URL.
+// Postconditions : Le mot de passe est mis a jour et l'etat UI est affiche.
 export class ResetPasswordComponent {
   private readonly auth = inject(AuthService);
   private readonly fb = inject(NonNullableFormBuilder);
@@ -69,6 +72,9 @@ export class ResetPasswordComponent {
     return this.form.hasError('mismatch') && this.form.controls.confirmPassword.touched;
   }
 
+  // Role : Soumettre le nouveau mot de passe.
+  // Préconditions : Le formulaire est valide et un token est present.
+  // Postconditions : La reinitialisation est envoyee via AuthService.
   submit() {
     if (this.form.invalid || this.status() === 'loading') {
       this.form.markAllAsTouched();
@@ -98,6 +104,9 @@ export class ResetPasswordComponent {
     });
   }
 
+  // Role : Reinitialiser le formulaire et l'etat.
+  // Préconditions : Aucune.
+  // Postconditions : Les champs et messages sont reinitialises.
   resetForm() {
     this.form.reset();
     this.status.set(this.hasToken() ? 'idle' : 'error');

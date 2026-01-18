@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminUserCrudComponent } from './admin-user-crud';
-import { UserService } from '@users/user.service';
+import { UserService } from '@services/user.service';
 import { createUserServiceMock } from '@testing/mocks/user-service.mock';
 import { UserDto } from '@app/types/user-dto';
 
@@ -8,12 +8,24 @@ describe('AdminUserCrudComponent', () => {
     let component: AdminUserCrudComponent;
     let fixture: ComponentFixture<AdminUserCrudComponent>;
     const mockUser: UserDto = {
-        id: 1,
+        id: 2,
         login: 'test',
         firstName: 'Test',
         lastName: 'User',
         email: 'test@example.com',
         role: 'benevole',
+        emailVerified: true,
+        avatarUrl: null,
+        phone: null,
+        createdAt: new Date().toISOString()
+    };
+    const protectedUser: UserDto = {
+        id: 1,
+        login: 'admin',
+        firstName: 'Admin',
+        lastName: 'System',
+        email: 'admin@secureapp.com',
+        role: 'admin',
         emailVerified: true,
         avatarUrl: null,
         phone: null,
@@ -46,6 +58,15 @@ describe('AdminUserCrudComponent', () => {
     });
 
     it('should not emit roleChanged if role is same', () => {
+        spyOn(component.roleChanged, 'emit');
+        const event = { target: { value: 'benevole' } } as any;
+        component.updateUserRole(event);
+        expect(component.roleChanged.emit).not.toHaveBeenCalled();
+    });
+
+    it('should not emit roleChanged for protected admin', () => {
+        fixture.componentRef.setInput('user', protectedUser);
+        fixture.detectChanges();
         spyOn(component.roleChanged, 'emit');
         const event = { target: { value: 'benevole' } } as any;
         component.updateUserRole(event);

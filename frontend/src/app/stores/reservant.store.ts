@@ -32,10 +32,16 @@ export class ReservantStore {
     loading = signal(false);
     error = signal<string | null>(null);
 
+    // Role : Definir le festival courant pour filtrer les reservants.
+    // Preconditions : Aucune.
+    // Postconditions : Le signal _currentFestivalId est mis a jour.
     setFestival(festivalId: number | null): void {
         this._currentFestivalId.set(festivalId);
     }
 
+    // Role : Charger tous les reservants.
+    // Preconditions : ReservantApiService est disponible.
+    // Postconditions : Le signal _reservants est mis a jour.
     loadAll(): void {
         this.loading.set(true);
         this.api.list().subscribe({
@@ -48,6 +54,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Charger les reservants pour un festival donne.
+    // Preconditions : festivalId est valide.
+    // Postconditions : Le signal _reservants est mis a jour et l'erreur est ajustee.
     loadByFestival(festivalId: number): void {
         this.loading.set(true);
         this.error.set(null);
@@ -61,6 +70,9 @@ export class ReservantStore {
             },
         });
     }
+    // Role : Charger un reservant par identifiant.
+    // Preconditions : id est valide.
+    // Postconditions : Le signal _reservants contient le reservant charge.
     loadById(id: number): void {
         this.loading.set(true);
         this.api.getbyid(id).subscribe({
@@ -72,12 +84,15 @@ export class ReservantStore {
             },
         });
     }
+    // Role : Creer un reservant et l'ajouter a la liste locale.
+    // Preconditions : Un objet ReservantDto valide est fourni.
+    // Postconditions : Le reservant est ajoute et les etats loading/error sont mis a jour.
     create(reservant: ReservantDto): void {
         this.loading.set(true);
         this.error.set(null);
         this.api.create(reservant).subscribe({
             next: (newReservant) => {
-                // Append to existing list instead of replacing
+                // Ajouter a la liste existante au lieu de remplacer
                 this._reservants.set([...this._reservants(), newReservant]);
                 this.loading.set(false);
             },
@@ -88,6 +103,9 @@ export class ReservantStore {
             },
         });
     }
+    // Role : Mettre a jour un reservant.
+    // Preconditions : Un objet ReservantDto valide est fourni.
+    // Postconditions : Le signal _reservants est mis a jour avec la version modifiee.
     update(reservant: ReservantDto) {
         this.loading.set(true);
         return this.api.update(reservant).pipe(
@@ -95,6 +113,9 @@ export class ReservantStore {
             finalize(() => this.loading.set(false)),
         );
     }
+    // Role : Supprimer un reservant.
+    // Preconditions : Un objet ReservantDto valide est fourni.
+    // Postconditions : Le signal _reservants est mis a jour si la suppression reussit.
     delete(reservant: ReservantDto): void {
         this.loading.set(true);
         this.api.delete(reservant).subscribe({
@@ -107,6 +128,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Verifier si une transition de workflow est autorisee.
+    // Preconditions : Les etats source et destination sont fournis.
+    // Postconditions : Retourne true si la transition est valide, sinon false.
     private canTransition(from: ReservantWorkflowState | undefined, to: ReservantWorkflowState): boolean {
         if (!from) return true;
         const allowed: Record<ReservantWorkflowState, ReservantWorkflowState[]> = {
@@ -122,6 +146,9 @@ export class ReservantStore {
         return allowed[from]?.includes(to) ?? false;
     }
 
+    // Role : Changer l'etat de workflow d'un reservant avec validation.
+    // Preconditions : reservantId est valide et currentFestivalId est defini si requis.
+    // Postconditions : Le reservant est mis a jour si la transition est autorisee.
     changeWorkflowState(reservantId: number, newState: ReservantWorkflowState): void {
         const current = this._reservants().find(r => r.id === reservantId);
         if (!this.canTransition(current?.workflow_state, newState)) {
@@ -141,6 +168,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Mettre a jour les indicateurs de workflow d'un reservant.
+    // Preconditions : reservantId est valide et flags est fourni.
+    // Postconditions : Le reservant est mis a jour dans le store.
     updateWorkflowFlags(reservantId: number, flags: ReservantWorkflowFlagsDto): void {
         this.loading.set(true);
         this.workflowApi.updateFlags(reservantId, flags, this._currentFestivalId()).pipe(
@@ -155,6 +185,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Charger les contacts d'un reservant.
+    // Preconditions : reservantId est valide.
+    // Postconditions : Le signal _contacts est mis a jour.
     loadContacts(reservantId: number): void {
         this.contactApi.listContacts(reservantId).subscribe({
             next: (contacts) => this._contacts.set(contacts),
@@ -162,6 +195,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Charger la timeline des contacts d'un reservant.
+    // Preconditions : reservantId est valide.
+    // Postconditions : Le signal _contactTimeline est mis a jour.
     loadContactTimeline(reservantId: number): void {
         this.contactApi.listTimeline(reservantId).subscribe({
             next: (timeline) => this._contactTimeline.set(timeline),
@@ -169,6 +205,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Ajouter un evenement de contact pour un reservant.
+    // Preconditions : reservantId, contactId et dateContact sont valides.
+    // Postconditions : Le signal _contactTimeline est mis a jour.
     addContactEvent(reservantId: number, contactId: number, dateContact: string): void {
         this.loading.set(true);
         this.contactApi.addContactEvent(reservantId, contactId, dateContact).pipe(
@@ -179,6 +218,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Creer un contact pour un reservant.
+    // Preconditions : reservantId est valide et contact est fourni.
+    // Postconditions : Le contact est ajoute dans le signal _contacts.
     createContact(reservantId: number, contact: ContactDto): void {
         this.loading.set(true);
         this.contactApi.addContact(reservantId, contact).pipe(
@@ -189,6 +231,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Supprimer un contact d'un reservant.
+    // Preconditions : reservantId et contactId sont valides.
+    // Postconditions : Le contact est retire du signal _contacts.
     deleteContact(reservantId: number, contactId: number): void {
         this.loading.set(true);
         this.contactApi.deleteContact(reservantId, contactId).pipe(
@@ -199,6 +244,9 @@ export class ReservantStore {
         });
     }
 
+    // Role : Supprimer un evenement de contact d'un reservant.
+    // Preconditions : reservantId et eventId sont valides.
+    // Postconditions : L'evenement est retire du signal _contactTimeline.
     deleteContactEvent(reservantId: number, eventId: number): void {
         this.loading.set(true);
         this.contactApi.deleteContactEvent(reservantId, eventId).pipe(

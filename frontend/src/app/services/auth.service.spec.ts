@@ -163,7 +163,7 @@ describe('AuthService', () => {
 
     describe('logout()', () => {
         it('should clear currentUser and redirect to login on successful logout', fakeAsync(() => {
-            // Simulate logged in state first
+            
             service.login('testuser', 'password123');
             const loginReq = httpMock.expectOne(`${environment.apiUrl}/auth/login`);
             loginReq.flush({ user: mockUser });
@@ -171,7 +171,6 @@ describe('AuthService', () => {
 
             expect(service.currentUser()).toEqual(jasmine.objectContaining({ id: mockUser.id }));
 
-            // Now logout
             service.logout();
 
             const logoutReq = httpMock.expectOne(`${environment.apiUrl}/auth/logout`);
@@ -220,7 +219,7 @@ describe('AuthService', () => {
             tick();
 
             expect(service.currentUser()).toBeNull();
-            expect(service.error()).toBeNull(); // 401 should not set error
+            expect(service.error()).toBeNull(); // 401 ne doit pas renseigner d'erreur
         }));
 
         it('should set error on network failure', fakeAsync(() => {

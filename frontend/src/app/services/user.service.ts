@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { environment } from '@env/environment';
 import { UserDto, UserRole } from '@app/types/user-dto';
+import { environment } from '@env/environment';
 import { catchError, finalize, of, tap } from 'rxjs';
 
 export type CreateUserPayload = {
@@ -12,7 +12,7 @@ export type CreateUserPayload = {
   email: string;
   phone?: string | null;
   avatarUrl?: string | null;
-  role: UserRole;
+  role?: UserRole;
 };
 
 export type UpdateUserPayload = {
@@ -26,74 +26,56 @@ export type UpdateUserPayload = {
   emailVerified?: boolean;
 };
 
+type CreateUserResponse = {
+  message: string;
+  user?: UserDto;
+};
+
+type UpdateUserResponse = {
+  message: string;
+  user?: UserDto;
+};
+
+type DeleteUserResponse = {
+  message: string;
+};
+
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
   private readonly http = inject(HttpClient);
 
-  private readonly _users = signal<UserDto[]>([]);
-  private readonly _isLoading = signal(false);
-  private readonly _error = signal<string | null>(null);
-
-  readonly users = this._users.asReadonly();
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly error = this._error.asReadonly();
+  readonly users = signal<UserDto[]>([]);
+  readonly isLoading = signal(false);
+  readonly error = signal<string | null>(null);
   readonly isMutating = signal(false);
   readonly mutationMessage = signal<string | null>(null);
   readonly mutationStatus = signal<'success' | 'error' | null>(null);
 
+  // Role : Charger la liste des utilisateurs.
+  // Preconditions : L'API est accessible.
+  // Postconditions : Les signaux users, error et isLoading sont mis a jour.
   loadAll() {
-    this._isLoading.set(true);
-    this._error.set(null);
+    this.isLoading.set(true);
+    this.error.set(null);
 
     this.http
       .get<UserDto[]>(`${environment.apiUrl}/users`, { withCredentials: true })
       .pipe(
-        tap((users) => this._users.set(users)),
+        tap((users) => this.users.set(users ?? [])),
         catchError((err) => {
-          console.error('Erreur de chargement des utilisateurs', err);
-          this._error.set('Impossible de charger les utilisateurs');
-          this._users.set([]);
+          this.error.set(err?.error?.error ?? 'Erreur chargement utilisateurs');
           return of([]);
         }),
-        finalize(() => this._isLoading.set(false)),
+        finalize(() => this.isLoading.set(false)),
       )
       .subscribe();
   }
 
-  deleteUser(id: number) {
-    if (this.isMutating()) {
-      return;
-    }
-
-    this.isMutating.set(true);
-    this.mutationMessage.set(null);
-    this.mutationStatus.set(null);
-
-    this.http
-      .delete<{ message: string }>(`${environment.apiUrl}/users/${id}`, {
-        withCredentials: true,
-      })
-      .pipe(
-        tap((response) => {
-          this.mutationMessage.set(response?.message ?? 'Utilisateur supprimé.');
-          this.mutationStatus.set('success');
-          this.loadAll();
-        }),
-        catchError((err) => {
-          console.error('Erreur suppression utilisateur', err);
-          this.mutationMessage.set(
-            err?.error?.error ?? 'Suppression impossible. Réessayez plus tard.',
-          );
-          this.mutationStatus.set('error');
-          return of(null);
-        }),
-        finalize(() => this.isMutating.set(false)),
-      )
-      .subscribe();
-  }
-
+  // Role : Creer un utilisateur.
+  // Preconditions : payload contient les champs requis.
+  // Postconditions : Lance la creation et rafraichit la liste si succes.
   createUser(payload: CreateUserPayload) {
     if (this.isMutating()) {
       return;
@@ -104,20 +86,17 @@ export class UserService {
     this.mutationStatus.set(null);
 
     this.http
-      .post<{ message: string }>(`${environment.apiUrl}/users`, payload, {
+      .post<CreateUserResponse>(`${environment.apiUrl}/users`, payload, {
         withCredentials: true,
       })
       .pipe(
         tap((response) => {
-          this.mutationMessage.set(response?.message ?? 'Utilisateur créé.');
+          this.mutationMessage.set(response?.message ?? 'Utilisateur cree');
           this.mutationStatus.set('success');
           this.loadAll();
         }),
         catchError((err) => {
-          console.error('Erreur création utilisateur', err);
-          this.mutationMessage.set(
-            err?.error?.error ?? 'Création impossible. Réessayez plus tard.',
-          );
+          this.mutationMessage.set(err?.error?.error ?? 'Creation impossible');
           this.mutationStatus.set('error');
           return of(null);
         }),
@@ -126,7 +105,10 @@ export class UserService {
       .subscribe();
   }
 
-  updateUser(id: number, payload: UpdateUserPayload) {
+  // Role : Mettre a jour un utilisateur.
+  // Preconditions : userId est valide et payload contient les champs a modifier.
+  // Postconditions : Met a jour le store local et rafraichit la liste.
+  updateUser(userId: number, payload: UpdateUserPayload) {
     if (this.isMutating()) {
       return;
     }
@@ -136,27 +118,22 @@ export class UserService {
     this.mutationStatus.set(null);
 
     this.http
-      .put<{ message: string; user: UserDto }>(
-        `${environment.apiUrl}/users/${id}`,
-        payload,
-        { withCredentials: true },
-      )
+      .put<UpdateUserResponse>(`${environment.apiUrl}/users/${userId}`, payload, {
+        withCredentials: true,
+      })
       .pipe(
         tap((response) => {
-          this.mutationMessage.set(response?.message ?? 'Utilisateur mis à jour.');
-          this.mutationStatus.set('success');
           if (response?.user) {
-            this.patchUser(response.user.id, response.user);
+            this.replaceUser(response.user);
           } else {
-            this.patchUser(id, this.toUserPatch(payload));
+            this.patchUser(userId, payload);
           }
+          this.mutationMessage.set(response?.message ?? 'Utilisateur mis a jour');
+          this.mutationStatus.set('success');
           this.loadAll();
         }),
         catchError((err) => {
-          console.error('Erreur mise à jour utilisateur', err);
-          this.mutationMessage.set(
-            err?.error?.error ?? 'Mise à jour impossible. Réessayez plus tard.',
-          );
+          this.mutationMessage.set(err?.error?.error ?? 'Mise a jour impossible');
           this.mutationStatus.set('error');
           return of(null);
         }),
@@ -165,17 +142,59 @@ export class UserService {
       .subscribe();
   }
 
-  private patchUser(id: number, patch: Partial<UserDto>) {
-    if (!Object.keys(patch).length) {
+  // Role : Supprimer un utilisateur.
+  // Preconditions : userId est valide.
+  // Postconditions : Lance la suppression et rafraichit la liste.
+  deleteUser(userId: number) {
+    if (this.isMutating()) {
       return;
     }
-    this._users.update((users) =>
-      users.map((user) => (user.id === id ? { ...user, ...patch } : user)),
-    );
+
+    this.isMutating.set(true);
+    this.mutationMessage.set(null);
+    this.mutationStatus.set(null);
+
+    this.http
+      .delete<DeleteUserResponse>(`${environment.apiUrl}/users/${userId}`, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap((response) => {
+          this.mutationMessage.set(response?.message ?? 'Utilisateur supprime');
+          this.mutationStatus.set('success');
+          this.loadAll();
+        }),
+        catchError((err) => {
+          this.mutationMessage.set(err?.error?.error ?? 'Suppression impossible');
+          this.mutationStatus.set('error');
+          return of(null);
+        }),
+        finalize(() => this.isMutating.set(false)),
+      )
+      .subscribe();
   }
 
-  private toUserPatch(payload: UpdateUserPayload): Partial<UserDto> {
+  // Role : Remplacer un utilisateur dans la liste locale.
+  // Preconditions : L'objet user est valide.
+  // Postconditions : Le signal users est mis a jour.
+  private replaceUser(user: UserDto) {
+    this.users.update((current) => {
+      const index = current.findIndex((item) => item.id === user.id);
+      if (index === -1) {
+        return [...current, user];
+      }
+      const next = [...current];
+      next[index] = user;
+      return next;
+    });
+  }
+
+  // Role : Appliquer un patch local aux donnees utilisateur.
+  // Preconditions : userId est valide et payload contient les champs a mettre a jour.
+  // Postconditions : Le signal users est mis a jour avec le patch.
+  private patchUser(userId: number, payload: UpdateUserPayload) {
     const patch: Partial<UserDto> = {};
+
     if (payload.login !== undefined) {
       patch.login = payload.login;
     }
@@ -188,10 +207,10 @@ export class UserService {
     if (payload.email !== undefined) {
       patch.email = payload.email;
     }
-    if (payload.phone !== undefined) {
+    if (Object.prototype.hasOwnProperty.call(payload, 'phone')) {
       patch.phone = payload.phone ?? null;
     }
-    if (payload.avatarUrl !== undefined) {
+    if (Object.prototype.hasOwnProperty.call(payload, 'avatarUrl')) {
       patch.avatarUrl = payload.avatarUrl ?? null;
     }
     if (payload.role !== undefined) {
@@ -200,6 +219,9 @@ export class UserService {
     if (payload.emailVerified !== undefined) {
       patch.emailVerified = payload.emailVerified;
     }
-    return patch;
+
+    this.users.update((current) =>
+      current.map((user) => (user.id === userId ? { ...user, ...patch } : user)),
+    );
   }
 }

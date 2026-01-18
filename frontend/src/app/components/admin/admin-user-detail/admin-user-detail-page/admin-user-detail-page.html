@@ -2,6 +2,7 @@
     <header class="admin-detail__header">
         <button type="button" class="ghost" (click)="goBack()">Retour</button>
         <div class="admin-detail__actions">
+            
             @if (user()) {
             <button type="button" class="ghost edit-toggle" (click)="toggleEdit()" [disabled]="isMutating()">
                 <span class="edit-toggle__icon" aria-hidden="true">
@@ -45,10 +46,10 @@
     }
 
     @if (user(); as selected) {
-    <!-- Display Info Component -->
+    <!-- Composant d informations -->
     <app-admin-user-detail-info [user]="selected"></app-admin-user-detail-info>
 
-    <!-- Edit Form Component (conditionally shown) -->
+    <!-- Formulaire d edition (affiche conditionnellement) -->
     @if (isEditing()) {
     <div class="edit-section">
         <app-admin-user-detail-edit [editForm]="editForm" [isMutating]="isMutating()" [isUploading]="isUploading()"

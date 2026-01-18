@@ -1,3 +1,4 @@
+// Type : Decrit une zone tarifaire.
 export interface ZoneTarifaireDto {
     id: number;
     name: string;

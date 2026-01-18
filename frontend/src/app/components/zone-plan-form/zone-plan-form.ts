@@ -9,6 +9,9 @@ import { ZonePlanDto } from '@app/types/zone-plan-dto';
   templateUrl: './zone-plan-form.html',
   styleUrl: './zone-plan-form.scss'
 })
+// Role : Gerer le formulaire de creation/edition d'un plan de zone.
+// Préconditions : `festivalId` et les listes de zones/tables restantes sont fournis.
+// Postconditions : Le plan de zone est cree ou mis a jour et les evenements sont emis.
 export class ZonePlanForm {
 
   private readonly zonePlanService = inject(ZonePlanService);
@@ -43,6 +46,9 @@ export class ZonePlanForm {
   }
 
   // Validateur personnalisé pour vérifier que nb_tables <= tables disponibles
+  // Role : Verifier que le nombre de tables ne depasse pas le stock disponible.
+  // Préconditions : Les donnees de tables restantes et la zone a editer sont connues.
+  // Postconditions : Retourne une erreur de validation si le stock est depasse.
   private tablesExceededValidator(): ValidatorFn {
     return (group: AbstractControl): ValidationErrors | null => {
       const formGroup = group as FormGroup;
@@ -80,6 +86,9 @@ export class ZonePlanForm {
     })
   }, { validators: this.tablesExceededValidator() });
 
+  // Role : Soumettre le formulaire et creer/mettre a jour le plan de zone.
+  // Préconditions : Le formulaire est valide.
+  // Postconditions : Le plan est enregistre et le formulaire est ferme.
   submit(): void {
     if (this.zonePlanForm.valid) {
       const formValue = this.zonePlanForm.getRawValue();
@@ -105,6 +114,9 @@ export class ZonePlanForm {
     }
   }
 
+  // Role : Fermer le formulaire et notifier le parent.
+  // Préconditions : Aucune.
+  // Postconditions : Le formulaire est reinitialise et `formClosed` est emis.
   close(): void {
     this.zonePlanForm.reset();
     this.formClosed.emit();

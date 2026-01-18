@@ -1,3 +1,4 @@
+<!-- // Role : Documentation des migrations. -->
 # Migrations de la base de données
 
 ## Migration 002: Ajout du type table_type_enum

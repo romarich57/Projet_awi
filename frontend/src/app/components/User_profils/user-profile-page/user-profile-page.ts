@@ -38,6 +38,9 @@ type ProfileForm = {
   templateUrl: './user-profile-page.html',
   styleUrl: './user-profile-page.scss',
 })
+// Role : Afficher et gerer la page de profil utilisateur (lecture, edition, suppression).
+// Préconditions : L'utilisateur est charge via AuthService; les services de profil et upload sont disponibles.
+// Postconditions : Les actions utilisateur declenchent les mises a jour ou la suppression du profil.
 export class UserProfilePageComponent {
   private readonly auth = inject(AuthService);
   private readonly profileService = inject(UserProfileService);
@@ -122,6 +125,9 @@ export class UserProfilePageComponent {
     });
   }
 
+  // Role : Basculer le mode edition et reinitialiser les champs si besoin.
+  // Préconditions : Un utilisateur est charge.
+  // Postconditions : Le formulaire et l'aperçu d'avatar sont remis en etat.
   toggleEdit() {
     const current = this.user();
     if (!current) {
@@ -140,6 +146,9 @@ export class UserProfilePageComponent {
     }
   }
 
+  // Role : Annuler l'edition et restaurer les donnees d'origine.
+  // Préconditions : Un utilisateur est charge.
+  // Postconditions : Le formulaire retrouve les valeurs initiales et les erreurs sont reinitialisees.
   cancelEdit() {
     const current = this.user();
     if (!current) {
@@ -155,6 +164,9 @@ export class UserProfilePageComponent {
     );
   }
 
+  // Role : Gerer la selection d'un fichier avatar.
+  // Préconditions : L'evenement provient d'un input file.
+  // Postconditions : Le fichier est valide, stocke et previsualise si possible.
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -183,6 +195,9 @@ export class UserProfilePageComponent {
     reader.readAsDataURL(file);
   }
 
+  // Role : Indiquer que l'avatar doit etre supprime.
+  // Préconditions : Le formulaire d'edition est actif ou le profil charge.
+  // Postconditions : L'avatar est marque comme supprime et l'aperçu revient par defaut.
   removeAvatar() {
     this.selectedFile.set(null);
     this.avatarRemoved.set(true);
@@ -190,6 +205,9 @@ export class UserProfilePageComponent {
     this.avatarPreview.set(DEFAULT_AVATAR_URL);
   }
 
+  // Role : Soumettre les modifications de profil.
+  // Préconditions : Un utilisateur est charge et le formulaire est valide.
+  // Postconditions : Le profil est mis a jour, avec ou sans upload d'avatar.
   submitEdit() {
     const current = this.user();
     if (!current) {
@@ -230,6 +248,9 @@ export class UserProfilePageComponent {
     this.profileService.updateProfile(payload);
   }
 
+  // Role : Demander un reset de mot de passe pour l'utilisateur courant.
+  // Préconditions : L'email utilisateur est disponible.
+  // Postconditions : Une demande de reinitialisation est envoyee.
   requestPasswordReset() {
     const email = this.user()?.email;
     if (!email) {
@@ -238,18 +259,30 @@ export class UserProfilePageComponent {
     this.profileService.requestPasswordReset(email);
   }
 
+  // Role : Ouvrir la confirmation de suppression de compte.
+  // Préconditions : Le profil est charge.
+  // Postconditions : L'indicateur de confirmation est active.
   requestDelete() {
     this.confirmDelete.set(true);
   }
 
+  // Role : Fermer la confirmation de suppression de compte.
+  // Préconditions : La confirmation est ouverte.
+  // Postconditions : L'indicateur de confirmation est desactive.
   cancelDelete() {
     this.confirmDelete.set(false);
   }
 
+  // Role : Declencher la suppression du compte.
+  // Préconditions : L'utilisateur confirme la suppression.
+  // Postconditions : Le service de profil envoie la demande de suppression.
   confirmDeleteAccount() {
     this.profileService.deleteAccount();
   }
 
+  // Role : Reinitialiser le formulaire avec les donnees utilisateur.
+  // Préconditions : `user` contient les champs requis.
+  // Postconditions : Le formulaire est aligne avec les donnees du profil.
   private resetForm(user: UserDto) {
     this.editForm.reset({
       login: user.login,

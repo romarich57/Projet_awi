@@ -1,5 +1,7 @@
+// Type : Decrit les roles utilisateur possibles.
 export type UserRole = 'admin' | 'benevole' | 'organizer' | 'super-organizer';
 
+// Valeur : Liste ordonnee des roles utilisateur.
 export const USER_ROLES: UserRole[] = [
   'benevole',
   'organizer',
@@ -7,6 +9,7 @@ export const USER_ROLES: UserRole[] = [
   'admin',
 ];
 
+// Type : Decrit un utilisateur.
 export interface UserDto {
   id: number;
   login: string;

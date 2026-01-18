@@ -1,3 +1,4 @@
+// Role : Gérer les routes des jeux.
 import { Router } from 'express'
 import type { Pool, PoolClient } from 'pg'
 import pool from '../db/database.js'
@@ -29,6 +30,9 @@ type GamePayload = Partial<Omit<GameRecord, 'id' | 'editor_name' | 'mechanisms'>
 
 const router = Router()
 
+// Role : Convertir une valeur en entier nullable.
+// Preconditions : value est un nombre ou une chaine convertible.
+// Postconditions : Retourne un entier, null ou undefined.
 function toNullableInt(value: unknown): number | null | undefined {
   if (value === undefined) return undefined
   if (value === null) return null
@@ -40,6 +44,9 @@ function toNullableInt(value: unknown): number | null | undefined {
   return undefined
 }
 
+// Role : Nettoyer une chaine et retourner null si vide.
+// Preconditions : value peut etre une chaine, null ou undefined.
+// Postconditions : Retourne une chaine nettoyee, null ou undefined.
 function toNullableString(value: unknown): string | null | undefined {
   if (value === undefined) return undefined
   if (value === null) return null
@@ -50,6 +57,9 @@ function toNullableString(value: unknown): string | null | undefined {
   return undefined
 }
 
+// Role : Convertir une valeur en booleen.
+// Preconditions : value peut etre string/number/boolean.
+// Postconditions : Retourne true/false ou undefined si non interpretable.
 function toBoolean(value: unknown): boolean | undefined {
   if (value === undefined) return undefined
   if (typeof value === 'boolean') return value
@@ -62,6 +72,9 @@ function toBoolean(value: unknown): boolean | undefined {
   return undefined
 }
 
+// Role : Extraire une liste d'identifiants de mecanismes.
+// Preconditions : value doit etre un tableau de valeurs numeriques.
+// Postconditions : Retourne une liste d'IDs uniques ou undefined.
 function parseMechanismIds(value: unknown): number[] | undefined {
   if (value === undefined) return undefined
   if (!Array.isArray(value)) return undefined
@@ -72,6 +85,9 @@ function parseMechanismIds(value: unknown): number[] | undefined {
   return Array.from(new Set(ids))
 }
 
+// Role : Valider et normaliser le payload de jeu.
+// Preconditions : body est l'objet req.body.
+// Postconditions : Retourne les donnees nettoyees et la liste d'erreurs.
 function parseGameBody(body: any, requireBasics: boolean): { data: GamePayload; errors: string[] } {
   const errors: string[] = []
   const data: GamePayload = {}
@@ -139,6 +155,9 @@ function parseGameBody(body: any, requireBasics: boolean): { data: GamePayload; 
   return { data, errors }
 }
 
+// Role : Construire les filtres SQL a partir de la query.
+// Preconditions : query contient les parametres de filtre.
+// Postconditions : Retourne la clause WHERE et les params.
 function buildFilters(query: any): { where: string; params: any[] } {
   const filters: string[] = []
   const params: any[] = []
@@ -164,6 +183,9 @@ function buildFilters(query: any): { where: string; params: any[] } {
   return { where, params }
 }
 
+// Role : Construire la requete SQL de selection des jeux.
+// Preconditions : where est une clause WHERE valide ou vide.
+// Postconditions : Retourne la requete SQL complete.
 function buildGameSelect(where: string): string {
   return `
     SELECT
@@ -186,6 +208,9 @@ function buildGameSelect(where: string): string {
   `
 }
 
+// Role : Recuperer un jeu par identifiant.
+// Preconditions : gameId est valide.
+// Postconditions : Retourne le jeu ou null s'il n'existe pas.
 async function fetchGameById(
   gameId: number,
   client: Pool | PoolClient = pool,
@@ -195,6 +220,9 @@ async function fetchGameById(
   return rows.length > 0 ? (rows[0] as GameRecord) : null
 }
 
+// Role : Verifier l'existence d'un editeur.
+// Preconditions : client est connecte et editorId est valide.
+// Postconditions : Lance une erreur si l'editeur n'existe pas.
 async function ensureEditorExists(client: PoolClient, editorId: number) {
   const { rows } = await client.query('SELECT id FROM editor WHERE id = $1', [editorId])
   if (rows.length === 0) {
@@ -202,6 +230,9 @@ async function ensureEditorExists(client: PoolClient, editorId: number) {
   }
 }
 
+// Role : Verifier l'existence des mecanismes.
+// Preconditions : client est connecte et mechanismIds est une liste d'IDs.
+// Postconditions : Lance une erreur si un mecanisme manque.
 async function ensureMechanismsExist(client: PoolClient, mechanismIds: number[]) {
   if (mechanismIds.length === 0) return
   const { rows } = await client.query<{ id: number }>(
@@ -216,6 +247,9 @@ async function ensureMechanismsExist(client: PoolClient, mechanismIds: number[])
   }
 }
 
+// Role : Remplacer les mecanismes d'un jeu.
+// Preconditions : client est connecte et gameId est valide.
+// Postconditions : Les liaisons game_mechanism sont remplacees.
 async function replaceMechanisms(client: PoolClient, gameId: number, mechanismIds: number[]) {
   await client.query('DELETE FROM game_mechanism WHERE game_id = $1', [gameId])
   if (mechanismIds.length === 0) return
@@ -227,6 +261,9 @@ async function replaceMechanisms(client: PoolClient, gameId: number, mechanismId
   )
 }
 
+// Role : Lister les jeux avec filtres.
+// Preconditions : La base est accessible.
+// Postconditions : Retourne la liste des jeux ou une erreur.
 router.get('/', async (req, res) => {
   try {
     const { where, params } = buildFilters(req.query)
@@ -239,6 +276,9 @@ router.get('/', async (req, res) => {
   }
 })
 
+// Role : Recuperer les mecanismes d'un jeu.
+// Preconditions : id est valide.
+// Postconditions : Retourne les mecanismes ou une erreur.
 router.get('/:id/mechanisms', async (req, res) => {
   const gameId = Number(req.params.id)
   if (!Number.isFinite(gameId)) {
@@ -256,6 +296,9 @@ router.get('/:id/mechanisms', async (req, res) => {
   }
 })
 
+// Role : Recuperer un jeu par ID.
+// Preconditions : id est valide.
+// Postconditions : Retourne le jeu ou une erreur.
 router.get('/:id', async (req, res) => {
   const gameId = Number(req.params.id)
   if (!Number.isFinite(gameId)) {
@@ -273,6 +316,9 @@ router.get('/:id', async (req, res) => {
   }
 })
 
+// Role : Creer un jeu.
+// Preconditions : Le payload est valide.
+// Postconditions : Retourne le jeu cree ou une erreur.
 router.post('/', async (req, res) => {
   const { data, errors } = parseGameBody(req.body, true)
   if (errors.length > 0) {
@@ -339,6 +385,9 @@ router.post('/', async (req, res) => {
   }
 })
 
+// Role : Mettre a jour un jeu.
+// Preconditions : id est valide et le payload est coherent.
+// Postconditions : Retourne le jeu mis a jour ou une erreur.
 async function updateGame(req: any, res: any) {
   const gameId = Number(req.params.id)
   if (!Number.isFinite(gameId)) {
@@ -465,9 +514,19 @@ async function updateGame(req: any, res: any) {
   }
 }
 
+// Role : Mettre a jour un jeu (PUT).
+// Preconditions : id est valide.
+// Postconditions : Delegue a updateGame.
 router.put('/:id', updateGame)
+
+// Role : Mettre a jour un jeu (PATCH).
+// Preconditions : id est valide.
+// Postconditions : Delegue a updateGame.
 router.patch('/:id', updateGame)
 
+// Role : Supprimer un jeu.
+// Preconditions : id est valide.
+// Postconditions : Retourne un message de suppression ou une erreur.
 router.delete('/:id', async (req, res) => {
   const gameId = Number(req.params.id)
   if (!Number.isFinite(gameId)) {

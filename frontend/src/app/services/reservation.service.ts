@@ -33,32 +33,42 @@ export interface StockResponse {
 export class ReservationService {
 
   http = inject(HttpClient);
-  
-  //Lister les réservants d'un festival
+
+  // Role : Lister les reservants d'un festival.
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne un Observable des reservants.
   getReservantsByFestival(festivalId: number): Observable<ReservantDto[]> {
     return this.http.get<ReservantDto[]>(`${environment.apiUrl}/reservation/${festivalId}`,
-       { withCredentials: true });
+      { withCredentials: true });
   }
 
-  //Lister les réservations complètes d'un festival  
+  // Role : Lister les reservations completes d'un festival.
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne un Observable des reservations detaillees.
   getReservationsByFestival(festivalId: number): Observable<ReservationDetailDto[]> {
     return this.http.get<ReservationDetailDto[]>(`${environment.apiUrl}/reservation/reservations/${festivalId}`,
-       { withCredentials: true });
+      { withCredentials: true });
   }
 
-  //Créer une nouvelle réservation
-  createReservation(reservation: any): Observable<{message: string, reservation: any}> {
-    return this.http.post<{message: string, reservation: any}>(`${environment.apiUrl}/reservation/reservation`, 
+  // Role : Creer une nouvelle reservation.
+  // Preconditions : L'objet reservation contient les champs requis.
+  // Postconditions : Retourne un Observable avec la reservation creee.
+  createReservation(reservation: any): Observable<{ message: string, reservation: any }> {
+    return this.http.post<{ message: string, reservation: any }>(`${environment.apiUrl}/reservation/reservation`,
       reservation, { withCredentials: true });
   }
 
-  //Récupérer le stock disponible par zone tarifaire pour un festival
+  // Role : Recuperer le stock disponible par zone tarifaire pour un festival.
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne un Observable du stock par zone et chaises.
   getStockByFestival(festivalId: number): Observable<StockResponse> {
     return this.http.get<StockResponse>(`${environment.apiUrl}/reservation/stock/${festivalId}`,
-       { withCredentials: true });
+      { withCredentials: true });
   }
 
-  //Mettre à jour une réservation
+  // Role : Mettre a jour une reservation.
+  // Preconditions : reservationId est valide et data contient les champs a modifier.
+  // Postconditions : Retourne un Observable de la reservation mise a jour.
   updateReservation(reservationId: number, data: {
     start_price?: number;
     nb_prises?: number;
@@ -67,15 +77,17 @@ export class ReservationService {
     direct_discount?: number;
     note?: string;
     zones_tarifaires?: { zone_tarifaire_id: number; nb_tables_reservees: number; nb_chaises_reservees: number }[];
-  }): Observable<{message: string, reservation: ReservationDto}> {
-    return this.http.put<{message: string, reservation: ReservationDto}>(
+  }): Observable<{ message: string, reservation: ReservationDto }> {
+    return this.http.put<{ message: string, reservation: ReservationDto }>(
       `${environment.apiUrl}/reservation/reservation/${reservationId}`,
       data,
       { withCredentials: true }
     );
   }
 
-  //Récupérer une réservation par son ID avec ses zones tarifaires
+  // Role : Recuperer une reservation par son ID avec ses zones tarifaires.
+  // Preconditions : reservationId est valide.
+  // Postconditions : Retourne un Observable de la reservation detaillee.
   getReservationById(reservationId: number): Observable<ReservationWithZones> {
     return this.http.get<ReservationWithZones>(
       `${environment.apiUrl}/reservation/detail/${reservationId}`,

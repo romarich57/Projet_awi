@@ -1,3 +1,4 @@
+// Type : Decrit la structure d'un festival.
 export interface FestivalDto {
     id: number;
     name: string;

@@ -1,9 +1,12 @@
+// Role : Gérer les routes des zones de plan.
 import { Router } from 'express'
 import pool from '../db/database.js'
 
 const router = Router();
 
-// Récupérer les allocations simples d'une réservation (tables sans jeux)
+// Role : Recuperer les allocations simples d'une reservation.
+// Preconditions : reservation_id est valide.
+// Postconditions : Retourne les allocations ou une erreur.
 router.get('/reservation/:reservation_id/allocations', async (req, res) => {
     const reservationId = Number(req.params.reservation_id);
     if (!Number.isFinite(reservationId)) {
@@ -25,7 +28,9 @@ router.get('/reservation/:reservation_id/allocations', async (req, res) => {
     }
 });
 
-// Créer ou mettre à jour une allocation simple (tables sans jeux)
+// Role : Creer ou mettre a jour une allocation simple.
+// Preconditions : reservation_id et zone_plan_id sont valides.
+// Postconditions : Retourne l'allocation ou une erreur.
 router.put('/reservation/:reservation_id/allocations/:zone_plan_id', async (req, res) => {
     const reservationId = Number(req.params.reservation_id);
     const zonePlanId = Number(req.params.zone_plan_id);
@@ -109,7 +114,9 @@ router.put('/reservation/:reservation_id/allocations/:zone_plan_id', async (req,
     }
 });
 
-// Supprimer une allocation simple (tables sans jeux)
+// Role : Supprimer une allocation simple.
+// Preconditions : reservation_id et zone_plan_id sont valides.
+// Postconditions : Retourne un message de suppression ou une erreur.
 router.delete('/reservation/:reservation_id/allocations/:zone_plan_id', async (req, res) => {
     const reservationId = Number(req.params.reservation_id);
     const zonePlanId = Number(req.params.zone_plan_id);
@@ -134,7 +141,9 @@ router.delete('/reservation/:reservation_id/allocations/:zone_plan_id', async (r
     }
 });
 
-// Récupérer le total des allocations simples par zone de plan pour un festival
+// Role : Recuperer le total des allocations simples par zone pour un festival.
+// Preconditions : festival_id est valide.
+// Postconditions : Retourne les totaux ou une erreur.
 router.get('/festival/:festival_id/allocations-simple', async (req, res) => {
     const festivalId = Number(req.params.festival_id);
     if (!Number.isFinite(festivalId)) {
@@ -160,7 +169,9 @@ router.get('/festival/:festival_id/allocations-simple', async (req, res) => {
     }
 });
 
-// Récupérer le total des allocations (simples + jeux) par zone de plan pour un festival
+// Role : Recuperer le total des allocations globales par zone pour un festival.
+// Preconditions : festival_id est valide.
+// Postconditions : Retourne les totaux globaux ou une erreur.
 router.get('/festival/:festival_id/allocations-global', async (req, res) => {
     const festivalId = Number(req.params.festival_id);
     if (!Number.isFinite(festivalId)) {
@@ -195,7 +206,9 @@ router.get('/festival/:festival_id/allocations-global', async (req, res) => {
     }
 });
 
-// Récupérer les allocations simples d'une zone de plan (toutes réservations)
+// Role : Recuperer les allocations simples d'une zone de plan.
+// Preconditions : zone_plan_id est valide.
+// Postconditions : Retourne les allocations ou une erreur.
 router.get('/:zone_plan_id/allocations-simples', async (req, res) => {
     const zonePlanId = Number(req.params.zone_plan_id);
     if (!Number.isFinite(zonePlanId)) {
@@ -223,7 +236,9 @@ router.get('/:zone_plan_id/allocations-simples', async (req, res) => {
     }
 });
 
-// Récupérer toutes les zones de plan d'un festival
+// Role : Recuperer toutes les zones de plan d'un festival.
+// Preconditions : festival_id est valide.
+// Postconditions : Retourne la liste des zones ou une erreur.
 router.get('/:festival_id', async (req, res) => {
     const { festival_id } = req.params;
     try {
@@ -244,7 +259,9 @@ router.get('/:festival_id', async (req, res) => {
 });
 
 
-// Création d'une nouvelle zone de plan
+// Role : Creer une nouvelle zone de plan.
+// Preconditions : Les champs requis sont fournis.
+// Postconditions : Retourne la zone creee ou une erreur.
 router.post('/', async (req, res) => {
     const { name, festival_id, id_zone_tarifaire, nb_tables } = req.body;
     
@@ -321,7 +338,9 @@ router.post('/', async (req, res) => {
 
 
 
-// Suppression d'une zone de plan par ID
+// Role : Supprimer une zone de plan par ID.
+// Preconditions : id est valide.
+// Postconditions : Retourne un message de suppression ou une erreur.
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     
@@ -372,7 +391,9 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// Récupérer les jeux alloués d'une zone de plan
+// Role : Recuperer les jeux alloues d'une zone de plan.
+// Preconditions : id est valide.
+// Postconditions : Retourne les jeux alloues ou une erreur.
 router.get('/:id/jeux-alloues', async (req, res) => {
     const { id } = req.params;
     
@@ -432,7 +453,9 @@ router.get('/:id/jeux-alloues', async (req, res) => {
     }
 });
 
-// Récupérer les jeux NON alloués à aucune zone pour un festival donné
+// Role : Recuperer les jeux non alloues pour un festival.
+// Preconditions : festival_id est valide, reservationId optionnel.
+// Postconditions : Retourne les jeux non alloues ou une erreur.
 router.get('/festival/:festival_id/jeux-non-alloues', async (req, res) => {
     const { festival_id } = req.params;
     const reservationId = req.query.reservationId ? Number(req.query.reservationId) : null;
@@ -510,7 +533,9 @@ router.get('/festival/:festival_id/jeux-non-alloues', async (req, res) => {
     }
 });
 
-//mettre à jour une zone de plan
+// Role : Mettre a jour une zone de plan.
+// Preconditions : id est valide et champs requis fournis.
+// Postconditions : Retourne un message de mise a jour ou une erreur.
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { name, id_zone_tarifaire, nb_tables } = req.body;

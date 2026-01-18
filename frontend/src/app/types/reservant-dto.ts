@@ -1,3 +1,4 @@
+// Type : Decrit les etats de workflow d'un reservant.
 export type ReservantWorkflowState =
     | 'Pas_de_contact'
     | 'Contact_pris'
@@ -8,6 +9,7 @@ export type ReservantWorkflowState =
     | 'Facture'
     | 'Facture_payee';
 
+// Type : Decrit un reservant et ses informations associees.
 export interface ReservantDto {
     id: number;
     name: string;

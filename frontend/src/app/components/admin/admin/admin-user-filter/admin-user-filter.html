@@ -8,6 +8,7 @@
         <span>Role</span>
         <select [value]="roleFilter()" (change)="updateRoleFilter($event)">
             <option value="all">Tous les roles</option>
+            <!-- Boucle d affichage principale -->
             @for (role of roleOptions; track role) {
             <option [value]="role">{{ roleLabels[role] }}</option>
             }

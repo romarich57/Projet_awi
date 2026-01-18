@@ -1,3 +1,4 @@
+// Type : Decrit une zone de plan.
 export interface ZonePlanDto {
     id: number;
     name: string;

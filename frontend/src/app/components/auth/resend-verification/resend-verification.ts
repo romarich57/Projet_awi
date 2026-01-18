@@ -21,6 +21,9 @@ import { AuthService } from '@services/auth.service';
   templateUrl: './resend-verification.html',
   styleUrl: './resend-verification.scss',
 })
+// Role : Renvoyer l'email de verification.
+// Préconditions : L'utilisateur fournit une adresse email valide.
+// Postconditions : La demande est envoyee et l'etat UI est mis a jour.
 export class ResendVerificationComponent {
   private readonly auth = inject(AuthService);
   private readonly fb = inject(NonNullableFormBuilder);
@@ -34,6 +37,9 @@ export class ResendVerificationComponent {
   readonly status = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly message = signal<string | null>(null);
 
+  // Role : Soumettre la demande de renvoi d'email.
+  // Préconditions : Le formulaire est valide et aucune requete en cours.
+  // Postconditions : La demande est envoyee via AuthService.
   submit() {
     if (this.form.invalid || this.status() === 'loading') {
       this.form.markAllAsTouched();

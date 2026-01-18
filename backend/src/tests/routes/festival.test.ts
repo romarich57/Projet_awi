@@ -1,3 +1,4 @@
+// Role : Tester les routes /api/festivals.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import pool from '../../db/database.js'
@@ -7,10 +8,7 @@ import {
     teardownTests
 } from '../test-helpers.js'
 
-/**
- * Festival Routes Tests
- * Tests for /api/festivals CRUD operations
- */
+// Tests des routes /api/festivals (CRUD)
 
 test.before(async () => {
     await setupTests()
@@ -20,9 +18,7 @@ test.after(async () => {
     await teardownTests()
 })
 
-// ============================================
-// GET /api/festivals Tests (3 tests)
-// ============================================
+
 
 test('GET / - should return all festivals (200)', async () => {
     await createTestFestival({ name: 'Festival 1' })
@@ -55,9 +51,7 @@ test('GET / - should return correct festival fields', async () => {
     assert.ok(rows[0].stock_tables_standard !== undefined)
 })
 
-// ============================================
-// GET /api/festivals/:id Tests (3 tests)
-// ============================================
+
 
 test('GET /:id - should return specific festival (200)', async () => {
     const festival = await createTestFestival({ name: 'Specific Festival' })
@@ -83,9 +77,7 @@ test('GET /:id - should validate id parameter', async () => {
     assert.ok(rows[0].id)
 })
 
-// ============================================
-// POST /api/festivals Tests (4 tests)
-// ============================================
+
 
 test('POST / - should create festival with valid data (201)', async () => {
     const newFestival = {
@@ -111,7 +103,7 @@ test('POST / - should create festival with valid data (201)', async () => {
 })
 
 test('POST / - should reject missing required fields (400)', async () => {
-    // Test validation - start_date missing
+    // Test de validation - start_date manquant
     try {
         await pool.query(
             `INSERT INTO festival (name, end_date, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises)
@@ -150,7 +142,7 @@ test('POST / - should return created festival with id', async () => {
 })
 
 // ============================================
-// PUT /api/festivals/:id Tests (3 tests)
+// Tests PUT /api/festivals/:id (3 tests)
 // ============================================
 
 test('PUT /:id - should update festival (200)', async () => {
@@ -188,7 +180,7 @@ test('PUT /:id - should validate updated data', async () => {
 })
 
 // ============================================
-// DELETE /api/festivals/:id Tests (2 tests)
+// Tests DELETE /api/festivals/:id (2 tests)
 // ============================================
 
 test('DELETE /:id - should delete festival (200)', async () => {

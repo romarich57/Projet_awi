@@ -11,6 +11,9 @@ export class EditorApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/editors`;
 
+  // Role : Recuperer la liste des editeurs.
+  // Preconditions : Aucune.
+  // Postconditions : Retourne un Observable des editeurs.
   list(): Observable<EditorDto[]> {
     return this.http.get<EditorDto[]>(this.baseUrl);
   }

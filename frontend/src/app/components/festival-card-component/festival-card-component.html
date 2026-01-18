@@ -6,6 +6,7 @@
     <div class="card-content">
         <div class="stat-row">
             <span>Tables:</span>
+            <!-- Total des tables (toutes tailles) -->
             <strong>{{ festival().stock_tables_standard + festival().stock_tables_grande +
                 festival().stock_tables_mairie }}</strong>
         </div>
@@ -20,7 +21,7 @@
             <span>Du {{ festival().start_date | date: 'dd MMM yyyy' }}</span>
             <span>Au {{ festival().end_date | date: 'dd MMM yyyy' }}</span>
         </div>
-        <!-- Placeholder for future status badge or icon -->
+        <!-- Emplacement reserve pour un badge de statut ou une icone -->
         <span class="arrow-icon">➝</span>
     </div>
 </div>

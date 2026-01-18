@@ -1,4 +1,5 @@
 <section class="card form-card">
+  <!-- Bloc conditionnel principal -->
   @if (error()) {
     <p class="error">{{ error() }}</p>
   }
@@ -165,6 +166,11 @@
         [ngModel]="localFormData().rules_video_url"
         (ngModelChange)="updateForm({ rules_video_url: $event })" />
     </label>
+    <!-- Aperçu vidéo lié au champ rules_video_url -->
+    <app-game-video-preview
+      class="full"
+      [videoUrl]="localFormData().rules_video_url">
+    </app-game-video-preview>
     <label class="full">
       <span>Mécanismes</span>
       <ng-content select="app-game-mechanisms-select"></ng-content>

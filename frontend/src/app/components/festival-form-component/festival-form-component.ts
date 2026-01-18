@@ -11,6 +11,9 @@ import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
   templateUrl: './festival-form-component.html',
   styleUrl: './festival-form-component.scss',
 })
+// Role : Gerer le formulaire de creation de festival et de zones tarifaires associees.
+// Préconditions : Les services sont injectes et le formulaire est initialise.
+// Postconditions : Les donnees valides sont transmises et le formulaire est reinitialise.
 export class FestivalFormComponent {
 
   private readonly festivalService = inject(FestivalService);
@@ -60,6 +63,9 @@ export class FestivalFormComponent {
   }
 
   // Créer un FormGroup pour une zone tarifaire
+  // Role : Construire un groupe de controles pour une zone tarifaire.
+  // Préconditions : Aucune.
+  // Postconditions : Retourne un FormGroup valide avec les controles necessaires.
   private createZoneFormGroup(): FormGroup {
     return new FormGroup({
       name: new FormControl('', [Validators.required]),
@@ -69,24 +75,42 @@ export class FestivalFormComponent {
   }
 
   // Ajouter une nouvelle zone tarifaire
+  // Role : Ajouter une zone tarifaire au formulaire.
+  // Préconditions : `zonesFormArray` est disponible.
+  // Postconditions : Un nouveau groupe de controles est ajoute au FormArray.
   addZone(): void {
     this.zonesFormArray.push(this.createZoneFormGroup());
   }
 
   // Supprimer une zone tarifaire
+  // Role : Supprimer une zone tarifaire par index.
+  // Préconditions : L'index est dans les limites du FormArray.
+  // Postconditions : La zone est retiree si au moins une zone reste.
   removeZone(index: number): void {
     if (this.zonesFormArray.length > 1) {
       this.zonesFormArray.removeAt(index);
     }
   }
 
+  // Role : Soumettre le formulaire et creer le festival puis ses zones.
+  // Préconditions : Le formulaire est valide; le service FestivalService est disponible.
+  // Postconditions : Le festival est cree, les zones sont creees, et le formulaire est reinitialise.
   submit(): void {
     if (this.festivalForm.valid) {
       const formValue = this.festivalForm.value as any;
+      const festivalName = String(formValue.name || '').trim();
+      const normalizedName = festivalName.toLowerCase();
+      const nameExists = this.festivalService
+        .festivals()
+        .some((festival) => festival.name.trim().toLowerCase() === normalizedName);
+      if (festivalName && nameExists) {
+        alert('Un festival avec ce nom existe deja.');
+        return;
+      }
       
       // Créer le festival avec les bonnes conversions
       const festival: Partial<FestivalDto> = {
-        name: formValue.name || '',
+        name: festivalName,
         stock_tables_standard: Number(formValue.stock_tables_standard) || 0,
         stock_tables_grande: Number(formValue.stock_tables_grande) || 0,
         stock_tables_mairie: Number(formValue.stock_tables_mairie) || 0,
@@ -134,6 +158,10 @@ export class FestivalFormComponent {
           this.zonesFormArray.at(0).reset();
         },
         error: (err) => {
+          if (err?.status === 409) {
+            alert('Un festival avec ce nom existe deja.');
+            return;
+          }
           console.error('Erreur lors de la création du festival:', err);
           alert('Erreur lors de la création du festival. Veuillez réessayer.');
         }

@@ -97,6 +97,10 @@ describe('GamesResultsListComponent', () => {
     });
 
     describe('Outputs', () => {
+        it('should have view output defined', () => {
+            expect(component.view).toBeDefined();
+        });
+
         it('should have edit output defined', () => {
             expect(component.edit).toBeDefined();
         });
@@ -110,6 +114,15 @@ describe('GamesResultsListComponent', () => {
             const game = mockGames[0];
 
             component.edit.emit(game);
+
+            expect(spy).toHaveBeenCalledWith(game);
+        });
+
+        it('should emit view event when triggered', () => {
+            const spy = spyOn(component.view, 'emit');
+            const game = mockGames[0];
+
+            component.view.emit(game);
 
             expect(spy).toHaveBeenCalledWith(game);
         });

@@ -13,6 +13,9 @@ import { AuthService } from '@app/services/auth.service';
   templateUrl: './reservation-form-component.html',
   styleUrls: ['./reservation-form-component.scss'],
 })
+// Role : Gerer le formulaire de reservation et le choix du reservant (nouveau ou existant).
+// Préconditions : Les services sont injectes; les inputs festivalId/festivalName peuvent etre fournis.
+// Postconditions : Les validations sont appliquees et la reservation est creee si le formulaire est valide.
 export class ReservationFormComponent {
 
   readonly authService = inject(AuthService);
@@ -61,6 +64,9 @@ export class ReservationFormComponent {
     this.setupRepresentedEditorWatchers();
   }
 
+  // Role : Initialiser les watchers de champs qui influencent le formulaire.
+  // Préconditions : Le formulaire est cree.
+  // Postconditions : Les changements de champs declenchent les mises a jour de visibilite/validation.
   private setupRepresentedEditorWatchers(): void {
     this.reservationForm.get('reservant_type')?.valueChanges.subscribe(() => {
       this.handleRepresentedEditorVisibility();
@@ -79,6 +85,9 @@ export class ReservationFormComponent {
 
 
 
+  // Role : Charger la liste des reservants existants depuis l'API.
+  // Préconditions : ReservantApiService est disponible.
+  // Postconditions : `existingReservants` est rempli et le chargement est termine.
   loadExistingReservants(): void {
     this.loadingReservants = true;
     this.reservantService.list().subscribe({
@@ -95,6 +104,9 @@ export class ReservationFormComponent {
     });
   }
 
+  // Role : Gerer le changement de mode (nouveau vs existant).
+  // Préconditions : Le controle `reservant_mode` existe.
+  // Postconditions : Les validateurs sont mis a jour et les champs sont reinitialises.
   onModeChange(): void {
     const mode = this.reservationForm.get('reservant_mode')?.value;
     this.useExistingReservant = mode === 'existing';
@@ -116,6 +128,9 @@ export class ReservationFormComponent {
     this.handleRepresentedEditorVisibility();
   }
 
+  // Role : Mettre a jour les validateurs selon le mode selectionne.
+  // Préconditions : Les controles du formulaire existent.
+  // Postconditions : Les validateurs et leur etat sont rafraichis.
   updateValidators(): void {
     const nameControl = this.reservationForm.get('reservant_name');
     const emailControl = this.reservationForm.get('reservant_email');
@@ -163,23 +178,38 @@ export class ReservationFormComponent {
     return this.reservationForm.get('reservant_type')?.value ?? null;
   }
 
+  // Role : Determiner si la question sur l'editeur represente doit apparaitre.
+  // Préconditions : Le type de reservant est connu (direct ou via selection).
+  // Postconditions : Retourne true si l'UI doit afficher la question.
   shouldShowRepresentedEditorQuestion(): boolean {
     const type = this.selectedReservantType;
     return type === 'animateur' || type === 'prestataire' || type === 'association';
   }
 
+  // Role : Reagir au changement de type de reservant.
+  // Préconditions : Le champ `reservant_type` existe.
+  // Postconditions : La visibilite des champs dependants est recalculée.
   onReservantTypeChange(): void {
     this.handleRepresentedEditorVisibility();
   }
 
+  // Role : Reagir au changement de reservant existant selectionne.
+  // Préconditions : Le champ `existing_reservant_id` existe.
+  // Postconditions : La visibilite des champs dependants est recalculée.
   onExistingReservantChange(): void {
     this.handleRepresentedEditorVisibility();
   }
 
+  // Role : Reagir au choix d'un editeur represente.
+  // Préconditions : Le champ `represent_editor` existe.
+  // Postconditions : Les validateurs du champ `represented_editor_id` sont mis a jour.
   onRepresentEditorChange(): void {
     this.updateRepresentedEditorValidators();
   }
 
+  // Role : Ajuster la visibilite et les valeurs des champs lies a l'editeur represente.
+  // Préconditions : Le formulaire est initialise.
+  // Postconditions : Les champs sont masques ou remis a zero selon les regles metier.
   private handleRepresentedEditorVisibility(): void {
     if (!this.shouldShowRepresentedEditorQuestion()) {
       this.reservationForm.patchValue(
@@ -190,6 +220,9 @@ export class ReservationFormComponent {
     this.updateRepresentedEditorValidators();
   }
 
+  // Role : Appliquer les validateurs sur l'editeur represente si necessaire.
+  // Préconditions : Le formulaire est initialise.
+  // Postconditions : Le controle `represented_editor_id` est valide ou requis selon le contexte.
   private updateRepresentedEditorValidators(): void {
     const representedEditorControl = this.reservationForm.get('represented_editor_id');
     const shouldShow = this.shouldShowRepresentedEditorQuestion();
@@ -205,10 +238,16 @@ export class ReservationFormComponent {
 
 
 
+  // Role : Fermer le formulaire sans soumission.
+  // Préconditions : Le parent ecoute l'evenement `closeForm`.
+  // Postconditions : L'evenement de fermeture est emis.
   cancel(): void {
     this.closeForm.emit();
   }
 
+  // Role : Soumettre le formulaire et creer une reservation.
+  // Préconditions : Le formulaire est valide et `festivalId` est defini.
+  // Postconditions : Une reservation est creee et les evenements sont emis en cas de succes.
   onSubmit(): void {
     if (this.reservationForm.valid && !this.isSubmitting) {
       this.isSubmitting = true;

@@ -19,13 +19,12 @@ export class UploadService {
     readonly isUploading = signal(false);
     readonly uploadError = signal<string | null>(null);
 
-    // Cache-busting timestamp to force browser to reload avatars
+    // Horodatage pour forcer le rechargement navigateur des avatars
     readonly avatarCacheBuster = signal(Date.now());
 
-    /**
-     * Upload un fichier avatar et retourne l'URL du fichier uploadé.
-     * Respecte Cours.md : HTTP encapsulé dans un service, pas dans un composant.
-     */
+    // Role : Uploader un avatar et retourner l'URL du fichier.
+    // Preconditions : Le fichier est fourni et le service HTTP est disponible.
+    // Postconditions : Met a jour uploadError et avatarCacheBuster selon le resultat.
     uploadAvatar(file: File): Observable<string | null> {
         this.isUploading.set(true);
         this.uploadError.set(null);
@@ -41,7 +40,7 @@ export class UploadService {
                 map((response) => response.url),
                 tap(() => {
                     this.uploadError.set(null);
-                    // Update cache buster to force reload of all avatars
+                    // Met a jour le cache buster pour recharger tous les avatars
                     this.avatarCacheBuster.set(Date.now());
                 }),
                 catchError((err) => {
@@ -53,9 +52,9 @@ export class UploadService {
             );
     }
 
-    /**
-     * Upload une image de jeu et retourne l'URL du fichier uploadé.
-     */
+    // Role : Uploader une image de jeu et retourner l'URL du fichier.
+    // Preconditions : Le fichier est fourni et le service HTTP est disponible.
+    // Postconditions : Met a jour uploadError selon le resultat.
     uploadGameImage(file: File): Observable<string | null> {
         this.isUploading.set(true);
         this.uploadError.set(null);
@@ -81,27 +80,26 @@ export class UploadService {
             );
     }
 
-    /**
-     * Force le rechargement de tous les avatars en invalidant le cache.
-     */
+    // Role : Forcer le rechargement des avatars en invalidant le cache.
+    // Preconditions : Aucune.
+    // Postconditions : Le cache buster est mis a jour.
     invalidateAvatarCache(): void {
         this.avatarCacheBuster.set(Date.now());
     }
 
-    /**
-     * Construit l'URL complète de l'avatar avec cache-busting.
-     * Si l'avatarUrl est null/undefined, retourne l'avatar par défaut.
-     */
+    // Role : Construire l'URL complete de l'avatar avec cache-busting.
+    // Preconditions : avatarUrl peut etre null/undefined.
+    // Postconditions : Retourne une URL exploitable par l'UI.
     getAvatarUrl(avatarUrl: string | null | undefined): string {
         if (!avatarUrl) {
             return DEFAULT_AVATAR_URL;
         }
         const cacheBuster = `?t=${this.avatarCacheBuster()}`;
-        // Si c'est un chemin relatif commençant par /uploads
+        // Si c'est un chemin relatif commencant par /uploads
         if (avatarUrl.startsWith('/uploads')) {
             return `${environment.apiUrl.replace('/api', '')}${avatarUrl}${cacheBuster}`;
         }
-        // Si c'est déjà une URL complète
+        // Si c'est deja une URL complete
         return `${avatarUrl}${cacheBuster}`;
     }
 }

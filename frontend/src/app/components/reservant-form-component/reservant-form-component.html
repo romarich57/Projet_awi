@@ -13,6 +13,7 @@
     </div>
   </header>
 
+  <!-- Bloc conditionnel principal -->
   @if (reservant() || !isEditContext) {
     <form class="form-card" [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="grid">

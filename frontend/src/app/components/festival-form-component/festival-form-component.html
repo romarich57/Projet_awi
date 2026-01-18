@@ -8,6 +8,7 @@
       <div class="field">
         <label for="name">Nom du festival</label>
         <input id="name" formControlName="name" />
+        <!-- Bloc conditionnel principal -->
         @if (festivalForm.controls['name'].errors?.['required']){
           <small>Le nom est requis.</small>
         }

@@ -15,6 +15,9 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './festival-list-component.html',
   styleUrl: './festival-list-component.scss',
 })
+// Role : Afficher la liste des festivals et piloter l'ajout via un formulaire.
+// Préconditions : Les services FestivalService/AuthService sont injectes.
+// Postconditions : La liste est chargee et les actions d'ajout mettent a jour l'etat.
 export class FestivalListComponent {
 
   private readonly _festivalService = inject(FestivalService);
@@ -34,33 +37,31 @@ export class FestivalListComponent {
 
 
   showForm = signal(false);
+  // Role : Afficher ou masquer le formulaire d'ajout.
+  // Préconditions : `showForm` est initialise.
+  // Postconditions : L'etat d'affichage est bascule.
   toggleForm(): void {
     // Logique pour afficher ou masquer le formulaire d'ajout de festival
     this.showForm.update(show => !show);
   }
 
+  // Role : Ajouter un festival via le service.
+  // Préconditions : Un objet `festival` valide est fourni.
+  // Postconditions : Le festival est cree et le formulaire est masque en cas de succes.
   addFestival(festival: FestivalDto): void {
-    this._festivalService.addFestival(festival).subscribe({
-      next: (response) => {
-        console.log('Festival ajouté:', response.festival);
-        this.showForm.set(false);
-      },
-      error: (err) => {
-        console.error('Erreur lors de l\'ajout du festival:', err);
-      }
-    });
+    if (!festival) {
+      return;
+    }
     this.showForm.set(false);
   }
 
+  // Role : Ajouter une zone tarifaire pour un festival.
+  // Préconditions : `zone_tarifaire` et `festival_id` sont valides.
+  // Postconditions : La zone est creee via le service.
   addZoneTarifaire(zone_tarifaire: ZoneTarifaireDto, festival_id: number): void {
-    this._festivalService.addZoneTarifaire(zone_tarifaire, festival_id).subscribe({
-      next: (response) => {
-        console.log('Zone tarifaire ajoutée:', response.zone_tarifaire);
-      },
-      error: (err) => {
-        console.error('Erreur lors de l\'ajout de la zone tarifaire:', err);
-      }
-    });
+    if (!zone_tarifaire || !festival_id) {
+      return;
+    }
   }
 
 

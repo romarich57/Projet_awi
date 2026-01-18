@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.video-preview {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.frame {
+  border: 1px dashed var(--border);
+  border-radius: 0.85rem;
+  background: #f6f7fb;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+}
+
+.frame iframe,
+.frame video {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.link {
+  color: #0b57d0;
+  text-decoration: underline;
+}

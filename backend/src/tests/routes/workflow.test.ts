@@ -1,3 +1,4 @@
+// Role : Tester les routes /api/workflow.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import pool from '../../db/database.js'
@@ -8,10 +9,7 @@ import {
     teardownTests
 } from '../test-helpers.js'
 
-/**
- * Workflow Routes Tests
- * Tests for /api/workflow operations
- */
+// Tests des routes /api/workflow
 
 test.before(async () => {
     await setupTests()
@@ -22,14 +20,14 @@ test.after(async () => {
 })
 
 // ============================================
-// GET /api/workflow/:festivalId Tests (2 tests)
+// Tests GET /api/workflow/:festivalId (2 tests)
 // ============================================
 
 test('GET /:festivalId - should return all reservants for a festival', async () => {
     const festival = await createTestFestival()
     const reservant = await createTestReservant()
 
-    // Create workflow entry
+    // Creer une entree de workflow
     await pool.query(
         `INSERT INTO suivi_workflow (reservant_id, festival_id, state) VALUES ($1, $2, $3)`,
         [reservant.id, festival.id, 'Pas_de_contact']
@@ -66,7 +64,7 @@ test('GET /:festivalId - should filter by festival_id if provided', async () => 
 })
 
 // ============================================
-// GET /api/workflow/reservations/:festivalId (2 tests)
+// Tests GET /api/workflow/reservations/:festivalId (2 tests)
 // ============================================
 
 test('GET /reservations/:festivalId - should return all reservations for a festival', async () => {
@@ -120,7 +118,7 @@ test('GET /reservations/:festivalId - should include complete reservation detail
 })
 
 // ============================================
-// POST /api/workflow/reservation Tests (8 tests)
+// Tests POST /api/workflow/reservation (8 tests)
 // ============================================
 
 test('POST /reservation - should create complete reservation with all data', async () => {
@@ -138,7 +136,7 @@ test('POST /reservation - should create complete reservation with all data', asy
         direct_discount: 0
     }
 
-    // Simulate POST request logic
+    // Simuler la logique de requete POST
     const { rows: reservantRows } = await pool.query(
         `INSERT INTO reservant (name, email, type) VALUES ($1, $2, $3) RETURNING id`,
         [reservationData.reservant_name, reservationData.reservant_email, reservationData.reservant_type]
@@ -204,26 +202,26 @@ test('POST /reservation - should create workflow entry', async () => {
 })
 
 test('POST /reservation - should handle zone tarifaire associations', async () => {
-    // This test verifies the structure exists
+    // Ce test verifie que la structure existe
     const { rows } = await pool.query(
         `SELECT table_name FROM information_schema.tables 
      WHERE table_name = 'reservation_zones_tarifaires'`
     )
 
-    assert.ok(rows.length > 0 || true) // Table may or may not exist
+    assert.ok(rows.length > 0 || true) // La table peut exister ou non
 })
 
 test('POST /reservation - should validate required fields are present', async () => {
-    // Missing festival_id should fail
+    // festival_id manquant doit echouer
     try {
         await pool.query(
             `INSERT INTO reservation (reservant_id, workflow_id, start_price, nb_prises, final_price)
        VALUES ($1, $2, $3, $4, $5)`,
             [1, 1, 100, 1, 100]
         )
-        // If no error, that's OK (foreign key may allow)
+        // Si pas d'erreur, OK (la cle etrangere peut autoriser)
     } catch (err: any) {
-        assert.ok(err) // Expected to fail
+        assert.ok(err) // Echec attendu
     }
 })
 
@@ -231,7 +229,7 @@ test('POST /reservation - should use transaction for atomicity', async () => {
     const client = await pool.connect()
     try {
         await client.query('BEGIN')
-        // Simulate transaction
+        // Simuler une transaction
         await client.query('SELECT 1')
         await client.query('COMMIT')
         assert.ok(true)
@@ -245,13 +243,13 @@ test('POST /reservation - should rollback on error', async () => {
     try {
         await client.query('BEGIN')
         try {
-            // Force an error
+            // Forcer une erreur
             await client.query('SELECT * FROM nonexistent_table')
             await client.query('COMMIT')
         } catch {
             await client.query('ROLLBACK')
         }
-        assert.ok(true) // Test passed if no exception
+        assert.ok(true) // Test reussi si pas d'exception
     } finally {
         client.release()
     }

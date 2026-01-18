@@ -1,0 +1,76 @@
+<section class="game-detail card">
+  <header class="detail-header">
+    <button type="button" class="ghost" (click)="goBack()">Retour</button>
+    <div class="header-text">
+      <p class="eyebrow">Catalogue maître</p>
+      <h1>{{ title() || 'Jeu' }}</h1>
+      <p class="muted">Consultation uniquement.</p>
+    </div>
+  </header>
+
+  <!-- Bloc conditionnel principal -->
+  @if (loading()) {
+    <p class="muted">Chargement...</p>
+  }
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+  @if (!loading() && !error() && game(); as data) {
+    <div class="preview-row">
+      <app-game-image-preview [imageUrl]="data.image_url ?? ''">
+        <span>{{ data.title.charAt(0) || '?' }}</span>
+      </app-game-image-preview>
+      <div class="preview-meta">
+        <div class="title">{{ data.title }}</div>
+        <div class="subtitle">
+          <span class="pill">{{ data.type }}</span>
+          <span class="pill">{{ editorLabel() }}</span>
+          @if (data.prototype) { <span class="pill warn">Prototype</span> }
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="meta-item">
+        <span class="label">Âge minimum</span>
+        <span class="value">{{ ageLabel() }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="label">Joueurs</span>
+        <span class="value">{{ playersLabel() }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="label">Durée</span>
+        <span class="value">{{ durationLabel() }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="label">Auteurs</span>
+        <span class="value">{{ data.authors || '—' }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="label">Thème</span>
+        <span class="value">{{ data.theme || '—' }}</span>
+      </div>
+      <div class="meta-item full">
+        <span class="label">Description</span>
+        <span class="value">{{ data.description || '—' }}</span>
+      </div>
+      <div class="meta-item full">
+        <span class="label">Mécanismes</span>
+        @if (hasMechanisms()) {
+          <div class="chips">
+            @for (m of mechanisms(); track m.id) {
+              <span class="chip">{{ m.name }}</span>
+            }
+          </div>
+        } @else {
+          <span class="muted">—</span>
+        }
+      </div>
+      <div class="meta-item full">
+        <span class="label">Vidéo des règles</span>
+        <app-game-video-preview [videoUrl]="data.rules_video_url ?? ''"></app-game-video-preview>
+      </div>
+    </div>
+  }
+</section>

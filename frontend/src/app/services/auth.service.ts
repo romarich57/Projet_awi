@@ -39,6 +39,9 @@ export class AuthService {
   readonly isSuperOrganizer = computed(() => this.currentUser()?.role === 'super-organizer' || this.isAdmin());
 
   // --- Connexion ---
+  // Role : Connecter un utilisateur avec identifiant et mot de passe.
+  // Preconditions : identifier et password sont fournis.
+  // Postconditions : Met a jour currentUser, error et isLoading.
   login(identifier: string, password: string) {
     this._isLoading.set(true);
     this._error.set(null);
@@ -53,14 +56,12 @@ export class AuthService {
         tap((res) => {
           if (res?.user) {
             this._currentUser.set(res.user);
-            console.log(`👍 Utilisateur connecté : ${JSON.stringify(res.user)}`); // DEBUG
           } else {
             this._error.set('Identifiants invalides');
             this._currentUser.set(null);
           }
         }),
         catchError((err: HttpErrorResponse) => {
-          console.error('👎 Erreur HTTP', err);
           this._error.set(this.getServerErrorMessage(err));
           this._currentUser.set(null);
           return of(null);
@@ -71,6 +72,9 @@ export class AuthService {
   }
 
   // --- Déconnexion ---
+  // Role : Deconnecter l'utilisateur courant.
+  // Preconditions : Aucune.
+  // Postconditions : Efface currentUser et redirige vers /login.
   logout() {
     this._isLoading.set(true);
     this._error.set(null);
@@ -94,10 +98,16 @@ export class AuthService {
   }
 
   // --- Vérifie la session actuelle (cookie httpOnly) ---
+  // Role : Declencher une verification de session.
+  // Preconditions : Aucune.
+  // Postconditions : Lance checkSession$ et met a jour l'etat.
   whoami() {
     this.checkSession$().subscribe();
   }
 
+  // Role : Verifier la session en cours via l'API.
+  // Preconditions : Aucune.
+  // Postconditions : Retourne un Observable de l'utilisateur courant ou null.
   checkSession$() {
     return this.http
       .get<AuthLoginResponse>(`${environment.apiUrl}/auth/whoami`, {
@@ -128,6 +138,9 @@ export class AuthService {
   }
 
   // --- Rafraîchissement pour l'interceptor ---
+  // Role : Rafraichir les tokens pour l'interceptor.
+  // Preconditions : Aucune.
+  // Postconditions : Retourne un Observable qui emet null en cas d'erreur.
   refresh$() {
     // observable qui émet null en cas d'erreur
     return this.http
@@ -135,6 +148,9 @@ export class AuthService {
       .pipe(catchError(() => of(null)));
   }
 
+  // Role : Enregistrer un nouvel utilisateur.
+  // Preconditions : payload est valide.
+  // Postconditions : Retourne un Observable avec le message de resultat.
   register(payload: RegisterPayload) {
     return this.http
       .post<RegisterResponse>(`${environment.apiUrl}/auth/register`, payload, {
@@ -148,6 +164,9 @@ export class AuthService {
       );
   }
 
+  // Role : Verifier l'email via un token.
+  // Preconditions : token est fourni.
+  // Postconditions : Retourne un Observable de la reponse de verification.
   verifyEmail(token: string) {
     return this.http
       .get<VerifyEmailResponse>(`${environment.apiUrl}/auth/verify-email`, {
@@ -160,6 +179,9 @@ export class AuthService {
       );
   }
 
+  // Role : Renvoyer l'email de verification.
+  // Preconditions : email est valide.
+  // Postconditions : Retourne un Observable avec le message de resultat.
   resendVerificationEmail(email: string) {
     return this.http
       .post<MessageResponse>(
@@ -175,6 +197,9 @@ export class AuthService {
       );
   }
 
+  // Role : Demander une reinitialisation de mot de passe.
+  // Preconditions : email est valide.
+  // Postconditions : Retourne un Observable avec le message de resultat.
   requestPasswordReset(email: string) {
     return this.http
       .post<MessageResponse>(
@@ -190,6 +215,9 @@ export class AuthService {
       );
   }
 
+  // Role : Reinitialiser le mot de passe.
+  // Preconditions : payload est valide.
+  // Postconditions : Retourne un Observable avec le message de resultat.
   resetPassword(payload: ResetPasswordPayload) {
     return this.http
       .post<MessageResponse>(`${environment.apiUrl}/auth/password/reset`, payload, {
@@ -203,6 +231,9 @@ export class AuthService {
       );
   }
 
+  // Role : Normaliser un message d'erreur serveur.
+  // Preconditions : err est un HttpErrorResponse.
+  // Postconditions : Retourne un message exploitable pour l'UI.
   private getServerErrorMessage(err: HttpErrorResponse) {
     if (err.status === 0) {
       return 'Serveur injoignable (vérifiez HTTPS ou CORS)';
@@ -219,6 +250,9 @@ export class AuthService {
     return `Erreur serveur (${err.status})`;
   }
 
+  // Role : Rediriger vers la page de connexion si necessaire.
+  // Preconditions : Aucune.
+  // Postconditions : Navigue vers /login si l'URL courante est differente.
   private redirectToLogin() {
     if (this.router.url !== '/login') {
       this.router.navigate(['/login']);

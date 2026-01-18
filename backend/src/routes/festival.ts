@@ -1,9 +1,18 @@
+// Role : Exposer les routes de gestion des festivals et des allocations.
 import { Router } from 'express'
+import type { Request, Response } from 'express'
 import type { Pool, PoolClient } from 'pg'
 import pool from '../db/database.js'
+import { verifyToken } from '../middleware/token-management.js'
+import { requireRole } from '../middleware/require-role.js'
 
 const router = Router();
+const BACKOFFICE_ROLES = ['admin', 'super-organizer', 'organizer']
+const requireBackoffice = [verifyToken, requireRole(BACKOFFICE_ROLES)]
 
+// Role : Recuperer l'identifiant de reservation pour un festival et un reservant.
+// Preconditions : festivalId et reservantId sont des nombres valides, client est un Pool/PoolClient.
+// Postconditions : Retourne l'id de reservation ou null si introuvable.
 async function findReservationId(
     festivalId: number,
     reservantId: number,
@@ -16,6 +25,9 @@ async function findReservationId(
     return rows.length > 0 ? rows[0].id : null;
 }
 
+// Role : Valider et normaliser le payload d'allocation.
+// Preconditions : body est l'objet recu par la route.
+// Postconditions : Retourne les erreurs et un payload normalise.
 function validateAllocationPayload(body: any): { errors: string[], payload: any } {
     const errors: string[] = [];
     const payload: any = {};
@@ -54,8 +66,10 @@ function validateAllocationPayload(body: any): { errors: string[], payload: any 
     return { errors, payload };
 }
 
-// Liste des festivals
-router.get('/', async (req, res) => {
+// Role : Lister les festivals.
+// Preconditions : Utilisateur authentifie avec un role backoffice.
+// Postconditions : Retourne la liste des festivals.
+router.get('/', requireBackoffice, async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : null;
     let query = 'SELECT id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date FROM festival ORDER BY start_date DESC';
 
@@ -67,8 +81,10 @@ router.get('/', async (req, res) => {
     res.json(rows);
 })
 
-// Détails d'un festival par ID
-router.get('/:id', async (req, res) => {
+// Role : Obtenir les details d'un festival.
+// Preconditions : Utilisateur authentifie avec un role backoffice, id valide.
+// Postconditions : Retourne le festival ou 404.
+router.get('/:id', requireBackoffice, async (req: Request, res: Response) => {
     const { id } = req.params
     const { rows } = await pool.query(
         'SELECT id, name, start_date, end_date, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises FROM festival WHERE id = $1',
@@ -80,8 +96,10 @@ router.get('/:id', async (req, res) => {
     res.json(rows[0]) // Renvoi du festival trouvé
 })
 
-// Stock global des tables du festival avec occupation par type
-router.get('/:id/stock-tables', async (req, res) => {
+// Role : Recuperer le stock des tables par type pour un festival.
+// Preconditions : Utilisateur authentifie avec un role backoffice, id valide.
+// Postconditions : Retourne les stocks et occupations.
+router.get('/:id/stock-tables', requireBackoffice, async (req: Request, res: Response) => {
     const { id } = req.params;
 
     try {
@@ -144,18 +162,38 @@ router.get('/:id/stock-tables', async (req, res) => {
     }
 })
 
-// Création d'un nouveau festival
-router.post('/', async (req, res) => {
+// Role : Creer un festival.
+// Preconditions : Utilisateur authentifie avec un role backoffice, champs requis fournis.
+// Postconditions : Cree le festival ou retourne une erreur.
+router.post('/', requireBackoffice, async (req: Request, res: Response) => {
     const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date } = req.body
     if (!name || !start_date || !end_date) {
         return res.status(400).json({ error: 'Champs obligatoires manquants' })
     }
     try {
         const { rows } = await pool.query(
-            `INSERT INTO festival (name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `INSERT INTO festival (
+                name,
+                stock_tables_standard,
+                stock_tables_grande,
+                stock_tables_mairie,
+                stock_chaises,
+                stock_chaises_available,
+                start_date,
+                end_date
+             )
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              RETURNING id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date`,
-            [name, stock_tables_standard || 0, stock_tables_grande || 0, stock_tables_mairie || 0, stock_chaises || 0, start_date, end_date]
+            [
+              name,
+              stock_tables_standard || 0,
+              stock_tables_grande || 0,
+              stock_tables_mairie || 0,
+              stock_chaises || 0,
+              stock_chaises || 0,
+              start_date,
+              end_date,
+            ]
         )
         res.status(201).json({ message: 'Festival créé', festival: rows[0] })
     } catch (err: any) {
@@ -168,14 +206,23 @@ router.post('/', async (req, res) => {
 })
 
 
-// Mise à jour d'un festival par ID
-router.put('/:id', async (req, res) => {
+// Role : Mettre a jour un festival.
+// Preconditions : Utilisateur authentifie avec un role backoffice, id valide.
+// Postconditions : Met a jour le festival ou retourne une erreur.
+router.put('/:id', requireBackoffice, async (req: Request, res: Response) => {
     const { id } = req.params
     const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date } = req.body
     try {
         const { rowCount } = await pool.query(
             `UPDATE festival
-             SET name = $1, stock_tables_standard = $2, stock_tables_grande = $3, stock_tables_mairie = $4, stock_chaises = $5, start_date = $6, end_date = $7
+             SET name = $1,
+                 stock_tables_standard = $2,
+                 stock_tables_grande = $3,
+                 stock_tables_mairie = $4,
+                 stock_chaises = $5,
+                 stock_chaises_available = GREATEST(0, $5 - (stock_chaises - stock_chaises_available)),
+                 start_date = $6,
+                 end_date = $7
              WHERE id = $8`,
             [name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date, id]
         )
@@ -189,8 +236,10 @@ router.put('/:id', async (req, res) => {
     }
 })
 
-// Jeux alloués à un réservant pour un festival donné
-router.get('/:festivalId/reservants/:reservantId/games', async (req, res) => {
+// Role : Lister les jeux alloues a un reservant pour un festival.
+// Preconditions : Utilisateur authentifie avec un role backoffice, ids valides.
+// Postconditions : Retourne la liste des jeux alloues.
+router.get('/:festivalId/reservants/:reservantId/games', requireBackoffice, async (req: Request, res: Response) => {
     const festivalId = Number(req.params.festivalId);
     const reservantId = Number(req.params.reservantId);
     if (!Number.isFinite(festivalId) || !Number.isFinite(reservantId)) {
@@ -256,8 +305,10 @@ router.get('/:festivalId/reservants/:reservantId/games', async (req, res) => {
     }
 });
 
-// Ajouter un jeu alloué à un réservant pour un festival
-router.post('/:festivalId/reservants/:reservantId/games', async (req, res) => {
+// Role : Ajouter un jeu alloue a un reservant pour un festival.
+// Preconditions : Utilisateur authentifie avec un role backoffice, ids valides, payload valide.
+// Postconditions : Cree l'allocation et retourne le detail.
+router.post('/:festivalId/reservants/:reservantId/games', requireBackoffice, async (req: Request, res: Response) => {
     const festivalId = Number(req.params.festivalId);
     const reservantId = Number(req.params.reservantId);
     if (!Number.isFinite(festivalId) || !Number.isFinite(reservantId)) {
@@ -369,8 +420,10 @@ router.post('/:festivalId/reservants/:reservantId/games', async (req, res) => {
     }
 });
 
-// Suppression d'un festival par ID
-router.delete('/:id', async (req, res) => {
+// Role : Supprimer un festival.
+// Preconditions : Utilisateur authentifie avec un role backoffice, id valide.
+// Postconditions : Supprime le festival ou retourne une erreur.
+router.delete('/:id', requireBackoffice, async (req: Request, res: Response) => {
     const { id } = req.params
     try {
         const { rowCount } = await pool.query('DELETE FROM festival WHERE id = $1', [id])

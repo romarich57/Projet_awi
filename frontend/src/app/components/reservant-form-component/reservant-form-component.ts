@@ -13,6 +13,9 @@ import { CommonModule, Location } from '@angular/common';
   styleUrl: './reservant-form-component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+// Role : Gerer le formulaire de creation/edition d'un reservant.
+// Préconditions : Les services et la route sont disponibles; l'id peut etre present.
+// Postconditions : Le reservant est cree ou mis a jour selon le contexte.
 export class ReservantFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -59,12 +62,18 @@ export class ReservantFormComponent implements OnInit {
     });
   }
 
+  // Role : Charger le reservant a editer si besoin.
+  // Préconditions : `reservantId` est present dans l'URL.
+  // Postconditions : Le store charge le reservant cible.
   ngOnInit(): void {
     if (this.reservantId !== null) {
       this.reservantStore.loadById(this.reservantId);
     }
   }
 
+  // Role : Soumettre le formulaire en creation ou en edition.
+  // Préconditions : Le formulaire est valide.
+  // Postconditions : Le reservant est cree ou mis a jour et la navigation est lancee.
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -112,10 +121,16 @@ export class ReservantFormComponent implements OnInit {
     });
   }
 
+  // Role : Annuler la saisie et revenir a l'ecran precedent.
+  // Préconditions : L'historique de navigation est disponible.
+  // Postconditions : La navigation retour est declenchee.
   cancel(): void {
     this.location.back();
   }
 
+  // Role : Verifier si un controle a une erreur donnee.
+  // Préconditions : Le nom de controle et le code d'erreur sont fournis.
+  // Postconditions : Retourne true si l'erreur doit etre affichee.
   controlError(controlName: keyof typeof this.form.controls, error: string): boolean {
     const control = this.form.get(controlName);
     return !!control && control.touched && control.hasError(error);

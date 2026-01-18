@@ -3,6 +3,9 @@ import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { AuthService } from '@services/auth.service';
 import { catchError, map, of } from 'rxjs';
 
+// Role : Verifier si l'utilisateur est authentifie avant d'acceder a une route.
+// Preconditions : AuthService et Router disponibles.
+// Postconditions : Autorise l'acces si connecte, sinon redirige vers '/login'.
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

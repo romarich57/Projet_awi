@@ -1,3 +1,4 @@
+// Role : Tester le middleware d'authentification.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { verifyToken } from '../../middleware/token-management.js'
@@ -10,12 +11,9 @@ import {
     teardownTests
 } from '../test-helpers.js'
 
-/**
- * Auth Middleware Tests
- * Tests for verifyToken middleware
- */
+// Tests du middleware verifyToken
 
-// Setup and teardown
+// Preparation et nettoyage
 test.before(async () => {
     await setupTests()
 })
@@ -24,9 +22,7 @@ test.after(async () => {
     await teardownTests()
 })
 
-// ============================================
-// Valid Token Tests (2 tests)
-// ============================================
+
 
 test('verifyToken - should allow request with valid access_token cookie', async () => {
     const user = await createTestUser()
@@ -105,9 +101,6 @@ test('verifyToken - should attach user object to req.user', async () => {
     assert.strictEqual(mockReq.user.role, user.role)
 })
 
-// ============================================
-// Invalid Token Tests (7 tests)
-// ============================================
 
 test('verifyToken - should reject request without access_token cookie', async () => {
     const mockReq: any = {

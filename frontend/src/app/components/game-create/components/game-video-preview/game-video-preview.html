@@ -1,0 +1,27 @@
+<section class="video-preview">
+  <p class="muted">Aperçu de la vidéo des règles</p>
+  <!-- Bloc conditionnel principal -->
+  @if (preview(); as state) {
+    @if (state.kind === 'none') {
+      <div class="empty">Aucune vidéo renseignée.</div>
+    } @else if (state.kind === 'embed') {
+      <div class="frame">
+        <iframe
+          [src]="state.safeUrl"
+          title="Aperçu vidéo des règles"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen>
+        </iframe>
+      </div>
+    } @else if (state.kind === 'video') {
+      <div class="frame">
+        <video [src]="state.url" controls>
+          Votre navigateur ne supporte pas la lecture vidéo.
+        </video>
+      </div>
+    } @else {
+      <div class="empty">Aperçu indisponible pour cette URL.</div>
+    }
+  }
+</section>

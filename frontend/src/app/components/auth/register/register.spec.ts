@@ -3,7 +3,6 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { AuthService } from '@services/auth.service';
 import { createAuthServiceMock } from '@testing/mocks/auth-service.mock';
 import { RegisterComponent } from './register';
-import { UploadService } from '../../../services/upload.service';
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent;
@@ -12,10 +11,7 @@ describe('RegisterComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RegisterComponent, RouterTestingModule],
-      providers: [
-        { provide: AuthService, useValue: createAuthServiceMock() },
-        { provide: UploadService, useValue: { isUploading: Object.assign(() => false, { set: () => { } }), uploadError: Object.assign(() => null, { set: () => { } }), uploadAvatar: () => ({ subscribe: (fn: any) => fn('url') }) } }
-      ],
+      providers: [{ provide: AuthService, useValue: createAuthServiceMock() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RegisterComponent);

@@ -1,8 +1,12 @@
+// Role : Gérer les routes des éditeurs.
 import { Router } from 'express'
 import pool from '../db/database.js'
 
 const router = Router()
 
+// Role : Lister les éditeurs.
+// Preconditions : La base est accessible.
+// Postconditions : Retourne la liste des éditeurs ou une erreur.
 router.get('/', async (_req, res) => {
   try {
     const { rows } = await pool.query(

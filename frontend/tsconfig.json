@@ -22,9 +22,6 @@
       "@auth/*": [
         "app/components/auth/*"
       ],
-      "@users/*": [
-        "app/users/*"
-      ],
       "@services/*": [
         "app/services/*"
       ],

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { UserService } from '@users/user.service';
+import { UserService } from '@services/user.service';
 import { createUserServiceMock, UserServiceMock } from '@testing/mocks/user-service.mock';
 import { AdminUserListComponent } from './admin-user-list';
 import { UserDto } from '@app/types/user-dto';

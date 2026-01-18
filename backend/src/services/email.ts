@@ -1,3 +1,4 @@
+// Role : Centraliser l'envoi des emails transactionnels.
 import nodemailer from 'nodemailer'
 import type { Transporter } from 'nodemailer'
 import {
@@ -10,6 +11,9 @@ import {
 
 let transporter: Transporter | null = null
 
+// Role : Initialiser le transporteur SMTP si besoin.
+// Preconditions : Les variables SMTP sont configurees.
+// Postconditions : Retourne une instance Transporter reutilisable.
 function ensureTransporter(): Transporter {
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
     throw new Error(
@@ -32,6 +36,9 @@ function ensureTransporter(): Transporter {
   return transporter
 }
 
+// Role : Envoyer un email de verification.
+// Preconditions : email et token sont fournis.
+// Postconditions : Un email est envoye via le transporteur SMTP.
 export async function sendVerificationEmail(
   email: string,
   token: string,
@@ -80,6 +87,9 @@ Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message
   })
 }
 
+// Role : Envoyer un email de reinitialisation de mot de passe.
+// Preconditions : email et token sont fournis.
+// Postconditions : Un email est envoye via le transporteur SMTP.
 export async function sendPasswordResetEmail(
   email: string,
   token: string,

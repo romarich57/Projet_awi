@@ -1,9 +1,11 @@
+// Role : Gerer les routes utilisateurs (profil et administration).
 import crypto from 'node:crypto'
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import pool from '../db/database.js'
 import { requireAdmin } from '../middleware/auth-admin.js'
 import { sendVerificationEmail } from '../services/email.js'
+import { ADMIN_EMAIL } from '../config/env.js'
 
 const router = Router()
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -14,6 +16,20 @@ const ALLOWED_ROLES = new Set([
   'super-organizer',
   'admin',
 ])
+const ROLE_ALIASES: Record<string, string> = {
+  admin: 'admin',
+  benevole: 'benevole',
+  'bénévole': 'benevole',
+  organizer: 'organizer',
+  organisateur: 'organizer',
+  'super-organizer': 'super-organizer',
+  superorganizer: 'super-organizer',
+  'super-organisateur': 'super-organizer',
+  superorganisateur: 'super-organizer',
+}
+const PROTECTED_ADMIN_ID = 1
+const PROTECTED_ADMIN_LOGIN = process.env.ADMIN_LOGIN ?? 'admin'
+const PROTECTED_ADMIN_EMAIL = ADMIN_EMAIL.toLowerCase()
 
 type PublicUser = {
   id: number
@@ -41,15 +57,33 @@ const SAFE_FIELDS = `
   created_at AS "createdAt"
 `
 
+// Role : Nettoyer une valeur texte.
+// Preconditions : value peut etre de tout type.
+// Postconditions : Retourne une chaine nettoyee ou vide.
 function sanitize(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+// Role : Hasher un token de verification email.
+// Preconditions : token est une chaine non vide.
+// Postconditions : Retourne le hash SHA-256.
 function hashVerificationToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex')
 }
 
-// Profil de l'utilisateur connecté
+// Role : Normaliser un role utilisateur a partir d'aliases.
+// Preconditions : input est une chaine non vide.
+// Postconditions : Retourne un role canonical ou l'entree brute.
+function normalizeRole(input: string): string {
+  const raw = input.trim()
+  const lowered = raw.toLowerCase()
+  const withoutPrefix = lowered.startsWith('role') ? lowered.slice(4) : lowered
+  return ROLE_ALIASES[withoutPrefix] ?? ROLE_ALIASES[lowered] ?? raw
+}
+
+// Role : Recuperer le profil de l'utilisateur connecte.
+// Preconditions : req.user est defini.
+// Postconditions : Retourne le profil ou une erreur.
 router.get('/me', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Utilisateur non authentifié' })
@@ -71,7 +105,9 @@ router.get('/me', async (req, res) => {
   }
 })
 
-// Mise a jour du profil connecté
+// Role : Mettre a jour le profil de l'utilisateur connecte.
+// Preconditions : req.user est defini et le payload est valide.
+// Postconditions : Retourne le profil mis a jour ou une erreur.
 router.put('/me', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Utilisateur non authentifié' })
@@ -246,7 +282,9 @@ router.put('/me', async (req, res) => {
   }
 })
 
-// Suppression du compte connecté
+// Role : Supprimer le compte connecte.
+// Preconditions : req.user est defini.
+// Postconditions : Supprime le compte ou retourne une erreur.
 router.delete('/me', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Utilisateur non authentifié' })
@@ -278,7 +316,9 @@ router.delete('/me', async (req, res) => {
   }
 })
 
-// Liste des utilisateurs (admin uniquement)
+// Role : Lister les utilisateurs (admin).
+// Preconditions : requireAdmin a valide l'acces.
+// Postconditions : Retourne la liste des utilisateurs ou une erreur.
 router.get('/', requireAdmin, async (_req, res) => {
   try {
     const { rows } = await pool.query<PublicUser>(
@@ -291,7 +331,9 @@ router.get('/', requireAdmin, async (_req, res) => {
   }
 })
 
-// Création d'un utilisateur (admin)
+// Role : Creer un utilisateur (admin).
+// Preconditions : requireAdmin a valide l'acces et le payload est valide.
+// Postconditions : Cree l'utilisateur ou retourne une erreur.
 router.post('/', requireAdmin, async (req, res) => {
   const login = sanitize(req.body?.login)
   const password = sanitize(req.body?.password)
@@ -369,7 +411,9 @@ router.post('/', requireAdmin, async (req, res) => {
   }
 })
 
-// Récupère un utilisateur par identifiant (sans exposer le mot de passe)
+// Role : Recuperer un utilisateur par identifiant (admin).
+// Preconditions : id est valide.
+// Postconditions : Retourne l'utilisateur ou une erreur.
 router.get('/:id', requireAdmin, async (req, res) => {
   const id = Number(req.params.id)
   if (!Number.isInteger(id) || id <= 0) {
@@ -392,7 +436,9 @@ router.get('/:id', requireAdmin, async (req, res) => {
   }
 })
 
-// Mise a jour d'un utilisateur (admin)
+// Role : Mettre a jour un utilisateur (admin).
+// Preconditions : id est valide et le payload est valide.
+// Postconditions : Retourne l'utilisateur mis a jour ou une erreur.
 router.put('/:id', requireAdmin, async (req, res) => {
   const id = Number(req.params.id)
   if (!Number.isInteger(id) || id <= 0) {
@@ -401,8 +447,9 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
   const login =
     typeof req.body?.login === 'string' ? sanitize(req.body.login) : undefined
-  const role =
+  const roleInput =
     typeof req.body?.role === 'string' ? sanitize(req.body.role) : undefined
+  const role = roleInput !== undefined ? normalizeRole(roleInput) : undefined
   const firstName =
     typeof req.body?.firstName === 'string' ? sanitize(req.body.firstName) : undefined
   const lastName =
@@ -444,6 +491,36 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
   if (email !== undefined && (!email || !EMAIL_REGEX.test(email))) {
     return res.status(400).json({ error: 'Email invalide' })
+  }
+
+  if (role !== undefined && role !== 'admin') {
+    try {
+      const { rows } = await pool.query<{ id: number; login: string; email: string }>(
+        `
+        SELECT id, login, email
+        FROM users
+        WHERE id = $1
+        LIMIT 1
+      `,
+        [id],
+      )
+      const target = rows[0]
+      if (!target) {
+        return res.status(404).json({ error: 'Utilisateur introuvable' })
+      }
+      const isProtectedAdmin =
+        target.id === PROTECTED_ADMIN_ID ||
+        target.login === PROTECTED_ADMIN_LOGIN ||
+        target.email.toLowerCase() === PROTECTED_ADMIN_EMAIL
+      if (isProtectedAdmin) {
+        return res
+          .status(403)
+          .json({ error: "Impossible de modifier le role de l'administrateur initial" })
+      }
+    } catch (err) {
+      console.error('Erreur verification admin initial', err)
+      return res.status(500).json({ error: 'Erreur serveur' })
+    }
   }
 
   const updates: string[] = []
@@ -510,6 +587,9 @@ router.put('/:id', requireAdmin, async (req, res) => {
   }
 })
 
+// Role : Supprimer un utilisateur (admin).
+// Preconditions : id est valide et requireAdmin a valide l'acces.
+// Postconditions : Retourne un message de suppression ou une erreur.
 router.delete('/:id', requireAdmin, async (req, res) => {
   const id = Number(req.params.id)
   if (!Number.isInteger(id) || id <= 0) {

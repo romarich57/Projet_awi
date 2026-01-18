@@ -21,6 +21,9 @@ import { AuthService } from '@services/auth.service';
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
+// Role : Gerer la connexion utilisateur.
+// Préconditions : AuthService est disponible.
+// Postconditions : L'utilisateur est authentifie et redirige si deja connecte.
 export class LoginComponent {
   private readonly auth = inject(AuthService);
   private readonly fb = inject(NonNullableFormBuilder);
@@ -46,6 +49,9 @@ export class LoginComponent {
     });
   }
 
+  // Role : Soumettre les identifiants de connexion.
+  // Préconditions : Le formulaire est valide et aucune connexion en cours.
+  // Postconditions : La demande de connexion est envoyee via AuthService.
   submit() {
     if (this.form.invalid || this.isLoading()) {
       this.form.markAllAsTouched();

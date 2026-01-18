@@ -40,7 +40,7 @@ describe('ReservantStore', () => {
     ];
 
     beforeEach(() => {
-        // Create spy object for ReservantApiService
+        
         apiMock = jasmine.createSpyObj('ReservantApiService', [
             'list',
             'getbyid',
@@ -49,10 +49,8 @@ describe('ReservantStore', () => {
             'delete'
         ]);
 
-        // Create spy object for ReservantWorkflowApi
         workflowApiMock = jasmine.createSpyObj('ReservantWorkflowApi', ['updateState', 'updateFlags']);
 
-        // Create spy object for ReservantContactApi
         contactApiMock = jasmine.createSpyObj('ReservantContactApi', ['listContacts', 'listTimeline', 'addContact', 'addContactEvent']);
         contactApiMock.listContacts.and.returnValue(of([]));
         contactApiMock.listTimeline.and.returnValue(of([]));
@@ -77,10 +75,6 @@ describe('ReservantStore', () => {
         }
     });
 
-    // ============================================
-    // INITIALIZATION TESTS (4 tests)
-    // ============================================
-
     describe('Initialization', () => {
         it('should be created', () => {
             expect(store).toBeTruthy();
@@ -99,10 +93,6 @@ describe('ReservantStore', () => {
         });
     });
 
-    // ============================================
-    // loadAll() TESTS (6 tests)
-    // ============================================
-
     describe('loadAll()', () => {
         it('should set loading=true when loadAll() is called', () => {
             apiMock.list.and.returnValue(of([]));
@@ -117,7 +107,6 @@ describe('ReservantStore', () => {
 
             store.loadAll();
 
-            // Allow async observable to complete
             setTimeout(() => {
                 expect(store.reservants()).toEqual(mockReservantList);
                 expect(store.reservants().length).toBe(2);
@@ -166,7 +155,7 @@ describe('ReservantStore', () => {
             setTimeout(() => {
                 expect(store.reservants()).toEqual(initialData);
 
-                // Load again with different data
+               
                 const newData = mockReservantList;
                 apiMock.list.and.returnValue(of(newData));
                 store.loadAll();
@@ -179,10 +168,6 @@ describe('ReservantStore', () => {
             }, 50);
         });
     });
-
-    // ============================================
-    // loadById() TESTS (5 tests)
-    // ============================================
 
     describe('loadById()', () => {
         it('should load single reservant by id', (done) => {
@@ -214,14 +199,12 @@ describe('ReservantStore', () => {
         });
 
         it('should replace reservants array with single item', (done) => {
-            // First load multiple items
             apiMock.list.and.returnValue(of(mockReservantList));
             store.loadAll();
 
             setTimeout(() => {
                 expect(store.reservants().length).toBe(2);
 
-                // Then load single item by ID
                 apiMock.getbyid.and.returnValue(of(mockReservant));
                 store.loadById(1);
 
@@ -247,10 +230,6 @@ describe('ReservantStore', () => {
         });
     });
 
-    // ============================================
-    // create() TESTS (8 tests)
-    // ============================================
-
     describe('create()', () => {
         const newReservant: ReservantDto = {
             id: 3,
@@ -261,7 +240,6 @@ describe('ReservantStore', () => {
         };
 
         it('should append new reservant to existing list', (done) => {
-            // First populate with existing data
             store['_reservants'].set([...mockReservantList]);
             apiMock.create.and.returnValue(of(newReservant));
 
@@ -355,10 +333,6 @@ describe('ReservantStore', () => {
         });
     });
 
-    // ============================================
-    // update() TESTS (6 tests)
-    // ============================================
-
     describe('update()', () => {
         const updatedReservant: ReservantDto = {
             ...mockReservant,
@@ -425,10 +399,6 @@ describe('ReservantStore', () => {
         });
     });
 
-    // ============================================
-    // Workflow update TESTS (4 tests)
-    // ============================================
-
     describe('workflow updates', () => {
         it('should call workflowApi.updateState with id and state', () => {
             workflowApiMock.updateState.and.returnValue(of(mockReservant));
@@ -463,10 +433,6 @@ describe('ReservantStore', () => {
             expect(store.loading()).toBe(true);
         });
     });
-
-    // ============================================
-    // contacts TESTS (4 tests)
-    // ============================================
 
     describe('contacts', () => {
         it('should load contacts list', () => {
@@ -507,10 +473,6 @@ describe('ReservantStore', () => {
         });
     });
 
-    // ============================================
-    // delete() TESTS (4 tests)
-    // ============================================
-
     describe('delete()', () => {
         it('should delete reservant from list', (done) => {
             apiMock.delete.and.returnValue(of(mockReservant));
@@ -518,8 +480,6 @@ describe('ReservantStore', () => {
             store.delete(mockReservant);
 
             setTimeout(() => {
-                // Note: Current implementation sets to [reservant], not removes
-                // This test reflects actual behavior
                 expect(store.reservants()).toEqual([mockReservant]);
                 done();
             }, 50);

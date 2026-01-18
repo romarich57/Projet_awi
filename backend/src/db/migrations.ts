@@ -1,5 +1,9 @@
+// Role : Appliquer les migrations de schema et de donnees.
 import pool from './database.js';
 
+// Role : Executer les migrations sur la base Postgres.
+// Preconditions : La connexion a la base est disponible.
+// Postconditions : Le schema est aligne et les donnees essentielles sont en place.
 export async function runMigrations() {
   const client = await pool.connect();
 
@@ -45,6 +49,15 @@ export async function runMigrations() {
       );
     `);
     console.log('✅ Table festival vérifiée/créée');
+    await client.query(`
+      ALTER TABLE festival
+        ADD COLUMN IF NOT EXISTS stock_chaises_available INTEGER NOT NULL DEFAULT 0;
+    `);
+    await client.query(`
+      UPDATE festival
+      SET stock_chaises_available = stock_chaises
+      WHERE stock_chaises_available IS NULL OR stock_chaises_available = 0;
+    `);
 
     // Types et tables de base pour les réservations (rattrapage si init.sql non appliqué)
     await client.query(`
@@ -81,6 +94,20 @@ export async function runMigrations() {
         password_reset_expires_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        jti_hash TEXT UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        revoked_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS refresh_tokens_user_id_idx ON refresh_tokens(user_id);
     `);
 
     await client.query(`
@@ -173,7 +200,7 @@ export async function runMigrations() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS zone_tarifaire (
         id SERIAL PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
         festival_id INTEGER REFERENCES festival(id) ON DELETE CASCADE,
         nb_tables INTEGER NOT NULL,
         nb_tables_available INTEGER NOT NULL DEFAULT 0,
@@ -181,6 +208,31 @@ export async function runMigrations() {
         m2_price NUMERIC NOT NULL,
         UNIQUE(festival_id, name)
       );
+    `);
+    await client.query(`
+      DO $$ BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conname = 'zone_tarifaire_name_key'
+            AND conrelid = 'zone_tarifaire'::regclass
+        ) THEN
+          ALTER TABLE zone_tarifaire DROP CONSTRAINT zone_tarifaire_name_key;
+        END IF;
+      END $$;
+    `);
+    await client.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conname = 'zone_tarifaire_festival_id_name_key'
+            AND conrelid = 'zone_tarifaire'::regclass
+        ) THEN
+          ALTER TABLE zone_tarifaire
+            ADD CONSTRAINT zone_tarifaire_festival_id_name_key UNIQUE (festival_id, name);
+        END IF;
+      END $$;
     `);
     await client.query(
       `UPDATE zone_tarifaire SET nb_tables_available = nb_tables WHERE nb_tables_available IS NULL;`,
@@ -279,6 +331,10 @@ export async function runMigrations() {
         PRIMARY KEY (reservation_id, zone_tarifaire_id)
       );
     `);
+    await client.query(`
+      ALTER TABLE reservation_zones_tarifaires
+        ADD COLUMN IF NOT EXISTS nb_chaises_reservees INTEGER NOT NULL DEFAULT 0;
+    `);
     console.log('✅ Table reservation_zones_tarifaires vérifiée/créée');
 
     await client.query(`
@@ -288,6 +344,10 @@ export async function runMigrations() {
         nb_tables INTEGER NOT NULL,
         PRIMARY KEY (reservation_id, zone_plan_id)
       );
+    `);
+    await client.query(`
+      ALTER TABLE reservation_zone_plan
+        ADD COLUMN IF NOT EXISTS nb_chaises INTEGER NOT NULL DEFAULT 0;
     `);
     console.log('✅ Table reservation_zone_plan vérifiée/créée');
 

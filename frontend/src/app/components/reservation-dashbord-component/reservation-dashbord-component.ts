@@ -12,6 +12,9 @@ import { ReservationFormComponent } from '../reservation-form-component/reservat
   templateUrl: './reservation-dashbord-component.html',
   styleUrl: './reservation-dashbord-component.scss',
 })
+// Role : Afficher le tableau de bord des reservations pour un festival.
+// Préconditions : Un festival courant est selectionne via FestivalState.
+// Postconditions : Les reservations sont chargees et les actions utilisateur sont gerees.
 export class ReservationDashbordComponent {
 
   private readonly _reservationService = inject(ReservationService);
@@ -39,6 +42,9 @@ export class ReservationDashbordComponent {
     });
   }
 
+  // Role : Charger les reservations pour un festival donne.
+  // Préconditions : `festivalId` est valide.
+  // Postconditions : La liste de reservations est mise a jour.
   private loadReservations(festivalId: number): void {
     this._reservationService.getReservationsByFestival(festivalId).subscribe({
       next: (reservationsData) => {
@@ -54,11 +60,17 @@ export class ReservationDashbordComponent {
 
   showReservationForm = signal(false);
 
+  // Role : Ouvrir le formulaire de creation de reservation.
+  // Préconditions : Aucune.
+  // Postconditions : `showReservationForm` passe a true.
   openReservationForm(): void {
     // Logique pour ouvrir le formulaire de réservation
     this.showReservationForm.set(true);
   }
 
+  // Role : Naviguer vers la page de details d'une reservation.
+  // Préconditions : `reservationId` est valide et un festival courant existe.
+  // Postconditions : La navigation vers la page de details est declenchee.
   viewReservationDetails(reservationId: number): void {
     // Naviguer vers la page de détails de la réservation
     const currentFestival = this.festivalState.currentFestival();
@@ -86,14 +98,23 @@ export class ReservationDashbordComponent {
     });
   });
 
+  // Role : Appliquer le filtre de type de reservant.
+  // Préconditions : `value` est un type valide ou 'all'.
+  // Postconditions : `typeFilter` est mis a jour.
   setTypeFilter(value: string): void {
     this.typeFilter.set(value);
   }
 
+  // Role : Appliquer le tri de la liste.
+  // Préconditions : `value` est un tri valide.
+  // Postconditions : `sortKey` est mis a jour.
   setSortKey(value: string): void {
     this.sortKey.set(value as 'name-asc' | 'name-desc');
   }
 
+  // Role : Reagir a la creation d'une reservation.
+  // Préconditions : Un festival courant existe.
+  // Postconditions : La liste est rechargee et le formulaire est ferme.
   onReservationCreated(): void {
     // Recharger la liste des réservations
     const currentFestival = this.festivalState.currentFestival();

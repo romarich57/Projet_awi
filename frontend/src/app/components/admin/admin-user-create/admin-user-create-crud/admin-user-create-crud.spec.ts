@@ -14,7 +14,6 @@ describe('AdminUserCreateCrudComponent', () => {
         fixture = TestBed.createComponent(AdminUserCreateCrudComponent);
         component = fixture.componentInstance;
 
-        // Setup required inputs
         const formGroup = new FormGroup({
             login: new FormControl(''),
             password: new FormControl(''),

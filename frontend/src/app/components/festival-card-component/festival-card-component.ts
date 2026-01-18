@@ -10,6 +10,9 @@ import { FestivalState } from '../../stores/festival-state';
   templateUrl: './festival-card-component.html',
   styleUrl: './festival-card-component.scss',
 })
+// Role : Afficher une carte de festival et gerer la selection utilisateur.
+// Préconditions : Le parent fournit `festival`; le store de festival est disponible.
+// Postconditions : L'etat de selection est calcule et les evenements de selection sont emis.
 export class FestivalCardComponent {
 
   festival = input.required<FestivalDto>();
@@ -18,12 +21,15 @@ export class FestivalCardComponent {
 
   private readonly festivalStore = inject(FestivalState);
 
-  // Vérifier si ce festival est actuellement sélectionné
+  // Verifier si ce festival est actuellement selectionne
   readonly selected = computed(() => {
     const currentFestival = this.festivalStore.currentFestival();
     return currentFestival?.id === this.festival().id;
   });
 
+  // Role : Basculer la selection du festival et notifier le parent.
+  // Préconditions : `festival` est present; `festivalStore` est initialise.
+  // Postconditions : Le festival est selectionne ou deselectionne et un id (ou null) est emis.
   onFestivalClick(): void {
     const festival = this.festival();
     if (this.selected()) {

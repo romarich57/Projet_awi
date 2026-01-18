@@ -1,9 +1,12 @@
+// Role : Gerer les routes des reservations et du stock.
 import { Router } from 'express'
 import pool from '../db/database.js'
 
 const router = Router();
 
-// Route pour consulter le stock disponible d'un festival
+// Role : Consulter le stock disponible d'un festival.
+// Preconditions : festivalId est valide.
+// Postconditions : Retourne le stock par zone et chaises ou une erreur.
 router.get('/stock/:festivalId', async (req, res) => {
     const { festivalId } = req.params;
 
@@ -60,7 +63,9 @@ router.get('/stock/:festivalId', async (req, res) => {
     }
 });
 
-// Lister toutes les réservations d'un festival avec détails complets
+// Role : Lister les reservations d'un festival avec details complets.
+// Preconditions : festivalId est valide.
+// Postconditions : Retourne la liste des reservations ou une erreur.
 router.get('/reservations/:festivalId', async (req, res) => {
     const { festivalId } = req.params;
     try {
@@ -111,7 +116,9 @@ router.get('/reservations/:festivalId', async (req, res) => {
 });
 
 
-// Récupérer une réservation par son ID avec ses zones tarifaires
+// Role : Recuperer une reservation par ID avec ses zones tarifaires.
+// Preconditions : reservationId est valide.
+// Postconditions : Retourne la reservation detaillee ou une erreur.
 router.get('/detail/:reservationId', async (req, res) => {
     const { reservationId } = req.params;
     try {
@@ -178,7 +185,9 @@ router.get('/detail/:reservationId', async (req, res) => {
 });
 
 
-//Lister les réservants avec leurs infos pour un festival donné
+// Role : Lister les reservants pour un festival.
+// Preconditions : festivalId est valide.
+// Postconditions : Retourne la liste des reservants ou une erreur.
 router.get('/:festivalId', async (req, res) => {
     const { festivalId } = req.params;
     try {
@@ -199,7 +208,9 @@ router.get('/:festivalId', async (req, res) => {
     }
 });
 
-// Créer une nouvelle réservation avec réservant (création automatique si n'existe pas)
+// Role : Creer une reservation et son reservant si besoin.
+// Preconditions : Les champs requis sont fournis.
+// Postconditions : Retourne la reservation creee ou une erreur.
 router.post('/reservation', async (req, res) => {
     const {
         reservant_name, reservant_email, reservant_type, festival_id,
@@ -439,7 +450,9 @@ router.post('/reservation', async (req, res) => {
     }
 });
 
-//modifier une reservation
+// Role : Mettre a jour une reservation.
+// Preconditions : id est valide et les champs fournis sont coherents.
+// Postconditions : Met a jour la reservation et ajuste les stocks.
 router.put('/reservation/:id', async (req, res) => {
     const { id } = req.params;
     const {
@@ -588,7 +601,9 @@ router.put('/reservation/:id', async (req, res) => {
     }
 });
 
-// Supprimer une réservation et restaurer le stock
+// Role : Supprimer une reservation et restaurer les stocks.
+// Preconditions : id est valide.
+// Postconditions : Supprime la reservation et restaure les stocks.
 router.delete('/reservation/:id', async (req, res) => {
     const { id } = req.params;
 

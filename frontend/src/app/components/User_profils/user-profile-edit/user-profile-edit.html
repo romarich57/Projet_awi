@@ -8,6 +8,7 @@
     <label class="field">
       <span>Identifiant</span>
       <input type="text" formControlName="login" />
+      <!-- Bloc conditionnel principal -->
       @if (editForm().get('login')?.invalid && (editForm().get('login')?.dirty || editForm().get('login')?.touched)) {
         <span class="field__error">Identifiant requis (min 3).</span>
       }

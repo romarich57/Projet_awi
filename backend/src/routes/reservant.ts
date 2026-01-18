@@ -1,9 +1,12 @@
+// Role : Gerer les routes liees aux reservants et contacts.
 import { Router } from 'express'
 import pool from '../db/database.js'
 
 const router = Router();
 
-// Helper: ensure a workflow row exists for a reservant, otherwise create one (uses provided festivalId or first festival)
+// Role : Garantir l'existence d'un workflow pour un reservant.
+// Preconditions : reservantId est valide, festivalId est optionnel.
+// Postconditions : Retourne l'id du workflow existant ou cree.
 async function ensureWorkflow(reservantId: number, festivalId?: number) {
     let targetFestivalId = festivalId;
     if (!targetFestivalId) {
@@ -33,7 +36,9 @@ async function ensureWorkflow(reservantId: number, festivalId?: number) {
     return created[0].id;
 }
 
-// Liste de tous les réservants
+// Role : Lister tous les reservants.
+// Preconditions : Aucune.
+// Postconditions : Retourne la liste des reservants.
 router.get('/', async (_req, res) => {
     try {
         const { rows } = await pool.query(
@@ -46,7 +51,9 @@ router.get('/', async (_req, res) => {
     }
 });
 
-// Détails d'un réservant par ID
+// Role : Obtenir le detail d'un reservant.
+// Preconditions : id est valide.
+// Postconditions : Retourne le reservant ou une erreur.
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -64,7 +71,9 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Création d'un nouveau réservant
+// Role : Creer un reservant.
+// Preconditions : name, email, type sont fournis.
+// Postconditions : Cree le reservant ou retourne une erreur.
 router.post('/', async (req, res) => {
     const { name, email, type, editor_id, phone_number, address, siret, notes } = req.body;
 
@@ -96,7 +105,9 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Mise à jour d'un réservant par ID
+// Role : Mettre a jour un reservant.
+// Preconditions : id est valide, payload coherent.
+// Postconditions : Met a jour le reservant ou retourne une erreur.
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { name, email, type, editor_id, phone_number, address, siret, notes } = req.body;
@@ -125,7 +136,9 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Suppression d'un réservant par ID
+// Role : Supprimer un reservant.
+// Preconditions : id est valide.
+// Postconditions : Supprime le reservant ou retourne une erreur.
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -152,7 +165,9 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// Mise à jour de l'état de workflow d'un réservant (R3)
+// Role : Mettre a jour l'etat de workflow d'un reservant (R3).
+// Preconditions : id est valide, workflowState autorise.
+// Postconditions : Met a jour le workflow et retourne le reservant.
 router.patch('/:id/workflow', async (req, res) => {
     const { id } = req.params;
     const { workflowState, festivalId } = req.body;
@@ -197,7 +212,9 @@ router.patch('/:id/workflow', async (req, res) => {
     }
 });
 
-// Mise à jour des indicateurs de workflow (R3)
+// Role : Mettre a jour les indicateurs de workflow (R3).
+// Preconditions : id est valide.
+// Postconditions : Met a jour les flags et retourne le reservant.
 router.patch('/:id/workflow/flags', async (req, res) => {
     const { id } = req.params;
     const { liste_jeux_demandee, liste_jeux_obtenue, jeux_recus, presentera_jeux, festivalId } = req.body;
@@ -232,7 +249,9 @@ router.patch('/:id/workflow/flags', async (req, res) => {
     }
 });
 
-// Liste des contacts d'un réservant (R2)
+// Role : Lister les contacts d'un reservant (R2).
+// Preconditions : id est valide.
+// Postconditions : Retourne la liste des contacts.
 router.get('/:id/contacts', async (req, res) => {
     const { id } = req.params;
     try {
@@ -250,7 +269,9 @@ router.get('/:id/contacts', async (req, res) => {
     }
 });
 
-// Ajout d'un contact pour un réservant (R2)
+// Role : Ajouter un contact pour un reservant (R2).
+// Preconditions : Champs obligatoires fournis.
+// Postconditions : Cree le contact et retourne les donnees.
 router.post('/:id/contacts', async (req, res) => {
     const { id } = req.params;
     const { name, email, phone_number, job_title, priority } = req.body;
@@ -273,7 +294,9 @@ router.post('/:id/contacts', async (req, res) => {
     }
 });
 
-// Timeline des contacts pour un réservant (R2)
+// Role : Recuperer la timeline des contacts (R2).
+// Preconditions : id est valide.
+// Postconditions : Retourne la timeline des contacts.
 router.get('/:id/contacts/timeline', async (req, res) => {
     const { id } = req.params;
     try {
@@ -302,7 +325,9 @@ router.get('/:id/contacts/timeline', async (req, res) => {
     }
 });
 
-// Ajout d'un événement de contact dans la timeline (R2)
+// Role : Ajouter un evenement de contact dans la timeline (R2).
+// Preconditions : contactId est fourni, id est valide.
+// Postconditions : Cree l'evenement et retourne les donnees.
 router.post('/:id/contacts/events', async (req, res) => {
     const { id } = req.params;
     const { contactId, dateContact } = req.body;
@@ -356,7 +381,9 @@ router.post('/:id/contacts/events', async (req, res) => {
     }
 });
 
-// Suppression d'un contact (R2)
+// Role : Supprimer un contact (R2).
+// Preconditions : id et contactId sont valides.
+// Postconditions : Supprime le contact ou retourne une erreur.
 router.delete('/:id/contacts/:contactId', async (req, res) => {
     const { id, contactId } = req.params;
     try {
@@ -375,7 +402,9 @@ router.delete('/:id/contacts/:contactId', async (req, res) => {
     }
 });
 
-// Suppression d'un événement de contact (timeline) (R2)
+// Role : Supprimer un evenement de contact (timeline) (R2).
+// Preconditions : id et eventId sont valides.
+// Postconditions : Supprime l'evenement ou retourne une erreur.
 router.delete('/:id/contacts/events/:eventId', async (req, res) => {
     const { id, eventId } = req.params;
     try {

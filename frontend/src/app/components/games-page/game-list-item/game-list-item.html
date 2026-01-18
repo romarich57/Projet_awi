@@ -1,6 +1,7 @@
-<div class="game-row">
+<div class="game-row" (click)="onRowClick()">
   <div class="row-main">
     <div class="game-avatar" [class.fallback]="!safeImageUrl()">
+      <!-- Bloc conditionnel principal -->
       @if (safeImageUrl()) {
         <img [src]="safeImageUrl()" [alt]="game().title" loading="lazy" />
       } @else {
@@ -67,8 +68,8 @@
   </div>
 
   <div class="row-actions">
-    <button type="button" class="primary strong" (click)="edit.emit(game())">Modifier</button>
-    <button type="button" class="ghost danger strong" (click)="delete.emit(game())">
+    <button type="button" class="primary strong" (click)="onEdit($event)">Modifier</button>
+    <button type="button" class="ghost danger strong" (click)="onDelete($event)">
       Supprimer
     </button>
   </div>

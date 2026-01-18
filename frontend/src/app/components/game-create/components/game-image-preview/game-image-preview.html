@@ -1,4 +1,5 @@
 <div class="game-avatar" [class.fallback]="!safeImageUrl()">
+  <!-- Bloc conditionnel principal -->
   @if (safeImageUrl()) {
     <img [src]="safeImageUrl()" alt="Aperçu du jeu" loading="lazy" />
   } @else {

@@ -1,5 +1,5 @@
--- Schéma de la table users conforme aux exigences d'Agents.md
--- A exécuter sur PostgreSQL (création initiale ou mise à jour via ALTER TABLE)
+-- // Schema de la table users conforme aux exigences du cours
+-- // A executer sur PostgreSQL (creation initiale ou mise a jour via ALTER TABLE)
 
 CREATE TABLE IF NOT EXISTS public.users (
   id SERIAL PRIMARY KEY,

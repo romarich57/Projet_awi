@@ -26,6 +26,9 @@ import type { GameDto } from '../../types/game-dto';
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [GameCreateStore],
 })
+// Role : Afficher les informations d'un reservant et gerer ses actions associees.
+// Préconditions : Le reservant est fourni en input ou via l'URL; les stores/services sont disponibles.
+// Postconditions : Les donnees sont chargees et les actions (contacts/jeux) sont gerees.
 export class ReservantCardComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   readonly reservantStore = inject(ReservantStore);
@@ -119,6 +122,9 @@ export class ReservantCardComponent implements OnInit {
     });
   }
 
+  // Role : Charger le reservant et ses contacts au demarrage.
+  // Préconditions : L'id du reservant est connu.
+  // Postconditions : Les donnees du reservant et ses contacts sont chargees.
   ngOnInit(): void {
     const currentId = this.reservantId ?? this.reservantInput()?.id ?? null;
     if (!this.reservantInput() && currentId !== null) {
@@ -129,6 +135,9 @@ export class ReservantCardComponent implements OnInit {
     }
   }
 
+  // Role : Obtenir un libelle lisible pour le type de reservant.
+  // Préconditions : `type` est une valeur valide du type de reservant.
+  // Postconditions : Retourne un libelle en francais.
   typeLabel(type: ReservantDto['type']): string {
     const labels: Record<ReservantDto['type'], string> = {
       editeur: 'Éditeur',
@@ -140,6 +149,9 @@ export class ReservantCardComponent implements OnInit {
     return labels[type];
   }
 
+  // Role : Creer un contact pour le reservant courant.
+  // Préconditions : Un reservant courant est disponible.
+  // Postconditions : Le contact est cree et le formulaire est reinitialise.
   createContact(): void {
     const reservantId = this.reservant()?.id ?? this.reservantId;
     if (reservantId == null) {
@@ -154,6 +166,9 @@ export class ReservantCardComponent implements OnInit {
     this.contactForm = { name: '', email: '', phone_number: '', job_title: '', priority: 0 };
   }
 
+  // Role : Charger la liste des jeux associes a un editeur.
+  // Préconditions : `editorId` est un identifiant valide.
+  // Postconditions : La liste des jeux est chargee et les etats de chargement sont mis a jour.
   loadEditorGames(editorId: number): void {
     this.editorGamesLoading.set(true);
     this.editorGamesError.set(null);
@@ -165,18 +180,30 @@ export class ReservantCardComponent implements OnInit {
     }).add(() => this.editorGamesLoading.set(false));
   }
 
+  // Role : Appliquer un patch au formulaire de creation de jeu.
+  // Préconditions : `partial` contient des champs valides.
+  // Postconditions : Le store de creation est mis a jour.
   onGameFormPatch(partial: Partial<GameFormModel>): void {
     this.gameCreateStore.patchForm(partial);
   }
 
+  // Role : Modifier la source de l'image du jeu.
+  // Préconditions : `source` est une valeur valide.
+  // Postconditions : Le store enregistre la source selectionnee.
   onGameImageSourceChanged(source: ImageSource): void {
     this.gameCreateStore.setImageSource(source);
   }
 
+  // Role : Recevoir un fichier image choisi pour le jeu.
+  // Préconditions : Le fichier peut etre null.
+  // Postconditions : Le store stocke le fichier selectionne.
   onGameImageFileSelected(file: File | null): void {
     this.gameCreateStore.selectImageFile(file);
   }
 
+  // Role : Soumettre la creation de jeu pour l'editeur courant.
+  // Préconditions : Le formulaire du store est valide.
+  // Postconditions : Le jeu est cree et la liste locale est mise a jour.
   onGameSubmit(): void {
     this.gameCreateStore.save().subscribe({
       next: (created) => {
@@ -188,10 +215,16 @@ export class ReservantCardComponent implements OnInit {
     });
   }
 
+  // Role : Annuler la creation de jeu et reinitialiser le formulaire.
+  // Préconditions : Le formulaire de creation est ouvert.
+  // Postconditions : Le formulaire est remis a zero.
   onGameCancel(): void {
     this.resetGameForm();
   }
 
+  // Role : Reinitialiser le formulaire de creation de jeu.
+  // Préconditions : Le store de creation est disponible.
+  // Postconditions : Les champs et la source d'image reviennent aux valeurs par defaut.
   resetGameForm(): void {
     this.gameCreateStore.patchForm({
       title: '',
@@ -211,6 +244,9 @@ export class ReservantCardComponent implements OnInit {
     this.gameCreateStore.setImageSource('url');
   }
 
+  // Role : Normaliser une valeur texte pour l'affichage.
+  // Préconditions : `value` peut etre null ou vide.
+  // Postconditions : Retourne un texte afficheable.
   displayValue(value?: string | null): string {
     const trimmed = value?.trim();
     return trimmed && trimmed.length > 0 ? trimmed : '-';

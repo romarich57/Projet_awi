@@ -101,9 +101,12 @@ describe('GamesPageContainerComponent', () => {
     expect(store.init).toHaveBeenCalled();
   });
 
-  it('should navigate when creating or editing', () => {
+  it('should navigate when creating, viewing, or editing', () => {
     component.startCreate();
     expect(router.navigate).toHaveBeenCalledWith(['/games', 'new']);
+
+    component.onView(game);
+    expect(router.navigate).toHaveBeenCalledWith(['/games', game.id]);
 
     component.onEdit(game);
     expect(router.navigate).toHaveBeenCalledWith(['/games', game.id, 'edit']);

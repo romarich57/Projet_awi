@@ -52,9 +52,7 @@ describe('FestivalState', () => {
     state = TestBed.inject(FestivalState);
   });
 
-  // ============================================
-  // INITIALIZATION TESTS (4 tests)
-  // ============================================
+ 
 
   describe('Initialization', () => {
     it('should be created', () => {
@@ -74,10 +72,6 @@ describe('FestivalState', () => {
       expect(typeof state.currentFestival).toBe('function');
     });
   });
-
-  // ============================================
-  // setCurrentFestival() TESTS (6 tests)
-  // ============================================
 
   describe('setCurrentFestival()', () => {
     it('should set current festival when provided', () => {
@@ -144,10 +138,6 @@ describe('FestivalState', () => {
     });
   });
 
-  // ============================================
-  // currentFestivalId GETTER TESTS (5 tests)
-  // ============================================
-
   describe('currentFestivalId getter', () => {
     it('should return null when no festival is set', () => {
       expect(state.currentFestivalId).toBeNull();
@@ -182,10 +172,6 @@ describe('FestivalState', () => {
     });
   });
 
-  // ============================================
-  // SIGNAL REACTIVITY TESTS (7 tests)
-  // ============================================
-
   describe('Signal Reactivity', () => {
     it('should emit when festival is set to null', () => {
       state.setCurrentFestival(mockFestival);
@@ -199,7 +185,6 @@ describe('FestivalState', () => {
     it('should be readonly and not allow direct modification', () => {
       const readonly = state.currentFestival;
 
-      // This should not have a 'set' method
       expect((readonly as any).set).toBeUndefined();
     });
 
@@ -237,10 +222,6 @@ describe('FestivalState', () => {
       expect(read2).toEqual(read3);
     });
   });
-
-  // ============================================
-  // EDGE CASES & DATA VALIDATION (5 tests)
-  // ============================================
 
   describe('Edge Cases', () => {
     it('should handle festival with minimal data', () => {
@@ -323,10 +304,6 @@ describe('FestivalState', () => {
     });
   });
 
-  // ============================================
-  // INTEGRATION & TYPE SAFETY (3 tests)
-  // ============================================
-
   describe('Integration & Type Safety', () => {
     it('should work correctly with Angular dependency injection', () => {
       const injectedState = TestBed.inject(FestivalState);
@@ -345,7 +322,6 @@ describe('FestivalState', () => {
 
       const festival = state.currentFestival();
       if (festival) {
-        // TypeScript should recognize these properties
         expect(festival.id).toBeDefined();
         expect(festival.name).toBeDefined();
         expect(festival.start_date).toBeDefined();

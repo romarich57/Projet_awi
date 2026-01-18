@@ -22,6 +22,9 @@ import { GameMechanismsSelectComponent } from '../game-mechanisms-select/game-me
   styleUrl: './game-create-page-container.scss',
   providers: [GameCreateStore],
 })
+// Role : Orchestrer la page de creation d'un jeu.
+// Préconditions : GameCreateStore est disponible et les sous-composants sont importes.
+// Postconditions : Les donnees de reference sont chargees et la creation est declenchee.
 export class GameCreatePageContainerComponent implements OnInit {
   private readonly router = inject(Router);
   readonly store = inject(GameCreateStore);
@@ -36,30 +39,51 @@ export class GameCreatePageContainerComponent implements OnInit {
   readonly imageUploadError = this.store.imageUploadError;
   readonly isUploadingImage = this.store.isUploadingImage;
 
+  // Role : Charger les donnees de reference (editeurs, mecanismes).
+  // Préconditions : Le store est injecte.
+  // Postconditions : Les listes de reference sont chargees.
   ngOnInit(): void {
     this.store.loadReferenceData();
   }
 
+  // Role : Revenir a la liste des jeux.
+  // Préconditions : Le routeur est disponible.
+  // Postconditions : La navigation est declenchee.
   onBack(): void {
     this.router.navigate(['/games']);
   }
 
+  // Role : Annuler la creation et revenir a la liste.
+  // Préconditions : Le routeur est disponible.
+  // Postconditions : La navigation est declenchee.
   onCancel(): void {
     this.router.navigate(['/games']);
   }
 
+  // Role : Mettre a jour une partie du formulaire.
+  // Préconditions : `partial` contient des champs valides.
+  // Postconditions : Le store applique le patch.
   onPatch(partial: Partial<GameFormModel>): void {
     this.store.patchForm(partial);
   }
 
+  // Role : Modifier la source de l'image.
+  // Préconditions : `source` est une valeur valide.
+  // Postconditions : Le store enregistre la source.
   onImageSourceChanged(source: ImageSource): void {
     this.store.setImageSource(source);
   }
 
+  // Role : Recevoir un fichier image selectionne.
+  // Préconditions : Le fichier peut etre null.
+  // Postconditions : Le store stocke le fichier selectionne.
   onImageFileSelected(file: File | null): void {
     this.store.selectImageFile(file);
   }
 
+  // Role : Soumettre la creation du jeu.
+  // Préconditions : Le store a un formulaire valide.
+  // Postconditions : Le jeu est cree et la navigation est lancee.
   onSubmit(): void {
     this.store.save().subscribe({
       next: () => this.router.navigate(['/games']),

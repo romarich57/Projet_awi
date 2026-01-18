@@ -20,6 +20,7 @@ import { HomeComponent } from './components/home/home';
 import { GamesPageContainerComponent } from './components/games-page/games-page-container/games-page-container';
 import { GameEditPageContainerComponent } from './components/game-edit-page/game-edit-page-container/game-edit-page-container';
 import { GameCreatePageContainerComponent } from './components/game-create/components/game-create-page-container/game-create-page-container';
+import { GameDetailPageComponent } from './components/game-detail-page/game-detail-page';
 import { ReservationDetailComponent } from './components/reservation-detail-component/reservation-detail-component';
 import { ReservationDetailsPage } from './components/reservation-details-page/reservation-details-page';
 import { UserProfilePageComponent } from './components/User_profils/user-profile-page/user-profile-page';
@@ -113,6 +114,13 @@ export const routes: Routes = [
     component: GameEditPageContainerComponent,
     canActivate: [authGuard],
     title: 'Modifier un jeu',
+  },
+  {
+    path: 'games/:id',
+    component: GameDetailPageComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin', 'super-organizer', 'organizer'] },
+    title: 'Détails du jeu',
   },
   {
     path: 'admin/users/new',
