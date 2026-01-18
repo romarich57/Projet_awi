@@ -9,6 +9,7 @@ import { requireRole } from '../middleware/require-role.js'
 const router = Router();
 const BACKOFFICE_ROLES = ['admin', 'super-organizer', 'organizer']
 const requireBackoffice = [verifyToken, requireRole(BACKOFFICE_ROLES)]
+const FESTIVAL_DELETE_ROLES = ['admin', 'super-organizer']
 
 // Role : Recuperer l'identifiant de reservation pour un festival et un reservant.
 // Preconditions : festivalId et reservantId sont des nombres valides, client est un Pool/PoolClient.
@@ -420,20 +421,78 @@ router.post('/:festivalId/reservants/:reservantId/games', requireBackoffice, asy
     }
 });
 
-// Role : Supprimer un festival.
-// Preconditions : Utilisateur authentifie avec un role backoffice, id valide.
-// Postconditions : Supprime le festival ou retourne une erreur.
-router.delete('/:id', requireBackoffice, async (req: Request, res: Response) => {
+// Role : Supprimer un festival et ses dependances.
+// Preconditions : Utilisateur authentifie (admin ou super-organizer), id valide.
+// Postconditions : Supprime les donnees liees au festival ou retourne une erreur.
+router.delete('/:id', [verifyToken, requireRole(FESTIVAL_DELETE_ROLES)], async (req: Request, res: Response) => {
     const { id } = req.params
+    const client = await pool.connect()
     try {
-        const { rowCount } = await pool.query('DELETE FROM festival WHERE id = $1', [id])
-        if (rowCount === 0) {
+        await client.query('BEGIN')
+
+        const { rows: festivalRows } = await client.query(
+            'SELECT id FROM festival WHERE id = $1',
+            [id],
+        )
+        if (festivalRows.length === 0) {
+            await client.query('ROLLBACK')
             return res.status(404).json({ error: 'Festival non trouvé' })
         }
+
+        await client.query(
+            `
+            DELETE FROM suivi_contact
+            WHERE workflow_id IN (SELECT id FROM suivi_workflow WHERE festival_id = $1)
+            `,
+            [id],
+        )
+        await client.query(
+            `
+            DELETE FROM reservation_zones_tarifaires
+            WHERE reservation_id IN (SELECT id FROM reservation WHERE festival_id = $1)
+            `,
+            [id],
+        )
+        await client.query(
+            `
+            DELETE FROM reservation_zone_plan
+            WHERE reservation_id IN (SELECT id FROM reservation WHERE festival_id = $1)
+            `,
+            [id],
+        )
+        await client.query(
+            `
+            DELETE FROM jeux_alloues
+            WHERE reservation_id IN (SELECT id FROM reservation WHERE festival_id = $1)
+            `,
+            [id],
+        )
+        await client.query(
+            `
+            DELETE FROM jeux_alloues
+            WHERE zone_plan_id IN (SELECT id FROM zone_plan WHERE festival_id = $1)
+            `,
+            [id],
+        )
+        await client.query('DELETE FROM reservation WHERE festival_id = $1', [id])
+        await client.query('DELETE FROM suivi_workflow WHERE festival_id = $1', [id])
+        await client.query('DELETE FROM zone_plan WHERE festival_id = $1', [id])
+        await client.query('DELETE FROM zone_tarifaire WHERE festival_id = $1', [id])
+
+        const { rowCount } = await client.query('DELETE FROM festival WHERE id = $1', [id])
+        if (rowCount === 0) {
+            await client.query('ROLLBACK')
+            return res.status(404).json({ error: 'Festival non trouvé' })
+        }
+
+        await client.query('COMMIT')
         res.json({ message: 'Festival supprimé' })
     } catch (err) {
+        await client.query('ROLLBACK')
         console.error(err)
         res.status(500).json({ error: 'Erreur serveur' })
+    } finally {
+        client.release()
     }
 })
 

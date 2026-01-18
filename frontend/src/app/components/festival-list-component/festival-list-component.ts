@@ -6,6 +6,7 @@ import { FestivalFormComponent } from '../festival-form-component/festival-form-
 import { FestivalDto } from '../../types/festival-dto';
 import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
 import { AuthService } from '../../services/auth.service';
+import { FestivalState } from '../../stores/festival-state';
 
 @Component({
   selector: 'app-festival-list-component',
@@ -22,9 +23,11 @@ export class FestivalListComponent {
 
   private readonly _festivalService = inject(FestivalService);
   private readonly _authService = inject(AuthService);
+  private readonly _festivalState = inject(FestivalState);
   private readonly _router = inject(Router);
   readonly festivals = this._festivalService.festivals;
   readonly isLoggedIn = this._authService.isLoggedIn;
+  readonly canDeleteFestival = this._authService.isSuperOrganizer;
 
   constructor() {
     if (!this.isLoggedIn()) {
@@ -62,6 +65,30 @@ export class FestivalListComponent {
     if (!zone_tarifaire || !festival_id) {
       return;
     }
+  }
+
+  // Role : Supprimer un festival et nettoyer l'etat courant si besoin.
+  // Préconditions : festivalId est valide et l'utilisateur est autorise.
+  // Postconditions : Le festival est supprime et l'etat courant est mis a jour.
+  deleteFestival(festivalId: number): void {
+    if (!festivalId) {
+      return;
+    }
+    const confirmation = window.confirm('Supprimer ce festival et toutes ses dependances ?');
+    if (!confirmation) {
+      return;
+    }
+    this._festivalService.deleteFestival(festivalId).subscribe({
+      next: () => {
+        const currentFestival = this._festivalState.currentFestival();
+        if (currentFestival?.id === festivalId) {
+          this._festivalState.setCurrentFestival(null);
+        }
+      },
+      error: (err) => {
+        console.error('Erreur lors de la suppression du festival', err);
+      },
+    });
   }
 
 

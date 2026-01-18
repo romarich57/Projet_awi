@@ -29,7 +29,10 @@
 
   <div class="festival-list">
     @for(festival of festivals(); track festival.id) {
-      <app-festival-card-component [festival]="festival"></app-festival-card-component>
+      <app-festival-card-component
+        [festival]="festival"
+        [canDelete]="canDeleteFestival()"
+        (deleteFestival)="deleteFestival($event)"></app-festival-card-component>
     }
   </div>
 </section>

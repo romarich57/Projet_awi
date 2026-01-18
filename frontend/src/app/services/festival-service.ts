@@ -85,4 +85,17 @@ export class FestivalService {
         );
     }
 
+    // Role : Supprimer un festival et mettre a jour la liste locale.
+    // Preconditions : festivalId est un identifiant valide.
+    // Postconditions : Supprime le festival cote serveur et retire l'entree du signal.
+    deleteFestival(festivalId: number): Observable<{ message: string }> {
+        return this.http.delete<{ message: string }>(
+            `${environment.apiUrl}/festivals/${festivalId}`,
+            { withCredentials: true },
+        ).pipe(
+            tap(() => {
+                this.festivals.update(festivals => festivals.filter(festival => festival.id !== festivalId));
+            }),
+        );
+    }
 }

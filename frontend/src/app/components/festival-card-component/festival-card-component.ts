@@ -16,8 +16,10 @@ import { FestivalState } from '../../stores/festival-state';
 export class FestivalCardComponent {
 
   festival = input.required<FestivalDto>();
+  canDelete = input(false);
 
   select = output<number | null>();
+  deleteFestival = output<number>();
 
   private readonly festivalStore = inject(FestivalState);
 
@@ -39,6 +41,18 @@ export class FestivalCardComponent {
     }
     this.festivalStore.setCurrentFestival(festival);
     this.select.emit(festival.id ?? null);
+  }
+
+  // Role : Demander la suppression d'un festival sans declencher la selection.
+  // Préconditions : `festival` est present; l'evenement de clic est fourni.
+  // Postconditions : Emission de l'id du festival a supprimer.
+  onDeleteClick(event: MouseEvent): void {
+    event.stopPropagation();
+    const festivalId = this.festival().id;
+    if (!festivalId) {
+      return;
+    }
+    this.deleteFestival.emit(festivalId);
   }
 
 }
