@@ -3,6 +3,8 @@ services:
     image: postgres:16-alpine
     container_name: secureapp_db_prodpol
     restart: unless-stopped
+    env_file:
+      - backend/.env.prodpol
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-secureapp}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secureapp}
@@ -11,7 +13,7 @@ services:
       - db_data_prodpol:/var/lib/postgresql/data
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-secureapp}']
+      test: [ 'CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-secureapp}' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,6 +30,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - backend/.env.prodpol
     environment:
       NODE_ENV: production
       PORT: ${BACKEND_PORT:-4000}
@@ -57,7 +61,6 @@ services:
       - "127.0.0.1:${BACKEND_PORT:-4000}:4000"
     volumes:
       - ./backend/uploads:/app/uploads
-      - ./certs/prodpol:/app/certs
     networks:
       - secureapp_prodpol_net
 
@@ -70,16 +73,17 @@ services:
     depends_on:
       backend:
         condition: service_started
+    env_file:
+      - backend/.env.prodpol
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ./certs/prodpol:/etc/nginx/certs
     networks:
       - secureapp_prodpol_net
 
 volumes:
   db_data_prodpol:
+
 
 networks:
   secureapp_prodpol_net:

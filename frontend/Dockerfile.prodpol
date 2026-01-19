@@ -17,6 +17,15 @@ RUN npm run build -- --configuration prodpol
 FROM nginx:1.29.2-alpine
 WORKDIR /usr/share/nginx/html
 
+# Certificats auto-signes pour l'IP
+RUN apk add --no-cache openssl \
+  && mkdir -p /etc/nginx/certs \
+  && openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+    -keyout /etc/nginx/certs/prodpol-key.pem \
+    -out /etc/nginx/certs/prodpol.pem \
+    -subj "/CN=162.38.111.46" \
+    -addext "subjectAltName=IP:162.38.111.46"
+
 # Copie du build Angular (Angular >= 17 structure)
 COPY --from=build /app/dist/frontend/browser/ ./
 
