@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Component, effect, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ReservationDetailComponent } from '../reservation-detail-component/reservation-detail-component';
 import { WorkflowComponent } from '../workflow-component/workflow-component';
 import { ZonePlanJeux } from '../zone-plan-jeux/zone-plan-jeux';
@@ -17,10 +17,10 @@ import type { ReservantDto } from '@app/types/reservant-dto';
 // Role : Afficher la page detail d'une reservation et ses sous-composants.
 // Préconditions : L'URL contient les parametres `id` et potentiellement `festivalId`.
 // Postconditions : Les signaux de page sont initialises et les donnees chargees sont stockees.
-export class ReservationDetailsPage implements OnInit {
-  
-  private readonly activatedRoute = inject(ActivatedRoute);
-  
+export class ReservationDetailsPage {
+  readonly reservationIdParam = input<string | null>(null, { alias: 'id' });
+  readonly festivalIdParam = input<string | null>(null, { alias: 'festivalId' });
+
   readonly reservationId = signal<number | null>(null);
   readonly festivalId = signal<number | null>(null);
   readonly reservationData = signal<ReservationWithZones | null>(null);
@@ -28,20 +28,16 @@ export class ReservationDetailsPage implements OnInit {
   readonly presenteraJeux = signal<boolean | null>(null);
   readonly reservationRefreshToken = signal<number>(0);
 
-  // Role : Initialiser les ids depuis l'URL.
-  // Préconditions : La route active expose les parametres attendus.
-  // Postconditions : `reservationId` et `festivalId` sont renseignes si disponibles.
-  ngOnInit(): void {
-    // Récupérer l'ID de l'URL
-    const id = this.activatedRoute.snapshot.params['id'];
-    const festivalId = this.activatedRoute.snapshot.queryParams['festivalId'];
-    
-    if (id) {
-      this.reservationId.set(+id);
-    }
-    if (festivalId) {
-      this.festivalId.set(+festivalId);
-    }
+  constructor() {
+    effect(() => {
+      const idParam = this.reservationIdParam();
+      const festivalParam = this.festivalIdParam();
+      const idValue = idParam ? Number(idParam) : null;
+      const festivalValue = festivalParam ? Number(festivalParam) : null;
+
+      this.reservationId.set(Number.isNaN(idValue) ? null : idValue);
+      this.festivalId.set(Number.isNaN(festivalValue) ? null : festivalValue);
+    });
   }
 
   // Role : Stocker la reservation chargee et mettre a jour les signaux derives.

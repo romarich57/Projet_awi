@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReservantDto } from '../../types/reservant-dto';
@@ -29,25 +29,31 @@ import type { GameDto } from '../../types/game-dto';
 // Role : Afficher les informations d'un reservant et gerer ses actions associees.
 // Préconditions : Le reservant est fourni en input ou via l'URL; les stores/services sont disponibles.
 // Postconditions : Les donnees sont chargees et les actions (contacts/jeux) sont gerees.
-export class ReservantCardComponent implements OnInit {
-  private readonly route = inject(ActivatedRoute);
+export class ReservantCardComponent {
   readonly reservantStore = inject(ReservantStore);
   private readonly gameApi = inject(GameApiService);
   private readonly gameCreateStore = inject(GameCreateStore);
 
   readonly reservantInput = input<ReservantDto | null>(null, { alias: 'reservant' });
-  private readonly reservantIdParam = this.route.snapshot.paramMap.get('id');
-  readonly reservantId = this.reservantIdParam ? Number(this.reservantIdParam) : null;
-  readonly isPageContext = this.reservantId !== null;
+  readonly reservantIdParam = input<string | null>(null, { alias: 'id' });
+  readonly reservantId = computed(() => {
+    const idParam = this.reservantIdParam();
+    if (!idParam) {
+      return null;
+    }
+    const parsed = Number(idParam);
+    return Number.isNaN(parsed) ? null : parsed;
+  });
 
   readonly reservant = computed(() => {
     if (this.reservantInput()) {
       return this.reservantInput();
     }
-    if (this.reservantId === null) {
+    const id = this.reservantId();
+    if (id === null) {
       return null;
     }
-    return this.reservantStore.reservants().find((r) => r.id === this.reservantId) ?? null;
+    return this.reservantStore.reservants().find((r) => r.id === id) ?? null;
   });
   readonly contacts = computed(() => this.reservantStore.contacts());
   contactForm = {
@@ -76,6 +82,16 @@ export class ReservantCardComponent implements OnInit {
   private lastEditorId: number | null = null;
 
   constructor() {
+    effect(() => {
+      const currentId = this.reservantId() ?? this.reservantInput()?.id ?? null;
+      if (!this.reservantInput() && currentId !== null) {
+        this.reservantStore.loadById(currentId);
+      }
+      if (currentId !== null) {
+        this.reservantStore.loadContacts(currentId);
+      }
+    });
+
     effect(() => {
       const reservant = this.reservant();
       if (
@@ -122,17 +138,8 @@ export class ReservantCardComponent implements OnInit {
     });
   }
 
-  // Role : Charger le reservant et ses contacts au demarrage.
-  // Préconditions : L'id du reservant est connu.
-  // Postconditions : Les donnees du reservant et ses contacts sont chargees.
-  ngOnInit(): void {
-    const currentId = this.reservantId ?? this.reservantInput()?.id ?? null;
-    if (!this.reservantInput() && currentId !== null) {
-      this.reservantStore.loadById(currentId);
-    }
-    if (currentId !== null) {
-      this.reservantStore.loadContacts(currentId);
-    }
+  get isPageContext(): boolean {
+    return this.reservantId() !== null;
   }
 
   // Role : Obtenir un libelle lisible pour le type de reservant.
@@ -153,7 +160,7 @@ export class ReservantCardComponent implements OnInit {
   // Préconditions : Un reservant courant est disponible.
   // Postconditions : Le contact est cree et le formulaire est reinitialise.
   createContact(): void {
-    const reservantId = this.reservant()?.id ?? this.reservantId;
+    const reservantId = this.reservant()?.id ?? this.reservantId();
     if (reservantId == null) {
       return;
     }

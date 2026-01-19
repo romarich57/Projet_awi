@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ReservantStore } from '../../stores/reservant.store';
 import { ReservantDto } from '../../types/reservant-dto';
@@ -16,16 +16,21 @@ import { CommonModule, Location } from '@angular/common';
 // Role : Gerer le formulaire de creation/edition d'un reservant.
 // Préconditions : Les services et la route sont disponibles; l'id peut etre present.
 // Postconditions : Le reservant est cree ou mis a jour selon le contexte.
-export class ReservantFormComponent implements OnInit {
-  private readonly route = inject(ActivatedRoute);
+export class ReservantFormComponent {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly fb = inject(FormBuilder);
   readonly reservantStore = inject(ReservantStore);
 
-  private readonly reservantIdParam = this.route.snapshot.paramMap.get('id');
-  readonly reservantId = this.reservantIdParam ? Number(this.reservantIdParam) : null;
-  readonly isEditContext = this.reservantId !== null;
+  readonly reservantIdParam = input<string | null>(null, { alias: 'id' });
+  readonly reservantId = computed(() => {
+    const idParam = this.reservantIdParam();
+    if (!idParam) {
+      return null;
+    }
+    const parsed = Number(idParam);
+    return Number.isNaN(parsed) ? null : parsed;
+  });
 
   readonly form = this.fb.nonNullable.group({
     name: this.fb.control<string>('', { validators: [Validators.required] }),
@@ -38,7 +43,7 @@ export class ReservantFormComponent implements OnInit {
   });
 
   readonly reservant = computed(() => {
-    const id = this.reservantId;
+    const id = this.reservantId();
     if (id === null) {
       return null;
     }
@@ -46,6 +51,13 @@ export class ReservantFormComponent implements OnInit {
   });
 
   constructor() {
+    effect(() => {
+      const id = this.reservantId();
+      if (id !== null) {
+        this.reservantStore.loadById(id);
+      }
+    });
+
     effect(() => {
       const reservant = this.reservant();
       if (reservant) {
@@ -62,13 +74,8 @@ export class ReservantFormComponent implements OnInit {
     });
   }
 
-  // Role : Charger le reservant a editer si besoin.
-  // Préconditions : `reservantId` est present dans l'URL.
-  // Postconditions : Le store charge le reservant cible.
-  ngOnInit(): void {
-    if (this.reservantId !== null) {
-      this.reservantStore.loadById(this.reservantId);
-    }
+  get isEditContext(): boolean {
+    return this.reservantId() !== null;
   }
 
   // Role : Soumettre le formulaire en creation ou en edition.
@@ -81,9 +88,10 @@ export class ReservantFormComponent implements OnInit {
     }
 
     const value = this.form.getRawValue();
+    const reservantId = this.reservantId();
 
     // Mode création
-    if (this.reservantId === null) {
+    if (reservantId === null) {
       const payload: Partial<ReservantDto> = {
         name: value.name || '',
         email: value.email || '',
@@ -104,7 +112,7 @@ export class ReservantFormComponent implements OnInit {
     // Mode édition
     const currentReservant = this.reservant();
     const payload: ReservantDto = {
-      id: this.reservantId,
+      id: reservantId,
       name: value.name || '',
       email: value.email || '',
       type: value.type as ReservantDto['type'],
@@ -116,7 +124,7 @@ export class ReservantFormComponent implements OnInit {
     };
 
     this.reservantStore.update(payload).subscribe({
-      next: () => this.router.navigate(['/reservants', this.reservantId]),
+      next: () => this.router.navigate(['/reservants', reservantId]),
       error: (error) => console.error('Error updating reservant', error),
     });
   }

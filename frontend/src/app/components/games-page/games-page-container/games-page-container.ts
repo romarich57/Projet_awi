@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { GamesFiltersPanelComponent } from '../games-filters-panel/games-filters-panel';
 import { GamesResultsListComponent } from '../games-results-list/games-results-list';
@@ -19,7 +19,7 @@ import type { GamesFilters, GamesVisibleColumns } from '@app/types/games-page.ty
 // Role : Orchestrer la page liste des jeux, filtres et actions.
 // Préconditions : GamesStore est disponible et les routes sont configurees.
 // Postconditions : Les jeux sont charges et les actions de navigation/suppression sont gerees.
-export class GamesPageContainerComponent implements OnInit {
+export class GamesPageContainerComponent {
   private readonly router = inject(Router);
   readonly store = inject(GamesStore);
 
@@ -38,11 +38,10 @@ export class GamesPageContainerComponent implements OnInit {
     return game ? `Supprimer "${game.title}" ?` : '';
   });
 
-  // Role : Initialiser les donnees de la page via le store.
-  // Préconditions : GamesStore est injecte.
-  // Postconditions : Les jeux et metadonnees sont charges.
-  ngOnInit(): void {
-    this.store.init();
+  constructor() {
+    effect(() => {
+      this.store.init();
+    });
   }
 
   // Role : Naviguer vers la page de creation de jeu.

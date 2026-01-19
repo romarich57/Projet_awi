@@ -1,0 +1,187 @@
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  login TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role role_enum DEFAULT 'benevole',
+  first_name TEXT,
+  last_name TEXT,
+  email TEXT UNIQUE NOT NULL,
+  phone TEXT,
+  avatar_url TEXT,
+  email_verified BOOLEAN DEFAULT FALSE,
+  email_verification_token TEXT,
+  email_verification_expires_at TIMESTAMP,
+  password_reset_token TEXT,
+  password_reset_expires_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  jti_hash TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  revoked_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS festival (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  stock_tables_standard INTEGER NOT NULL DEFAULT 0,
+  stock_tables_grande INTEGER NOT NULL DEFAULT 0,
+  stock_tables_mairie INTEGER NOT NULL DEFAULT 0,
+  stock_chaises INTEGER NOT NULL DEFAULT 0,
+  stock_chaises_available INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS editor (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  website TEXT,
+  description TEXT,
+  logo_url TEXT,
+  is_exhibitor BOOLEAN NOT NULL DEFAULT false,
+  is_distributor BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS reservant (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  type reservant_type_enum NOT NULL,
+  editor_id INTEGER REFERENCES editor(id),
+  phone_number TEXT,
+  address TEXT,
+  siret TEXT,
+  notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS contact (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone_number TEXT NOT NULL,
+  job_title TEXT NOT NULL,
+  editor_id INTEGER REFERENCES editor(id),
+  reservant_id INTEGER REFERENCES reservant(id),
+  priority INTEGER NOT NULL,
+  CONSTRAINT contact_entity_check CHECK (
+    (editor_id IS NOT NULL AND reservant_id IS NULL) OR
+    (editor_id IS NULL AND reservant_id IS NOT NULL)
+  )
+);
+
+CREATE TABLE IF NOT EXISTS games (
+  id SERIAL PRIMARY KEY,
+  title TEXT UNIQUE NOT NULL,
+  type TEXT NOT NULL,
+  editor_id INTEGER REFERENCES editor(id) ON DELETE RESTRICT,
+  min_age INTEGER NOT NULL,
+  authors TEXT NOT NULL,
+  min_players INTEGER,
+  max_players INTEGER,
+  prototype BOOLEAN NOT NULL DEFAULT false,
+  duration_minutes INTEGER,
+  theme TEXT,
+  description TEXT,
+  image_url TEXT,
+  rules_video_url TEXT
+);
+
+CREATE TABLE IF NOT EXISTS mechanism (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS game_mechanism (
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  mechanism_id INTEGER NOT NULL REFERENCES mechanism(id) ON DELETE CASCADE,
+  PRIMARY KEY (game_id, mechanism_id)
+);
+
+CREATE TABLE IF NOT EXISTS zone_tarifaire (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  festival_id INTEGER REFERENCES festival(id) ON DELETE CASCADE,
+  nb_tables INTEGER NOT NULL,
+  nb_tables_available INTEGER NOT NULL DEFAULT 0,
+  price_per_table NUMERIC NOT NULL,
+  m2_price NUMERIC NOT NULL,
+  UNIQUE(festival_id, name)
+);
+
+CREATE TABLE IF NOT EXISTS zone_plan (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  festival_id INTEGER REFERENCES festival(id),
+  id_zone_tarifaire INTEGER REFERENCES zone_tarifaire(id),
+  nb_tables INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS suivi_workflow (
+  id SERIAL PRIMARY KEY,
+  reservant_id INTEGER NOT NULL REFERENCES reservant(id),
+  festival_id INTEGER NOT NULL REFERENCES festival(id),
+  state workflow_enum NOT NULL DEFAULT 'Pas_de_contact',
+  liste_jeux_demandee BOOLEAN NOT NULL DEFAULT false,
+  liste_jeux_obtenue BOOLEAN NOT NULL DEFAULT false,
+  jeux_recus BOOLEAN NOT NULL DEFAULT false,
+  presentera_jeux BOOLEAN NOT NULL DEFAULT true,
+  UNIQUE(reservant_id, festival_id)
+);
+
+CREATE TABLE IF NOT EXISTS suivi_contact (
+  id SERIAL PRIMARY KEY,
+  contact_id INTEGER REFERENCES contact(id),
+  workflow_id INTEGER REFERENCES suivi_workflow(id),
+  date_contact TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS reservation (
+  id SERIAL PRIMARY KEY,
+  reservant_id INTEGER REFERENCES reservant(id),
+  represented_editor_id INTEGER REFERENCES reservant(id),
+  festival_id INTEGER REFERENCES festival(id),
+  workflow_id INTEGER REFERENCES suivi_workflow(id),
+  start_price NUMERIC NOT NULL,
+  table_discount_offered NUMERIC NOT NULL,
+  direct_discount NUMERIC NOT NULL,
+  nb_prises INTEGER NOT NULL,
+  date_facturation DATE,
+  final_price NUMERIC NOT NULL,
+  statut_paiement TEXT CHECK (statut_paiement IN ('non_payé', 'payé')) NOT NULL DEFAULT 'non_payé',
+  note TEXT,
+  UNIQUE(reservant_id, festival_id)
+);
+
+CREATE TABLE IF NOT EXISTS jeux_alloues (
+  id SERIAL PRIMARY KEY,
+  game_id INTEGER REFERENCES games(id) ON DELETE RESTRICT,
+  reservation_id INTEGER REFERENCES reservation(id),
+  zone_plan_id INTEGER REFERENCES zone_plan(id),
+  nb_tables_occupees NUMERIC NOT NULL,
+  nb_exemplaires NUMERIC NOT NULL,
+  taille_table_requise table_type_enum NOT NULL DEFAULT 'standard',
+  UNIQUE (reservation_id, game_id)
+);
+
+CREATE TABLE IF NOT EXISTS reservation_zones_tarifaires (
+  reservation_id INTEGER REFERENCES reservation(id),
+  zone_tarifaire_id INTEGER REFERENCES zone_tarifaire(id),
+  nb_tables_reservees INTEGER NOT NULL,
+  nb_chaises_reservees INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (reservation_id, zone_tarifaire_id)
+);
+
+CREATE TABLE IF NOT EXISTS reservation_zone_plan (
+  reservation_id INTEGER REFERENCES reservation(id) ON DELETE CASCADE,
+  zone_plan_id INTEGER REFERENCES zone_plan(id) ON DELETE CASCADE,
+  nb_tables INTEGER NOT NULL,
+  nb_chaises INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (reservation_id, zone_plan_id)
+);

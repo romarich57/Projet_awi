@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
+import { Router } from '@angular/router';
 import { GameEditHeaderComponent } from '../game-edit-header/game-edit-header';
 import { GameFormComponent } from '../game-form/game-form';
 import { GameEditStore, ImageSource } from '@app/stores/game-edit-store';
@@ -18,8 +18,7 @@ import type { GameFormModel } from '@app/types/game-edit.types';
 // Role : Orchestrer la page d'edition d'un jeu.
 // Préconditions : La route contient l'id du jeu; GameEditStore est disponible.
 // Postconditions : Les donnees sont chargees et la sauvegarde est declenchee.
-export class GameEditPageContainerComponent implements OnInit {
-  private readonly route = inject(ActivatedRoute);
+export class GameEditPageContainerComponent {
   private readonly router = inject(Router);
   readonly store = inject(GameEditStore);
 
@@ -35,15 +34,20 @@ export class GameEditPageContainerComponent implements OnInit {
   readonly imageUploadError = this.store.imageUploadError;
   readonly isUploadingImage = this.store.isUploadingImage;
 
-  private gameId = NaN;
+  readonly id = input<string | null>(null);
+  private readonly gameId = computed(() => {
+    const idParam = this.id();
+    const parsed = idParam ? Number(idParam) : Number.NaN;
+    return Number.isNaN(parsed) ? Number.NaN : parsed;
+  });
 
-  // Role : Charger l'id depuis la route et initialiser le store.
-  // Préconditions : Le parametre `id` est present dans l'URL.
-  // Postconditions : Le store est initialise pour le jeu cible.
-  ngOnInit(): void {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    this.gameId = idParam ? Number(idParam) : NaN;
-    this.store.init(this.gameId);
+  constructor() {
+    effect(() => {
+      const gameId = this.gameId();
+      if (!Number.isNaN(gameId)) {
+        this.store.init(gameId);
+      }
+    });
   }
 
   // Role : Revenir a la liste des jeux.
@@ -85,7 +89,11 @@ export class GameEditPageContainerComponent implements OnInit {
   // Préconditions : Le store a un formulaire valide.
   // Postconditions : La sauvegarde est declenchee et la navigation est faite en cas de succes.
   onSubmit(): void {
-    this.store.save(this.gameId).subscribe({
+    const gameId = this.gameId();
+    if (Number.isNaN(gameId)) {
+      return;
+    }
+    this.store.save(gameId).subscribe({
       next: () => this.router.navigate(['/games']),
     });
   }
