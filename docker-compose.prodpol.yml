@@ -1,0 +1,86 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: secureapp_db_prodpol
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-secureapp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secureapp}
+      POSTGRES_DB: ${POSTGRES_DB:-secureapp}
+    volumes:
+      - db_data_prodpol:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-secureapp}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - secureapp_prodpol_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prodpol
+    container_name: secureapp_backend_prodpol
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: ${BACKEND_PORT:-4000}
+      HOST: 0.0.0.0
+      HTTPS_ENABLED: ${HTTPS_ENABLED:-true}
+      CERTS_DIR: /app/certs
+      HTTPS_CERT_PATH: ${HTTPS_CERT_PATH:-/app/certs/prodpol.pem}
+      HTTPS_KEY_PATH: ${HTTPS_KEY_PATH:-/app/certs/prodpol-key.pem}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-15m}
+      REFRESH_EXPIRATION: ${REFRESH_EXPIRATION:-7d}
+      FRONTEND_URL: ${FRONTEND_URL}
+      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@secureapp.com}
+      ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-adminadmin}
+      ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-Admin}
+      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-System}
+      ADMIN_AVATAR_URL: ${ADMIN_AVATAR_URL:-}
+      ADMIN_PHONE: ${ADMIN_PHONE:-}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-4000}:4000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./certs/prodpol:/app/certs
+    networks:
+      - secureapp_prodpol_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prodpol
+    container_name: secureapp_frontend_prodpol
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs/prodpol:/etc/nginx/certs
+    networks:
+      - secureapp_prodpol_net
+
+volumes:
+  db_data_prodpol:
+
+networks:
+  secureapp_prodpol_net:
+    driver: bridge

@@ -1,0 +1,27 @@
+#
+# Frontend Dockerfile (Production - prodpol)
+#
+
+# --- Etape 1 : Build Angular ---
+FROM node:22-alpine AS build
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+# Build en PRODPOL (utilise environment.prodpol.ts)
+RUN npm run build -- --configuration prodpol
+
+# --- Etape 2 : Serveur Nginx ---
+FROM nginx:1.29.2-alpine
+WORKDIR /usr/share/nginx/html
+
+# Copie du build Angular (Angular >= 17 structure)
+COPY --from=build /app/dist/frontend/browser/ ./
+
+# Configuration nginx pour prodpol
+COPY nginx.prodpol.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80 443
+CMD ["nginx", "-g", "daemon off;"]
