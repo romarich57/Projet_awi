@@ -4,7 +4,7 @@ services:
     container_name: secureapp_db_prodpol
     restart: unless-stopped
     env_file:
-      - backend/.env.prodpol
+      - backend/.env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-secureapp}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secureapp}
@@ -31,7 +31,7 @@ services:
       db:
         condition: service_healthy
     env_file:
-      - backend/.env.prodpol
+      - backend/.env
     environment:
       NODE_ENV: production
       PORT: ${BACKEND_PORT:-4000}
@@ -74,7 +74,7 @@ services:
       backend:
         condition: service_started
     env_file:
-      - backend/.env.prodpol
+      - backend/.env
     ports:
       - "80:80"
       - "443:443"
