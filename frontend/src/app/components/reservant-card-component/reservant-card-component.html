@@ -49,8 +49,8 @@
       <div class="form-row">
         <label>Priorite</label>
         <select [(ngModel)]="contactForm.priority" name="contact-priority">
-          <option [ngValue]="0">0 - Normal</option>
-          <option [ngValue]="1">1 - Prioritaire</option>
+          <option [value]="0">0 - Normal</option>
+          <option [value]="1">1 - Prioritaire</option>
         </select>
       </div>
       <button class="ghost" type="button" (click)="createContact()">

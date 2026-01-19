@@ -37,9 +37,9 @@
       <div class="form-group">
         <label for="id_zone_tarifaire">Zone tarifaire:</label>
         <select id="id_zone_tarifaire" formControlName="id_zone_tarifaire">
-          <option [ngValue]="null" disabled>-- Sélectionner une zone tarifaire --</option>
+          <option [value]="null" disabled>-- Sélectionner une zone tarifaire --</option>
           @for (zone of zoneTarifaires(); track zone.id) {
-            <option [ngValue]="zone.id">{{ zone.name }} ({{ zone.price_per_table }}€/table)</option>
+            <option [value]="zone.id">{{ zone.name }} ({{ zone.price_per_table }}€/table)</option>
           }
         </select>
         @if (zonePlanForm.controls['id_zone_tarifaire'].errors?.['required'] && zonePlanForm.controls['id_zone_tarifaire'].touched) {
