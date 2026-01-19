@@ -32,6 +32,7 @@ export const SMTP_USER = process.env.SMTP_USER
 export const SMTP_PASS = process.env.SMTP_PASS
 
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com'
+export const ADMIN_LOGIN = process.env.ADMIN_LOGIN || 'admin'
 
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET manquant dans .env')

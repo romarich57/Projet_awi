@@ -32,7 +32,19 @@
       <app-festival-card-component
         [festival]="festival"
         [canDelete]="canDeleteFestival()"
-        (deleteFestival)="deleteFestival($event)"></app-festival-card-component>
+        (deleteFestival)="requestDeleteFestival($event)"></app-festival-card-component>
     }
   </div>
+
+  @if (pendingDeleteFestivalId()) {
+    <div class="modal-backdrop" (click)="cancelDeleteFestival()"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+      <h3 id="delete-title">Confirmation</h3>
+      <p class="muted">{{ deletePrompt() }}</p>
+      <div class="modal-actions">
+        <button type="button" class="ghost" (click)="cancelDeleteFestival()">Annuler</button>
+        <button type="button" class="danger" (click)="confirmDeleteFestival()">Supprimer</button>
+      </div>
+    </div>
+  }
 </section>

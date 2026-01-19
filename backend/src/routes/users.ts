@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 import pool from '../db/database.js'
 import { requireAdmin } from '../middleware/auth-admin.js'
 import { sendVerificationEmail } from '../services/email.js'
-import { ADMIN_EMAIL } from '../config/env.js'
+import { ADMIN_EMAIL, ADMIN_LOGIN } from '../config/env.js'
 
 const router = Router()
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -28,7 +28,7 @@ const ROLE_ALIASES: Record<string, string> = {
   superorganisateur: 'super-organizer',
 }
 const PROTECTED_ADMIN_ID = 1
-const PROTECTED_ADMIN_LOGIN = process.env.ADMIN_LOGIN ?? 'admin'
+const PROTECTED_ADMIN_LOGIN = ADMIN_LOGIN.toLowerCase()
 const PROTECTED_ADMIN_EMAIL = ADMIN_EMAIL.toLowerCase()
 
 type PublicUser = {
@@ -79,6 +79,27 @@ function normalizeRole(input: string): string {
   const lowered = raw.toLowerCase()
   const withoutPrefix = lowered.startsWith('role') ? lowered.slice(4) : lowered
   return ROLE_ALIASES[withoutPrefix] ?? ROLE_ALIASES[lowered] ?? raw
+}
+
+// Role : Verifier si un utilisateur est le compte admin initial protege.
+// Preconditions : userId est un entier positif.
+// Postconditions : Retourne true si l'utilisateur correspond au compte admin initial.
+async function isProtectedAdmin(userId: number): Promise<boolean> {
+  const { rows } = await pool.query<{ id: number; login: string; email: string }>(
+    'SELECT id, login, email FROM users WHERE id = $1',
+    [userId],
+  )
+  const user = rows[0]
+  if (!user) {
+    return false
+  }
+  const login = user.login?.toLowerCase() ?? ''
+  const email = user.email?.toLowerCase() ?? ''
+  return (
+    user.id === PROTECTED_ADMIN_ID ||
+    login === PROTECTED_ADMIN_LOGIN ||
+    email === PROTECTED_ADMIN_EMAIL
+  )
 }
 
 // Role : Recuperer le profil de l'utilisateur connecte.
@@ -295,7 +316,7 @@ router.delete('/me', async (req, res) => {
     return res.status(400).json({ error: 'Identifiant invalide' })
   }
 
-  if (userId === 1) {
+  if (await isProtectedAdmin(userId)) {
     return res
       .status(403)
       .json({ error: 'Impossible de supprimer le compte super administrateur initial' })
@@ -608,8 +629,8 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Identifiant invalide' })
   }
   
-  // Protection du super admin initial (id=1)
-  if (id === 1) {
+  // Protection du super admin initial
+  if (await isProtectedAdmin(id)) {
     return res
       .status(403)
       .json({ error: 'Impossible de supprimer le compte super administrateur initial' })
@@ -623,7 +644,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   }
 
   try {
-    const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1 AND id <> 1 AND id <> $2', [id, currentUserId])
+    const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1 AND id <> $2', [id, currentUserId])
     if (rowCount === 0) {
       return res.status(404).json({ error: 'Utilisateur introuvable' })
     }

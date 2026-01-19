@@ -10,37 +10,39 @@
     </button>
   </div>
 
-  <div class="actions__card actions__card--danger">
-    <h2>Supprimer le compte</h2>
-    <p>Cette action est définitive et supprimera vos données.</p>
+  @if (canDelete()) {
+    <div class="actions__card actions__card--danger">
+      <h2>Supprimer le compte</h2>
+      <p>Cette action est définitive et supprimera vos données.</p>
 
-    <!-- Bloc conditionnel principal -->
-    @if (!confirmDelete()) {
-      <button
-        type="button"
-        class="danger"
-        (click)="requestDelete()"
-        [disabled]="isMutating()"
-      >
-        Supprimer mon compte
-      </button>
-    } @else {
-      <div class="confirm">
-        <p>Confirmez-vous la suppression de votre compte ?</p>
-        <div class="confirm__actions">
-          <button
-            type="button"
-            class="danger"
-            (click)="confirmDeleteAccount()"
-            [disabled]="isMutating()"
-          >
-            Oui, supprimer
-          </button>
-          <button type="button" class="ghost" (click)="cancelDelete()">
-            Annuler
-          </button>
+      <!-- Bloc conditionnel principal -->
+      @if (!confirmDelete()) {
+        <button
+          type="button"
+          class="danger"
+          (click)="requestDelete()"
+          [disabled]="isMutating()"
+        >
+          Supprimer mon compte
+        </button>
+      } @else {
+        <div class="confirm">
+          <p>Confirmez-vous la suppression de votre compte ?</p>
+          <div class="confirm__actions">
+            <button
+              type="button"
+              class="danger"
+              (click)="confirmDeleteAccount()"
+              [disabled]="isMutating()"
+            >
+              Oui, supprimer
+            </button>
+            <button type="button" class="ghost" (click)="cancelDelete()">
+              Annuler
+            </button>
+          </div>
         </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 </section>

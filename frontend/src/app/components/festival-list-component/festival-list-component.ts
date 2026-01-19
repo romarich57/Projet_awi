@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, effect, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FestivalCardComponent } from '../festival-card-component/festival-card-component';
 import { FestivalService } from '../../services/festival-service';
@@ -28,6 +28,17 @@ export class FestivalListComponent {
   readonly festivals = this._festivalService.festivals;
   readonly isLoggedIn = this._authService.isLoggedIn;
   readonly canDeleteFestival = this._authService.isSuperOrganizer;
+  readonly pendingDeleteFestivalId = signal<number | null>(null);
+  readonly deletePrompt = computed(() => {
+    const festivalId = this.pendingDeleteFestivalId();
+    if (!festivalId) {
+      return '';
+    }
+    const festivalName = this.festivals().find((festival) => festival.id === festivalId)?.name;
+    return festivalName
+      ? `Supprimer le festival "${festivalName}" et toutes ses dependances ?`
+      : 'Supprimer ce festival et toutes ses dependances ?';
+  });
 
   constructor() {
     if (!this.isLoggedIn()) {
@@ -67,15 +78,29 @@ export class FestivalListComponent {
     }
   }
 
-  // Role : Supprimer un festival et nettoyer l'etat courant si besoin.
+  // Role : Ouvrir la confirmation de suppression d'un festival.
   // Préconditions : festivalId est valide et l'utilisateur est autorise.
-  // Postconditions : Le festival est supprime et l'etat courant est mis a jour.
-  deleteFestival(festivalId: number): void {
-    if (!festivalId) {
+  // Postconditions : L'etat du modal est active.
+  requestDeleteFestival(festivalId: number): void {
+    if (!festivalId || !this.canDeleteFestival()) {
       return;
     }
-    const confirmation = window.confirm('Supprimer ce festival et toutes ses dependances ?');
-    if (!confirmation) {
+    this.pendingDeleteFestivalId.set(festivalId);
+  }
+
+  // Role : Annuler la suppression d'un festival.
+  // Préconditions : La confirmation est ouverte.
+  // Postconditions : L'etat du modal est reinitialise.
+  cancelDeleteFestival(): void {
+    this.pendingDeleteFestivalId.set(null);
+  }
+
+  // Role : Confirmer la suppression d'un festival.
+  // Préconditions : Un festival est en attente de suppression.
+  // Postconditions : Le festival est supprime et l'etat courant est mis a jour.
+  confirmDeleteFestival(): void {
+    const festivalId = this.pendingDeleteFestivalId();
+    if (!festivalId) {
       return;
     }
     this._festivalService.deleteFestival(festivalId).subscribe({
@@ -84,9 +109,11 @@ export class FestivalListComponent {
         if (currentFestival?.id === festivalId) {
           this._festivalState.setCurrentFestival(null);
         }
+        this.pendingDeleteFestivalId.set(null);
       },
       error: (err) => {
         console.error('Erreur lors de la suppression du festival', err);
+        this.pendingDeleteFestivalId.set(null);
       },
     });
   }

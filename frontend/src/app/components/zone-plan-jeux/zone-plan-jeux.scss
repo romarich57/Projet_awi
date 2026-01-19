@@ -351,6 +351,7 @@ h3 {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
+  -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;

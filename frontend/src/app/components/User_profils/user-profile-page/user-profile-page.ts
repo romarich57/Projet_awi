@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   signal,
@@ -62,6 +63,13 @@ export class UserProfilePageComponent {
   readonly isEditing = signal(false);
   readonly confirmDelete = signal(false);
   readonly hasRequested = signal(false);
+  readonly canDeleteAccount = computed(() => {
+    const current = this.user();
+    if (!current) {
+      return false;
+    }
+    return !this.isProtectedAdmin(current);
+  });
 
   readonly selectedFile = signal<File | null>(null);
   readonly avatarPreview = signal<string>(DEFAULT_AVATAR_URL);
@@ -263,6 +271,9 @@ export class UserProfilePageComponent {
   // Préconditions : Le profil est charge.
   // Postconditions : L'indicateur de confirmation est active.
   requestDelete() {
+    if (!this.canDeleteAccount()) {
+      return;
+    }
     this.confirmDelete.set(true);
   }
 
@@ -277,6 +288,9 @@ export class UserProfilePageComponent {
   // Préconditions : L'utilisateur confirme la suppression.
   // Postconditions : Le service de profil envoie la demande de suppression.
   confirmDeleteAccount() {
+    if (!this.canDeleteAccount()) {
+      return;
+    }
     this.profileService.deleteAccount();
   }
 
@@ -291,5 +305,14 @@ export class UserProfilePageComponent {
       email: user.email,
       phone: user.phone ?? '',
     });
+  }
+
+  // Role : Verifier si l'utilisateur correspond au compte admin initial.
+  // Préconditions : user contient les champs login/email.
+  // Postconditions : Retourne true si l'utilisateur est protege.
+  private isProtectedAdmin(user: UserDto): boolean {
+    const login = user.login?.toLowerCase() ?? '';
+    const email = user.email?.toLowerCase() ?? '';
+    return login === 'admin' || email === 'admin@secureapp.com';
   }
 }

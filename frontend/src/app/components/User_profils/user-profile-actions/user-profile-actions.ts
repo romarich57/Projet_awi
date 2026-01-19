@@ -16,6 +16,7 @@ export class UserProfileActionsComponent {
   readonly userEmail = input.required<string>();
   readonly isMutating = input<boolean>(false);
   readonly confirmDelete = input<boolean>(false);
+  readonly canDelete = input<boolean>(true);
 
   @Output() passwordResetRequested = new EventEmitter<void>();
   @Output() deleteRequested = new EventEmitter<void>();
