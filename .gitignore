@@ -5,7 +5,16 @@ backend/dist/
 backend/uploads/
 frontend/dist/
 .DS_Store
+
+# Environment files (contain secrets)
 .env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
 .idea/
 .vscode/
 coverage/
+
