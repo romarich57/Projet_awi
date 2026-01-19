@@ -69,6 +69,8 @@ describe('ReservantFormComponent', () => {
 
       fixture = TestBed.createComponent(ReservantFormComponent);
       component = fixture.componentInstance;
+      // Set the input to trigger the effect that calls loadById
+      fixture.componentRef.setInput('id', '1');
       fixture.detectChanges();
     } catch (e) {
       console.error('ReservantFormComponent Test Setup Error:', e);
@@ -127,10 +129,34 @@ describe('ReservantFormComponent', () => {
   });
 
   it('should submit form when valid (create)', () => {
-    // Setup create mode
-    Object.defineProperty(component, 'reservantId', { value: null });
+    // Re-create component in create mode (no id)
+    TestBed.resetTestingModule();
+    const locationMock = jasmine.createSpyObj('Location', ['back']);
+    const createStoreMock = {
+      reservants: signal([]),
+      currentReservant: signal(null),
+      loading: signal(false),
+      error: signal(null),
+      loadById: jasmine.createSpy('loadById'),
+      create: jasmine.createSpy('create').and.returnValue(of({})),
+      update: jasmine.createSpy('update').and.returnValue(of({}))
+    };
 
-    component.form.patchValue({
+    TestBed.configureTestingModule({
+      imports: [ReservantFormComponent, ReactiveFormsModule, CommonModule, RouterTestingModule],
+      providers: [
+        { provide: ReservantStore, useValue: createStoreMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
+        { provide: Location, useValue: locationMock }
+      ]
+    });
+
+    const createFixture = TestBed.createComponent(ReservantFormComponent);
+    const createComponent = createFixture.componentInstance;
+    // Do NOT set input - this simulates create mode
+    createFixture.detectChanges();
+
+    createComponent.form.patchValue({
       name: 'New Reservant',
       email: 'new@test.com',
       type: 'editeur',
@@ -140,13 +166,14 @@ describe('ReservantFormComponent', () => {
       notes: 'Notes'
     });
 
-    component.onSubmit();
-    expect(storeMock.create).toHaveBeenCalled();
+    createComponent.onSubmit();
+    expect(createStoreMock.create).toHaveBeenCalled();
   });
 
   it('should submit form when valid (update)', () => {
-    // Setup edit mode (default in beforeEach)
-    storeMock.currentReservant.set(mockReservant);
+    // Setup edit mode - the id is already set in beforeEach
+    // Populate the reservants signal with the mock data so reservant() returns it
+    storeMock.reservants.set([mockReservant]);
     fixture.detectChanges();
 
     component.form.patchValue({

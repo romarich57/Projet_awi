@@ -51,6 +51,8 @@ describe('ReservantCardComponent - Additional Tests', () => {
 
         fixture = TestBed.createComponent(ReservantCardComponent);
         component = fixture.componentInstance;
+        // Set the input to trigger the effect
+        fixture.componentRef.setInput('id', '1');
         fixture.detectChanges();
     });
 

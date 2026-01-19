@@ -48,11 +48,13 @@ describe('GameEditPageContainerComponent', () => {
     // Get the actual store from the component's injector
     store = fixture.debugElement.injector.get(GameEditStore);
 
-    // Spy on the store methods
+    // Spy on the store methods before setting input (which triggers effect)
     initSpy = spyOn(store, 'init').and.callThrough();
     saveSpy = spyOn(store, 'save').and.returnValue(of(void 0));
     setFormDataSpy = spyOn(store, 'setFormData').and.callThrough();
 
+    // Set the input to trigger the effect
+    fixture.componentRef.setInput('id', '42');
     fixture.detectChanges();
   });
 
