@@ -109,8 +109,8 @@
                                                 </td>
                                                 <td>{{ jeu.nb_exemplaires }}</td>
                                                 <td>{{ jeu.taille_table_requise }}</td>
-                                                <td>{{ chaisesPourReservation(zone, jeu.reservation_id) }}</td>
-                                                <td>
+                                                <td>{{ jeu.nb_chaises || 0 }}</td> 
+                                                <td>                                               
                                                     @if (jeu.reservation_id === reservation()?.id) {
                                                         <button class="btn-remove" (click)="removeGameFromZone(jeu)">Retirer</button>
                                                     }

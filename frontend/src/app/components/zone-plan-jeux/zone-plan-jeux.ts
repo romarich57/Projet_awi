@@ -264,8 +264,8 @@ export class ZonePlanJeux {
   // Préconditions : `festivalId` est valide.
   // Postconditions : `zoneTarifaires` est mis a jour.
   private loadZoneTarifaires(festivalId: number): void {
-    // Charger uniquement les zones tarifaires qui ont des réservations
-    this._zoneTarifaireService.getZonesTarifairesWithReservations(festivalId).subscribe({
+    // Charger toutes les zones tarifaires du festival courant
+    this._zoneTarifaireService.getZonesTarifaires(festivalId).subscribe({
       next: (zones) => this.zoneTarifaires.set(zones),
       error: (err) => console.error('Erreur chargement zones tarifaires', err)
     });
@@ -323,15 +323,14 @@ export class ZonePlanJeux {
   // Role : Charger le stock de chaises pour le festival.
   // Préconditions : `festivalId` est valide.
   // Postconditions : `chaisesStock` est mis a jour si des donnees sont presentes.
-  private loadChaisesStock(festivalId: number): void {
-    this._reservationService.getStockByFestival(festivalId).subscribe({
-      next: (stock) => {
-        if (stock.chaises) {
-          this.chaisesStock.set({
-            total: stock.chaises.total,
-            available: stock.chaises.available
-          });
-        }
+private loadChaisesStock(festivalId: number): void {
+    this._reservationService.getStockChaises(festivalId).subscribe({
+      next: (data) => {
+        // La structure de la réponse correspond à ce qu'on a défini dans le back
+        this.chaisesStock.set({
+          total: data.chaises.total,
+          available: data.chaises.available
+        });
       },
       error: (err) => console.error('Erreur chargement stock chaises', err)
     });
@@ -441,9 +440,8 @@ export class ZonePlanJeux {
     this.selectedGame.set(null);
     this.nbExemplairesInput.set(1);
     this.tailleTableInput.set('standard');
-    // Initialiser avec les chaises déjà allouées pour cette zone
     this.chaisesInput.set(0);
-    this.gameInputMode.set('tables');
+    
     this.gameTablesInput.set(1);
     this.gameM2Input.set(tablesToM2(1));
     this.showAllocationModal.set(true);
@@ -591,12 +589,13 @@ export class ZonePlanJeux {
     // nb_tables_occupees contient le total, on suppose 1 place par exemplaire par défaut
     const nbExemplaires = Number(game.nb_exemplaires) || 1;
     const nbTables = Number(game.nb_tables_occupees) || 1;
+    const nbChaises = Number(game.nb_chaises) || 0;
     this.nbExemplairesInput.set(nbExemplaires);
     this.gameTablesInput.set(nbTables);
     this.gameM2Input.set(tablesToM2(nbTables));
     this.tailleTableInput.set(game.taille_table_requise || 'standard');
     
-  this.chaisesInput.set(0);
+  this.chaisesInput.set(nbChaises);
   }
 
   // Allouer le jeu sélectionné à la zone
@@ -628,27 +627,10 @@ export class ZonePlanJeux {
     }
     
     this.loading.set(true);
-    this._zonePlanService.assignerJeuAZone(game.allocation_id, zone.id, nbTables, nbExemplaires, tailleTable).subscribe({
+    this._zonePlanService.assignerJeuAZone(game.allocation_id, zone.id, nbTables, nbExemplaires, tailleTable, nbChaises).subscribe({
       next: () => {
-        // Si des chaises sont allouées, mettre à jour l'allocation des chaises pour cette réservation
-        if (nbChaises > 0 || this.chaisesAlloueesParZone()[zone.id] > 0) {
-          // Récupérer les tables simples déjà allouées pour cette zone par cette réservation (s'il y en a)
-          const tablesSimples = this.tablesAlloueesParZoneReservation()[zone.id] || 0;
-          this._zonePlanService.setReservationAllocation(game.reservation_id, zone.id, tablesSimples, nbChaises).subscribe({
-            next: () => {
-              this.refreshData();
-              this.closeAllocationModal();
-            },
-            error: (err) => {
-              console.error('Erreur lors de l\'allocation des chaises', err);
-              this.refreshData();
-              this.closeAllocationModal();
-            }
-          });
-        } else {
-          this.refreshData();
-          this.closeAllocationModal();
-        }
+        this.refreshData();
+        this.closeAllocationModal();
       },
       error: (err) => {
         console.error('Erreur lors de l\'allocation', err);

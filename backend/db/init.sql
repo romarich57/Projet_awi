@@ -182,6 +182,7 @@ CREATE TABLE IF NOT EXISTS jeux_alloues (
     zone_plan_id INTEGER REFERENCES zone_plan(id),
     nb_tables_occupees NUMERIC NOT NULL,
     nb_exemplaires NUMERIC NOT NULL,
+    nb_chaises INTEGER NOT NULL DEFAULT 0,
     taille_table_requise table_type_enum NOT NULL DEFAULT 'standard',
     UNIQUE (reservation_id, game_id)
 );

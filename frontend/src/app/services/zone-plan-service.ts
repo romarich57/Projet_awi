@@ -135,16 +135,18 @@ export class ZonePlanService {
     zonePlanId: number | null, 
     nbTablesOccupees?: number,
     nbExemplaires?: number,
-    tailleTableRequise?: 'standard' | 'grande' | 'mairie' | 'aucun'
+    tailleTableRequise?: 'standard' | 'grande' | 'mairie' | 'aucun',
+    nbChaises?: number
   ): Observable<AllocatedGameWithReservant> {
-    const payload: {  // Le payload sert a envoyer les donnees necessaires a la mise a jour de l'allocation de jeu
-      zone_plan_id: number | null; 
+    const payload: {
+      zone_plan_id: number | null;
       nb_tables_occupees?: number;
       nb_exemplaires?: number;
       taille_table_requise?: string;
+      nb_chaises?: number;
     } = { zone_plan_id: zonePlanId };
-    
-    if (nbTablesOccupees !== undefined) { // Verifie si nbTablesOccupees est defini avant de l'ajouter au payload 
+
+    if (nbTablesOccupees !== undefined) {
       payload.nb_tables_occupees = nbTablesOccupees;
     }
     if (nbExemplaires !== undefined) {
@@ -153,7 +155,9 @@ export class ZonePlanService {
     if (tailleTableRequise !== undefined) {
       payload.taille_table_requise = tailleTableRequise;
     }
-    // Patch pour mettre a jour partiellement une ressource existante sur le serveur
+    if (nbChaises !== undefined) {
+      payload.nb_chaises = nbChaises;
+    }
     return this.http.patch<AllocatedGameWithReservant>(`/api/jeux_alloues/${allocationId}`, payload, { withCredentials: true });
   }
 

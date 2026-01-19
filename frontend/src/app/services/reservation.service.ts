@@ -105,6 +105,17 @@ export class ReservationService {
       { withCredentials: true });
   }
 
+  // Role : Recuperer uniquement le stock de chaises (avec le calcul corrigé des jeux).
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne le stock total et disponible.
+  getStockChaises(festivalId: number): Observable<{ chaises: { total: number; available: number } }> {
+
+    return this.http.get<{ chaises: { total: number; available: number } }>(
+      `${environment.apiUrl}/festivals/${festivalId}/stock-chaises`,
+      { withCredentials: true }
+    );
+  }
+
   // Role : Mettre a jour une reservation.
   // Preconditions : reservationId est valide et data contient les champs a modifier.
   // Postconditions : Retourne un Observable de la reservation mise a jour.
@@ -133,6 +144,8 @@ export class ReservationService {
       { withCredentials: true }
     );
   }
+
+
 
 }
 

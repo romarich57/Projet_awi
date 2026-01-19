@@ -496,4 +496,52 @@ router.delete('/:id', [verifyToken, requireRole(FESTIVAL_DELETE_ROLES)], async (
     }
 })
 
+
+// Role : Recuperer le stock de chaises (Total - Allocations Simples - Allocations Jeux).
+// Preconditions : Utilisateur authentifie avec un role backoffice, id valide.
+// Postconditions : Retourne le total et le disponible.
+router.get('/:id/stock-chaises', requireBackoffice, async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        const { rows } = await pool.query(
+            `SELECT 
+                f.stock_chaises AS total,
+                (f.stock_chaises 
+                 - COALESCE((
+                    SELECT SUM(rzp.nb_chaises) 
+                    FROM reservation_zone_plan rzp 
+                    JOIN reservation r ON r.id = rzp.reservation_id 
+                    WHERE r.festival_id = $1
+                 ), 0)
+                 - COALESCE((
+                    SELECT SUM(ja.nb_chaises) 
+                    FROM jeux_alloues ja 
+                    JOIN reservation r ON r.id = ja.reservation_id 
+                    WHERE r.festival_id = $1 AND ja.zone_plan_id IS NOT NULL
+                 ), 0)
+                ) AS available
+             FROM festival f
+             WHERE f.id = $1`,
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Festival non trouvé' });
+        }
+
+        // On renvoie le format attendu par ton Angular (ReservationService)
+        res.json({
+            chaises: {
+                total: Number(rows[0].total),
+                available: Number(rows[0].available)
+            }
+        });
+
+    } catch (err) {
+        console.error('Erreur lors de la récupération du stock de chaises:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 export default router

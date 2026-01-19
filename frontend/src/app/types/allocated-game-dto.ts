@@ -10,6 +10,7 @@ export interface AllocatedGameDto {
   game_id: number;
   nb_tables_occupees: number;
   nb_exemplaires: number;
+  nb_chaises: number;
   zone_plan_id: number | null;
   taille_table_requise: TableSize;
   title: string;
