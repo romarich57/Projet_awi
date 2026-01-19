@@ -1,7 +1,7 @@
 import { Component, inject, input, output, OnInit, SimpleChanges, effect, computed } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ReservationService } from '../../services/reservation.service';
+import { ReservationCreatePayload, ReservationService } from '../../services/reservation.service';
 import { ReservantApiService } from '../../services/reservant-api';
 import { ReservantDto } from '../../types/reservant-dto';
 import { AuthService } from '@app/services/auth.service';
@@ -260,7 +260,7 @@ export class ReservationFormComponent {
       }
 
       const formValues = this.reservationForm.value;
-      let reservation;
+      let reservation: ReservationCreatePayload;
       const representedEditorId =
         formValues.represent_editor === 'yes' && formValues.represented_editor_id
           ? Number(formValues.represented_editor_id)
@@ -301,10 +301,18 @@ export class ReservationFormComponent {
         };
       } else {
         // Créer un nouveau réservant
+        const reservantName = formValues.reservant_name?.trim();
+        const reservantEmail = formValues.reservant_email?.trim();
+        const reservantType = formValues.reservant_type ?? null;
+        if (!reservantName || !reservantEmail || !reservantType) {
+          console.error('Informations reservant manquantes');
+          this.isSubmitting = false;
+          return;
+        }
         reservation = {
-          reservant_name: formValues.reservant_name,
-          reservant_email: formValues.reservant_email,
-          reservant_type: formValues.reservant_type,
+          reservant_name: reservantName,
+          reservant_email: reservantEmail,
+          reservant_type: reservantType,
           phone_number: formValues.phone_number || '',
           address: formValues.address || '',
           siret: formValues.siret || '',

@@ -48,6 +48,7 @@ describe('ReservantStore', () => {
             'update',
             'delete'
         ]);
+        apiMock.list.and.returnValue(of(mockReservantList));
 
         workflowApiMock = jasmine.createSpyObj('ReservantWorkflowApi', ['updateState', 'updateFlags']);
 
@@ -95,7 +96,7 @@ describe('ReservantStore', () => {
 
     describe('loadAll()', () => {
         it('should set loading=true when loadAll() is called', () => {
-            apiMock.list.and.returnValue(of([]));
+            apiMock.list.and.returnValue(of([]).pipe(delay(1)));
 
             store.loadAll();
 
@@ -191,7 +192,7 @@ describe('ReservantStore', () => {
         });
 
         it('should set loading=true during loadById()', () => {
-            apiMock.getbyid.and.returnValue(of(mockReservant));
+            apiMock.getbyid.and.returnValue(of(mockReservant).pipe(delay(1)));
 
             store.loadById(1);
 
@@ -239,32 +240,28 @@ describe('ReservantStore', () => {
             workflow_state: 'Pas_de_contact'
         };
 
-        it('should append new reservant to existing list', (done) => {
-            store['_reservants'].set([...mockReservantList]);
+        it('should reload reservants after create()', (done) => {
+            const refreshedList = [...mockReservantList, newReservant];
             apiMock.create.and.returnValue(of(newReservant));
+            apiMock.list.and.returnValue(of(refreshedList));
 
             store.create(newReservant);
 
             setTimeout(() => {
+                expect(store.reservants()).toEqual(refreshedList);
                 expect(store.reservants().length).toBe(3);
-                expect(store.reservants()).toContain(mockReservantList[0]);
-                expect(store.reservants()).toContain(mockReservantList[1]);
-                expect(store.reservants()).toContain(newReservant);
                 done();
             }, 50);
         });
 
-        it('should NOT replace existing reservants on create()', (done) => {
-            const existing = [mockReservant];
-            store['_reservants'].set(existing);
+        it('should call api.list() after create()', (done) => {
             apiMock.create.and.returnValue(of(newReservant));
+            apiMock.list.and.returnValue(of([newReservant]));
 
             store.create(newReservant);
 
             setTimeout(() => {
-                expect(store.reservants()).toContain(mockReservant);
-                expect(store.reservants()).toContain(newReservant);
-                expect(store.reservants().length).toBe(2);
+                expect(apiMock.list).toHaveBeenCalled();
                 done();
             }, 50);
         });
@@ -289,7 +286,7 @@ describe('ReservantStore', () => {
         });
 
         it('should set error=null before create()', () => {
-            store.error.set('Previous error');
+            (store as any)._error.set('Previous error');
             apiMock.create.and.returnValue(of(newReservant));
 
             store.create(newReservant);
@@ -474,19 +471,21 @@ describe('ReservantStore', () => {
     });
 
     describe('delete()', () => {
-        it('should delete reservant from list', (done) => {
+        it('should remove reservant from list after delete', (done) => {
             apiMock.delete.and.returnValue(of(mockReservant));
+            apiMock.list.and.returnValue(of([]));
 
             store.delete(mockReservant);
 
             setTimeout(() => {
-                expect(store.reservants()).toEqual([mockReservant]);
+                expect(store.reservants()).toEqual([]);
                 done();
             }, 50);
         });
 
         it('should set loading=true during delete()', () => {
-            apiMock.delete.and.returnValue(of(mockReservant));
+            apiMock.delete.and.returnValue(of(mockReservant).pipe(delay(1)));
+            apiMock.list.and.returnValue(of([]));
 
             store.delete(mockReservant);
 

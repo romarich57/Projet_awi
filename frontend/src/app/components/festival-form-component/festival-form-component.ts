@@ -109,14 +109,16 @@ export class FestivalFormComponent {
       }
       
       // Créer le festival avec les bonnes conversions
+      const startDate = String(formValue.start_date || new Date().toISOString().split('T')[0]);
+      const endDate = String(formValue.end_date || new Date().toISOString().split('T')[0]);
       const festival: Partial<FestivalDto> = {
         name: festivalName,
         stock_tables_standard: Number(formValue.stock_tables_standard) || 0,
         stock_tables_grande: Number(formValue.stock_tables_grande) || 0,
         stock_tables_mairie: Number(formValue.stock_tables_mairie) || 0,
         stock_chaises: Number(formValue.stock_chaises) || 0,
-        start_date: new Date(formValue.start_date || new Date().toISOString().split('T')[0]),
-        end_date: new Date(formValue.end_date || new Date().toISOString().split('T')[0]),
+        start_date: startDate,
+        end_date: endDate,
       };
       
       // Créer les zones tarifaires (sans festival_id pour l'instant)

@@ -18,7 +18,9 @@ export class ReservantWorkflowApi {
     // Postconditions : Retourne un Observable du reservant mis a jour.
     updateState(reservantId: number, newState: ReservantWorkflowState, festivalId: number | null = null): Observable<ReservantDto> {
         const url = `${this.resourceUrl}/${reservantId}/workflow`;
-        const payload: any = { workflowState: newState };
+        const payload: { workflowState: ReservantWorkflowState; festivalId?: number } = {
+            workflowState: newState,
+        };
         if (festivalId !== null) {
             payload.festivalId = festivalId;
         }

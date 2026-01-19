@@ -27,6 +27,45 @@ export interface StockResponse {
   chaises: ChaisesStock;
 }
 
+export interface ReservationZoneTarifairePayload {
+  zone_tarifaire_id: number;
+  nb_tables_reservees: number;
+  nb_chaises_reservees?: number;
+}
+
+export interface ReservationCreatePayload {
+  reservant_name: string;
+  reservant_email: string;
+  reservant_type: ReservantDto['type'];
+  festival_id: number;
+  editor_name?: string;
+  editor_email?: string;
+  start_price: number;
+  nb_prises: number;
+  final_price: number;
+  table_discount_offered?: number;
+  direct_discount?: number;
+  note?: string;
+  phone_number?: string;
+  address?: string;
+  siret?: string;
+  represented_editor_id?: number | null;
+  zones_tarifaires?: ReservationZoneTarifairePayload[];
+}
+
+export interface ReservationCreateResponse {
+  message: string;
+  reservation: ReservationDto & {
+    reservant_name: string;
+    reservant_email: string;
+    reservant_type: ReservantDto['type'];
+    editor_name: string | null;
+    editor_email: string | null;
+    workflow_state: string;
+    festival_name: string;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -53,8 +92,8 @@ export class ReservationService {
   // Role : Creer une nouvelle reservation.
   // Preconditions : L'objet reservation contient les champs requis.
   // Postconditions : Retourne un Observable avec la reservation creee.
-  createReservation(reservation: any): Observable<{ message: string, reservation: any }> {
-    return this.http.post<{ message: string, reservation: any }>(`${environment.apiUrl}/reservation/reservation`,
+  createReservation(reservation: ReservationCreatePayload): Observable<ReservationCreateResponse> {
+    return this.http.post<ReservationCreateResponse>(`${environment.apiUrl}/reservation/reservation`,
       reservation, { withCredentials: true });
   }
 

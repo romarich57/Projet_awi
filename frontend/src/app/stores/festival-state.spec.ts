@@ -12,8 +12,8 @@ describe('FestivalState', () => {
   const mockFestival: FestivalDto = {
     id: 1,
     name: 'Test Festival 2024',
-    start_date: new Date('2024-06-01'),
-    end_date: new Date('2024-06-30'),
+    start_date: '2024-06-01',
+    end_date: '2024-06-30',
     stock_tables_standard: 10,
     stock_tables_grande: 5,
     stock_tables_mairie: 3,
@@ -25,8 +25,8 @@ describe('FestivalState', () => {
     {
       id: 2,
       name: 'Another Festival',
-      start_date: new Date('2024-07-01'),
-      end_date: new Date('2024-07-15'),
+      start_date: '2024-07-01',
+      end_date: '2024-07-15',
       stock_tables_standard: 8,
       stock_tables_grande: 4,
       stock_tables_mairie: 2,
@@ -121,8 +121,8 @@ describe('FestivalState', () => {
       const festival: FestivalDto = {
         id: 42,
         name: 'Complete Festival',
-        start_date: new Date('2024-08-01'),
-        end_date: new Date('2024-08-31'),
+        start_date: '2024-08-01',
+        end_date: '2024-08-31',
         stock_tables_standard: 15,
         stock_tables_grande: 8,
         stock_tables_mairie: 5,
@@ -228,8 +228,8 @@ describe('FestivalState', () => {
       const minimalFestival: FestivalDto = {
         id: 1,
         name: 'Minimal',
-        start_date: new Date('2024-01-01'),
-        end_date: new Date('2024-01-02'),
+        start_date: '2024-01-01',
+        end_date: '2024-01-02',
         stock_tables_standard: 0,
         stock_tables_grande: 0,
         stock_tables_mairie: 0,
@@ -246,8 +246,8 @@ describe('FestivalState', () => {
       const largeFestival: FestivalDto = {
         id: 1,
         name: 'Large Festival',
-        start_date: new Date('2024-01-01'),
-        end_date: new Date('2024-01-02'),
+        start_date: '2024-01-01',
+        end_date: '2024-01-02',
         stock_tables_standard: 1000,
         stock_tables_grande: 500,
         stock_tables_mairie: 100,
@@ -283,9 +283,9 @@ describe('FestivalState', () => {
       expect(state.currentFestival()?.name).toContain('🎉');
     });
 
-    it('should preserve Date objects correctly', () => {
-      const startDate = new Date('2024-12-31T23:59:59Z');
-      const endDate = new Date('2025-01-01T00:00:00Z');
+    it('should preserve date strings correctly', () => {
+      const startDate = '2024-12-31T23:59:59Z';
+      const endDate = '2025-01-01T00:00:00Z';
       const datesFestival: FestivalDto = {
         id: 1,
         name: 'Dates Test',

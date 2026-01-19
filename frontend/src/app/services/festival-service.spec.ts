@@ -12,8 +12,8 @@ describe('FestivalService', () => {
   const mockFestival: FestivalDto = {
     id: 1,
     name: 'Test Festival',
-    start_date: new Date('2024-06-01'),
-    end_date: new Date('2024-06-30'),
+    start_date: '2024-06-01',
+    end_date: '2024-06-30',
     stock_tables_standard: 10,
     stock_tables_grande: 5,
     stock_tables_mairie: 3,
@@ -55,6 +55,9 @@ describe('FestivalService', () => {
       const req = httpMock.expectOne(`${environment.apiUrl}/festivals`);
       expect(req.request.method).toBe('POST');
       req.flush({ festival: mockFestival });
+      const reloadReq = httpMock.expectOne(`${environment.apiUrl}/festivals`);
+      expect(reloadReq.request.method).toBe('GET');
+      reloadReq.flush([mockFestival]);
     });
 
     it('should add zone tarifaire via POST', (done) => {

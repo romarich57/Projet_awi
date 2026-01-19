@@ -58,9 +58,8 @@ export class FestivalService {
             { withCredentials: true }
         ).pipe(
             tap((response) => {
-                // Ajouter le nouveau festival à la liste locale
-                this.festivals.update(festivals => [...festivals, response.festival]);
                 console.log('Festival ajouté avec succès:', response.festival);
+                this.loadAllFestivals();
             })
         );
     }
@@ -94,7 +93,7 @@ export class FestivalService {
             { withCredentials: true },
         ).pipe(
             tap(() => {
-                this.festivals.update(festivals => festivals.filter(festival => festival.id !== festivalId));
+                this.loadAllFestivals();
             }),
         );
     }

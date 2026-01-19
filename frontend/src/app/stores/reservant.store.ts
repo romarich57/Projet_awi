@@ -3,7 +3,7 @@ import { signal } from "@angular/core";
 import { inject } from "@angular/core";
 import { ReservantApiService } from "../services/reservant-api";
 import { ReservantDto } from "../types/reservant-dto";
-import { finalize, tap } from "rxjs";
+import { finalize, switchMap, tap, type Observable } from "rxjs";
 import { ReservantWorkflowApi } from "../services/reservant-workflow-api";
 import { ReservantWorkflowState } from "../types/reservant-dto";
 import { ReservantWorkflowFlagsDto } from "../types/reservant-workflow-flags-dto";
@@ -24,13 +24,15 @@ export class ReservantStore {
     private readonly _contacts = signal<ContactDto[]>([]);
     private readonly _contactTimeline = signal<ReservantContactDto[]>([]);
     private readonly _currentFestivalId = signal<number | null>(null);
+    private readonly _loading = signal(false);
+    private readonly _error = signal<string | null>(null);
 
     public readonly reservants = this._reservants.asReadonly();
     public readonly contacts = this._contacts.asReadonly();
     public readonly contactTimeline = this._contactTimeline.asReadonly();
     public readonly currentFestivalId = this._currentFestivalId.asReadonly();
-    loading = signal(false);
-    error = signal<string | null>(null);
+    public readonly loading = this._loading.asReadonly();
+    public readonly error = this._error.asReadonly();
 
     // Role : Definir le festival courant pour filtrer les reservants.
     // Preconditions : Aucune.
@@ -43,13 +45,17 @@ export class ReservantStore {
     // Preconditions : ReservantApiService est disponible.
     // Postconditions : Le signal _reservants est mis a jour.
     loadAll(): void {
-        this.loading.set(true);
-        this.api.list().subscribe({
+        this._loading.set(true);
+        this._error.set(null);
+        this.api.list().pipe(
+            finalize(() => this._loading.set(false)),
+        ).subscribe({
             next: (reservants) => {
                 this._reservants.set(reservants);
             },
             error: (error) => {
                 console.error('Error loading reservants:', error);
+                this._error.set(error.message || 'Erreur lors du chargement des réservants');
             },
         });
     }
@@ -58,15 +64,17 @@ export class ReservantStore {
     // Preconditions : festivalId est valide.
     // Postconditions : Le signal _reservants est mis a jour et l'erreur est ajustee.
     loadByFestival(festivalId: number): void {
-        this.loading.set(true);
-        this.error.set(null);
-        this.reservationService.getReservantsByFestival(festivalId).subscribe({
+        this._loading.set(true);
+        this._error.set(null);
+        this.reservationService.getReservantsByFestival(festivalId).pipe(
+            finalize(() => this._loading.set(false)),
+        ).subscribe({
             next: (reservants) => {
                 this._reservants.set(reservants);
             },
             error: (error) => {
                 console.error('Error loading reservants for festival:', error);
-                this.error.set(error.message || 'Erreur lors du chargement des réservants');
+                this._error.set(error.message || 'Erreur lors du chargement des réservants');
             },
         });
     }
@@ -74,13 +82,17 @@ export class ReservantStore {
     // Preconditions : id est valide.
     // Postconditions : Le signal _reservants contient le reservant charge.
     loadById(id: number): void {
-        this.loading.set(true);
-        this.api.getbyid(id).subscribe({
+        this._loading.set(true);
+        this._error.set(null);
+        this.api.getbyid(id).pipe(
+            finalize(() => this._loading.set(false)),
+        ).subscribe({
             next: (reservant) => {
                 this._reservants.set([reservant]);
             },
             error: (error) => {
                 console.error('Error loading reservant:', error);
+                this._error.set(error.message || 'Erreur lors du chargement du réservant');
             },
         });
     }
@@ -88,18 +100,16 @@ export class ReservantStore {
     // Preconditions : Un objet ReservantDto valide est fourni.
     // Postconditions : Le reservant est ajoute et les etats loading/error sont mis a jour.
     create(reservant: ReservantDto): void {
-        this.loading.set(true);
-        this.error.set(null);
-        this.api.create(reservant).subscribe({
-            next: (newReservant) => {
-                // Ajouter a la liste existante au lieu de remplacer
-                this._reservants.set([...this._reservants(), newReservant]);
-                this.loading.set(false);
-            },
+        this._loading.set(true);
+        this._error.set(null);
+        this.api.create(reservant).pipe(
+            switchMap(() => this.fetchReservantsAfterMutation()),
+            tap((reservants) => this._reservants.set(reservants)),
+            finalize(() => this._loading.set(false)),
+        ).subscribe({
             error: (error) => {
                 console.error('Error creating reservant:', error);
-                this.error.set(error.message || 'Erreur lors de la création');
-                this.loading.set(false);
+                this._error.set(error.message || 'Erreur lors de la création');
             },
         });
     }
@@ -107,23 +117,26 @@ export class ReservantStore {
     // Preconditions : Un objet ReservantDto valide est fourni.
     // Postconditions : Le signal _reservants est mis a jour avec la version modifiee.
     update(reservant: ReservantDto) {
-        this.loading.set(true);
+        this._loading.set(true);
         return this.api.update(reservant).pipe(
             tap((updated) => this._reservants.set([updated])),
-            finalize(() => this.loading.set(false)),
+            finalize(() => this._loading.set(false)),
         );
     }
     // Role : Supprimer un reservant.
     // Preconditions : Un objet ReservantDto valide est fourni.
     // Postconditions : Le signal _reservants est mis a jour si la suppression reussit.
     delete(reservant: ReservantDto): void {
-        this.loading.set(true);
-        this.api.delete(reservant).subscribe({
-            next: (reservant) => {
-                this._reservants.set([reservant]);
-            },
+        this._loading.set(true);
+        this._error.set(null);
+        this.api.delete(reservant).pipe(
+            switchMap(() => this.fetchReservantsAfterMutation()),
+            tap((reservants) => this._reservants.set(reservants)),
+            finalize(() => this._loading.set(false)),
+        ).subscribe({
             error: (error) => {
                 console.error('Error deleting reservant:', error);
+                this._error.set(error.message || 'Erreur lors de la suppression');
             },
         });
     }
@@ -155,9 +168,9 @@ export class ReservantStore {
             console.warn('Transition de workflow refusée', current?.workflow_state, '->', newState);
             return;
         }
-        this.loading.set(true);
+        this._loading.set(true);
         this.workflowApi.updateState(reservantId, newState, this._currentFestivalId()).pipe(
-            finalize(() => this.loading.set(false)),
+            finalize(() => this._loading.set(false)),
         ).subscribe({
             next: (updated) => {
                 this._reservants.set([updated]);
@@ -172,9 +185,9 @@ export class ReservantStore {
     // Preconditions : reservantId est valide et flags est fourni.
     // Postconditions : Le reservant est mis a jour dans le store.
     updateWorkflowFlags(reservantId: number, flags: ReservantWorkflowFlagsDto): void {
-        this.loading.set(true);
+        this._loading.set(true);
         this.workflowApi.updateFlags(reservantId, flags, this._currentFestivalId()).pipe(
-            finalize(() => this.loading.set(false)),
+            finalize(() => this._loading.set(false)),
         ).subscribe({
             next: (updated) => {
                 this._reservants.set([updated]);
@@ -209,9 +222,9 @@ export class ReservantStore {
     // Preconditions : reservantId, contactId et dateContact sont valides.
     // Postconditions : Le signal _contactTimeline est mis a jour.
     addContactEvent(reservantId: number, contactId: number, dateContact: string): void {
-        this.loading.set(true);
+        this._loading.set(true);
         this.contactApi.addContactEvent(reservantId, contactId, dateContact).pipe(
-            finalize(() => this.loading.set(false)),
+            finalize(() => this._loading.set(false)),
         ).subscribe({
             next: (event) => this._contactTimeline.set([...this._contactTimeline(), event]),
             error: (error) => console.error('Error adding contact event:', error),
@@ -222,9 +235,9 @@ export class ReservantStore {
     // Preconditions : reservantId est valide et contact est fourni.
     // Postconditions : Le contact est ajoute dans le signal _contacts.
     createContact(reservantId: number, contact: ContactDto): void {
-        this.loading.set(true);
+        this._loading.set(true);
         this.contactApi.addContact(reservantId, contact).pipe(
-            finalize(() => this.loading.set(false)),
+            finalize(() => this._loading.set(false)),
         ).subscribe({
             next: (c) => this._contacts.set([...this._contacts(), c]),
             error: (error) => console.error('Error creating contact:', error),
@@ -235,9 +248,9 @@ export class ReservantStore {
     // Preconditions : reservantId et contactId sont valides.
     // Postconditions : Le contact est retire du signal _contacts.
     deleteContact(reservantId: number, contactId: number): void {
-        this.loading.set(true);
+        this._loading.set(true);
         this.contactApi.deleteContact(reservantId, contactId).pipe(
-            finalize(() => this.loading.set(false)),
+            finalize(() => this._loading.set(false)),
         ).subscribe({
             next: () => this._contacts.set(this._contacts().filter(c => c.id !== contactId)),
             error: (error) => console.error('Error deleting contact:', error),
@@ -248,12 +261,22 @@ export class ReservantStore {
     // Preconditions : reservantId et eventId sont valides.
     // Postconditions : L'evenement est retire du signal _contactTimeline.
     deleteContactEvent(reservantId: number, eventId: number): void {
-        this.loading.set(true);
+        this._loading.set(true);
         this.contactApi.deleteContactEvent(reservantId, eventId).pipe(
-            finalize(() => this.loading.set(false)),
+            finalize(() => this._loading.set(false)),
         ).subscribe({
             next: () => this._contactTimeline.set(this._contactTimeline().filter(e => e.id !== eventId)),
             error: (error) => console.error('Error deleting contact event:', error),
         });
+    }
+
+    // Role : Recharger les reservants apres une mutation.
+    // Preconditions : Le festival courant peut etre null.
+    // Postconditions : Retourne un Observable avec la liste actualisee.
+    private fetchReservantsAfterMutation(): Observable<ReservantDto[]> {
+        const festivalId = this._currentFestivalId();
+        return festivalId !== null
+            ? this.reservationService.getReservantsByFestival(festivalId)
+            : this.api.list();
     }
 }

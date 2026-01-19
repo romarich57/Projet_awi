@@ -1,4 +1,5 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { GameApiService } from '@app/services/game-api';
 import { EditorApiService } from '@app/services/editor-api';
 import { ReservationService } from '@app/services/reservation.service';
@@ -170,9 +171,9 @@ export class GamesStore {
     this._deleteError.set(null);
     this.gameApi.delete(game.id).subscribe({
       next: () => {
-        this._games.set(this._games().filter((item) => item.id !== game.id));
+        this.loadGames();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         if (err.status === 409) {
           this._deleteError.set('Impossible de supprimer ce jeu car il est utilisé dans une réservation');
         } else {

@@ -22,8 +22,8 @@ describe('FestivalCardComponent', () => {
     mockFestival = {
       id: 1,
       name: 'Test Fest',
-      start_date: new Date('2024-01-01'),
-      end_date: new Date('2024-01-02'),
+      start_date: '2024-01-01',
+      end_date: '2024-01-02',
       stock_tables_standard: 10,
       stock_tables_grande: 5,
       stock_tables_mairie: 2,
