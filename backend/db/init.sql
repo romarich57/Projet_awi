@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS festival (
     stock_tables_grande INTEGER NOT NULL DEFAULT 0,
     stock_tables_mairie INTEGER NOT NULL DEFAULT 0,
     stock_chaises INTEGER NOT NULL DEFAULT 0,
-    stock_chaises_available INTEGER NOT NULL DEFAULT 0
+    stock_chaises_available INTEGER NOT NULL DEFAULT 0,
+    prix_prises NUMERIC NOT NULL DEFAULT 0
 );
 
 -- // Table des Editeurs (createurs de jeux)

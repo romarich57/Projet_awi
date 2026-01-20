@@ -72,7 +72,7 @@ function validateAllocationPayload(body: any): { errors: string[], payload: any 
 // Postconditions : Retourne la liste des festivals.
 router.get('/', async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : null;
-    let query = 'SELECT id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date FROM festival ORDER BY start_date DESC';
+    let query = 'SELECT id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, prix_prises, start_date, end_date FROM festival ORDER BY start_date DESC';
 
     if (limit && limit > 0) {
         query += ` LIMIT ${limit}`;
@@ -88,7 +88,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
     const { id } = req.params
     const { rows } = await pool.query(
-        'SELECT id, name, start_date, end_date, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises FROM festival WHERE id = $1',
+        'SELECT id, name, start_date, end_date, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, prix_prises FROM festival WHERE id = $1',
         [id]
     )
     if (rows.length === 0) {
@@ -167,7 +167,7 @@ router.get('/:id/stock-tables', requireBackoffice, async (req: Request, res: Res
 // Preconditions : Utilisateur authentifie avec un role backoffice, champs requis fournis.
 // Postconditions : Cree le festival ou retourne une erreur.
 router.post('/', requireBackoffice, async (req: Request, res: Response) => {
-    const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date } = req.body
+    const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, prix_prises, start_date, end_date } = req.body
     if (!name || !start_date || !end_date) {
         return res.status(400).json({ error: 'Champs obligatoires manquants' })
     }
@@ -180,11 +180,12 @@ router.post('/', requireBackoffice, async (req: Request, res: Response) => {
                 stock_tables_mairie,
                 stock_chaises,
                 stock_chaises_available,
+                prix_prises,
                 start_date,
                 end_date
              )
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             RETURNING id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING id, name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, prix_prises, start_date, end_date`,
             [
               name,
               stock_tables_standard || 0,
@@ -192,6 +193,7 @@ router.post('/', requireBackoffice, async (req: Request, res: Response) => {
               stock_tables_mairie || 0,
               stock_chaises || 0,
               stock_chaises || 0,
+              prix_prises || 0,
               start_date,
               end_date,
             ]
@@ -212,7 +214,7 @@ router.post('/', requireBackoffice, async (req: Request, res: Response) => {
 // Postconditions : Met a jour le festival ou retourne une erreur.
 router.put('/:id', requireBackoffice, async (req: Request, res: Response) => {
     const { id } = req.params
-    const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date } = req.body
+    const { name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, prix_prises, start_date, end_date } = req.body
     try {
         const { rowCount } = await pool.query(
             `UPDATE festival
@@ -222,10 +224,11 @@ router.put('/:id', requireBackoffice, async (req: Request, res: Response) => {
                  stock_tables_mairie = $4,
                  stock_chaises = $5,
                  stock_chaises_available = GREATEST(0, $5 - (stock_chaises - stock_chaises_available)),
-                 start_date = $6,
-                 end_date = $7
-             WHERE id = $8`,
-            [name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, start_date, end_date, id]
+                 prix_prises = $6,
+                 start_date = $7,
+                 end_date = $8
+             WHERE id = $9`,
+            [name, stock_tables_standard, stock_tables_grande, stock_tables_mairie, stock_chaises, prix_prises, start_date, end_date, id]
         )
         if (rowCount === 0) {
             return res.status(404).json({ error: 'Festival non trouvé' })

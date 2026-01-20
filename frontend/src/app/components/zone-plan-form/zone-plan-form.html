@@ -21,7 +21,7 @@
         <label for="nb_tables">Nombre de tables:</label>
         <input id="nb_tables" type="number" formControlName="nb_tables" min="1" />
         @if (zonePlanForm.controls['id_zone_tarifaire'].value !== null) {
-          <small class="info">Tables disponibles: {{ tablesRestantes()[zonePlanForm.controls['id_zone_tarifaire'].value] ?? 0 }}</small>
+          <small class="info">Tables disponibles: {{ tablesRestantes()[zonePlanForm.controls['id_zone_tarifaire'].value] || 0 }}</small>
         }
         @if (zonePlanForm.controls['nb_tables'].errors?.['required'] && zonePlanForm.controls['nb_tables'].touched) {
           <small class="error">Le nombre de tables est requis.</small>

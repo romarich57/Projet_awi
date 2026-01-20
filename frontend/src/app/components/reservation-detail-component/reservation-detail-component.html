@@ -91,9 +91,9 @@
           (input)="onPrisesChange($event)"
           [readonly]="readOnly()"
         />
-        <span class="price-info">{{ prixParPrise | currency:'EUR':'symbol':'1.0-2' }} / prise</span>
+        <span class="price-info">{{ prixParPrise() | currency:'EUR':'symbol':'1.0-2' }} / prise</span>
         <span class="subtotal">
-          = {{ (nbPrises() * prixParPrise) | currency:'EUR':'symbol':'1.0-2' }}
+          = {{ (nbPrises() * prixParPrise()) | currency:'EUR':'symbol':'1.0-2' }}
         </span>
       </div>
     </div>
