@@ -1,36 +1,46 @@
 <div class="zone-plan-jeux-container">
     <!-- Bloc conditionnel principal -->
+ 
+    
     @if (festivalId()) {
-        @if (isGameMode()) {
-            <!-- Section des jeux non alloués -->
-            <div class="jeux-non-alloues">
-                <h4>🎮 Jeux non alloués ({{ jeuxNonAlloues().length }})</h4>
-                @if (jeuxNonAlloues().length > 0) {
-                    <div class="jeux-list compact">
-                        @for (jeu of jeuxNonAlloues(); track jeu.allocation_id) {
-                            <div class="jeu-item non-alloue">
-                                <div class="jeu-info">
-                                    <span class="jeu-title">{{ jeu.title }}</span>
-                                    <span class="jeu-reservant">{{ jeu.reservant_name }}</span>
+        @if(!isReadOnly()) {
+        
+        
+
+            @if (isGameMode()) {
+                <!-- Section des jeux non alloués -->
+                <div class="jeux-non-alloues">
+                    <h4>🎮 Jeux non alloués ({{ jeuxNonAlloues().length }})</h4>
+                    @if (jeuxNonAlloues().length > 0) {
+                        <div class="jeux-list compact">
+                            @for (jeu of jeuxNonAlloues(); track jeu.allocation_id) {
+                                <div class="jeu-item non-alloue">
+                                    <div class="jeu-info">
+                                        <span class="jeu-title">{{ jeu.title }}</span>
+                                        <span class="jeu-reservant">{{ jeu.reservant_name }}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        }
-                    </div>
-                } @else {
-                    <p class="empty-message">✅ Tous les jeux sont alloués à une zone.</p>
-                }
+                            }
+                        </div>
+                    } @else {
+                        <p class="empty-message">✅ Tous les jeux sont alloués à une zone.</p>
+                    }
+                </div>
+
+                <hr class="section-divider">
+            }
+
+            
+            <div class="chaises-stock-global">
+                <span class="chaises-label">🪑 Stock chaises festival :</span>
+                <span class="chaises-count" [class.low-stock]="chaisesStock().available <= 10">
+                    {{ chaisesStock().available }} disponibles / {{ chaisesStock().total }} total
+                </span>
             </div>
 
-            <hr class="section-divider">
         }
-
         
-        <div class="chaises-stock-global">
-            <span class="chaises-label">🪑 Stock chaises festival :</span>
-            <span class="chaises-count" [class.low-stock]="chaisesStock().available <= 10">
-                {{ chaisesStock().available }} disponibles / {{ chaisesStock().total }} total
-            </span>
-        </div>
+    
         
 
         <!-- Liste des zones de plan -->
@@ -225,7 +235,7 @@
                                                 <input type="number" 
                                                        [ngModel]="gameTablesInput()" 
                                                        (ngModelChange)="onGameTablesInputChange($event)"
-                                                       min="0" 
+                                                       min="0.5" 
                                                        step="0.5">
                                             </label>
                                         } @else {
@@ -234,8 +244,8 @@
                                                 <input type="number" 
                                                        [ngModel]="gameM2Input()" 
                                                        (ngModelChange)="onGameM2InputChange($event)"
-                                                       min="0" 
-                                                       step="0.5">
+                                                       min="2.25" 
+                                                       step="0.25">
                                                 <small class="hint-text">= {{ gameTablesInput() }} table(s)</small>
                                             </label>
                                         }

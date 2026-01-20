@@ -30,6 +30,8 @@ interface ZonePlanAvecJeux extends ZonePlanDto {
 // Postconditions : Les stocks, allocations et jeux sont charges et mis a jour selon les actions.
 export class ZonePlanJeux {
 
+  isReadOnly = input<boolean>(false);
+
   festivalId = input.required<number | null>();
   reservation = input<ReservationWithZones | null>(null);
   refreshToken = input<number>(0);
