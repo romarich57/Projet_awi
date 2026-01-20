@@ -132,7 +132,7 @@ WHERE nb_tables_available IS NULL;
 
 CREATE TABLE IF NOT EXISTS zone_plan (
     id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
     festival_id INTEGER REFERENCES festival(id),
     id_zone_tarifaire INTEGER REFERENCES zone_tarifaire(id),
     nb_tables INTEGER NOT NULL

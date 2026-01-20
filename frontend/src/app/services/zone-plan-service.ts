@@ -72,6 +72,12 @@ export class ZonePlanService {
   // Preconditions : data est fourni et festivalId est valide.
   // Postconditions : Recharge la liste des zones du festival.
   addZonePlan(data: Partial<ZonePlanDto>, festivalId: number) {
+    // Vérifier côté client si une zone de plan avec le même nom existe déjà dans ce festival
+    const existing = this.zonePlans().find(z => z.festival_id === festivalId && z.name.trim().toLowerCase() === String(data.name).trim().toLowerCase());
+    if (existing) {
+      console.error('Erreur lors de l\'ajout de la nouvelle zone de plan de jeux: une zone avec ce nom existe déjà dans ce festival');
+      return;
+    }
     const payload = { ...data, festival_id: festivalId };
     return this.http.post<ZonePlanDto>(`/api/zone-plan`, payload, { withCredentials: true }).subscribe({
       next: (newZonePlan) => {
