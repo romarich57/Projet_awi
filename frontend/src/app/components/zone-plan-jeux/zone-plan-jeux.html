@@ -291,6 +291,10 @@
                                             💡 Tables disponibles dans cette zone : {{ tablesRestantesParZone()[selectedZone()!.id] }}
                                         </p>
                                         
+                                        <p class="hint" [class.warning]="selectedZone() && tablesCalculees() > quotaRestantPourZone(selectedZone()!)">
+                                            Tables restantes dans la réservation ({{ selectedZone()?.zone_tarifaire_name }}) : 
+                                            <strong>{{ selectedZone() ? quotaRestantPourZone(selectedZone()!) : 0 }}</strong>
+                                        </p>
                                         @if (stockInsuffisant()) {
                                             <p class="error">⚠️ Stock insuffisant pour ce type de table ({{ stockPourTailleSelectionnee() }} restantes)</p>
                                         }
@@ -379,7 +383,10 @@
                         @if (isGameMode()) {
                             <button class="btn-confirm" 
                                     (click)="allocateGame()" 
-                                    [disabled]="!selectedGame() || loading() || tablesCalculees() > tablesRestantesParZone()[selectedZone()!.id] || stockInsuffisant()">
+                                    [disabled]="!selectedGame() || loading() || 
+                                        tablesCalculees() > tablesRestantesParZone()[selectedZone()!.id] || 
+                                        (selectedZone() && tablesCalculees() > quotaRestantPourZone(selectedZone()!)) || 
+                                        stockInsuffisant()">
                                 {{ loading() ? 'Allocation...' : 'Allouer le jeu' }}
                             </button>
                         } @else {

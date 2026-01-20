@@ -384,6 +384,20 @@ private loadChaisesStock(festivalId: number): void {
     return result;
   });
 
+
+  // Calcule combien de tables le client peut encore placer dans cette catégorie de prix
+  // (Total Réservé - Déjà Placé ailleurs)
+  quotaRestantPourZone(zone: ZonePlanAvecJeux): number {
+    const ztId = zone.id_zone_tarifaire;
+    const totalReserve = this.tablesReserveesParZoneTarifaire()[ztId] || 0;
+    const totalPlace = this.tablesAlloueesParZoneTarifaireReservation()[ztId] || 0;
+    
+    // Si on modifie un jeu déjà placé dans cette zone tarifaire, on ne doit pas compter ses tables actuelles comme "utilisées"
+    // Mais ici, on part du principe que tu alloues un jeu depuis la liste des "Non Alloués".
+    
+    return Math.max(0, totalReserve - totalPlace);
+  }
+
   // Calcule le nombre de tables restantes par zone
   readonly tablesRestantesParZone = computed(() => {
     const zones = this.zonesAvecJeux();
@@ -618,6 +632,8 @@ private loadChaisesStock(festivalId: number): void {
       alert(`Pas assez de tables disponibles. Restantes: ${tablesRestantes}, Demandées: ${nbTables}`);
       return;
     }
+
+    const quotaRestant = this.quotaRestantPourZone(zone);
 
     // Vérifier que les chaises ne dépassent pas le stock disponible
     const chaisesDisponibles = this.chaisesDisponibles();
