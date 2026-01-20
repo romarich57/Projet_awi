@@ -139,19 +139,43 @@ export class ZonePlanJeux {
   readonly tablesAlloueesParZoneTarifaireReservation = computed(() => {
     const result: Record<number, number> = {};
     const zonePlans = this.zonePlans();
-    const allocations = this.tablesAlloueesParZoneReservation();
+    const reservation = this.reservation();
+    
+    // 1. Récupérer les tables "simples" 
+    const simpleAllocations = this.tablesAlloueesParZoneReservation();
+
+    // 2. Récupérer la liste complète des zones (qui contient les jeux)
+    const zonesCompletes = this.zonesAvecJeux();
 
     for (const zone of zonePlans) {
-      const tables = allocations[zone.id] || 0;
-      result[zone.id_zone_tarifaire] = (result[zone.id_zone_tarifaire] || 0) + tables;
+      // Compter les tables simples
+      const nbSimples = simpleAllocations[zone.id] || 0;
+
+      // Compter les tables prises par les JEUX de ce réservant
+      // On cherche la zone chargée avec ses jeux
+      const zoneAvecJeux = zonesCompletes.find(z => z.id === zone.id);
+      
+      const nbJeux = zoneAvecJeux && reservation
+        ? zoneAvecJeux.jeuxAlloues
+            .filter(j => j.reservation_id === reservation.id) // Uniquement les jeux de CE client
+            // Additionne leurs tables
+            .reduce((sum, j) => sum + Number(j.nb_tables_occupees), 0) //reduce prend une liste d'éléments et la transforme en une seule valeur (ici, un nombre total)
+        : 0;
+
+      // Total consommé dans cette salle
+      const totalUtilise = nbSimples + nbJeux;
+
+      // On ajoute au total de la zone tarifaire correspondante
+      result[zone.id_zone_tarifaire] = (result[zone.id_zone_tarifaire] || 0) + totalUtilise;
     }
 
     return result;
   });
 
-  // Tables occupées pour l'allocation du jeu
+  // Tables occupées Ttotales (Tables par jeu * Nombre d'exemplaires)
   readonly tablesCalculees = computed(() => {
-    return this.gameTablesInput();
+    // On multiplie l'input (taille d'un jeu) par le nombre d'exemplaires
+    return this.gameTablesInput() * this.nbExemplairesInput();
   });
 
   // Filtrer les jeux disponibles pour la zone sélectionnée
