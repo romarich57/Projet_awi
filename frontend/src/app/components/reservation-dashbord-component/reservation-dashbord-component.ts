@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, effect, computed } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { ReservationService } from '../../services/reservation.service';
 import { FestivalState } from '../../stores/festival-state';
@@ -11,6 +11,7 @@ import { catchError, finalize, of } from 'rxjs';
 @Component({
   selector: 'app-reservation-dashbord-component',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, ReservationFormComponent],
   templateUrl: './reservation-dashbord-component.html',
   styleUrl: './reservation-dashbord-component.scss',

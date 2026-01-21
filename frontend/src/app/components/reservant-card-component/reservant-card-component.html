@@ -122,7 +122,7 @@
     (patch)="onGameFormPatch($event)" (imageSourceChanged)="onGameImageSourceChanged($event)"
     (imageFileSelected)="onGameImageFileSelected($event)" (submit)="onGameSubmit()" (cancelClicked)="onGameCancel()">
     <app-game-image-preview [imageUrl]="gameImagePreview()">
-      <span>{{ gameFormData().title.charAt(0) || '?' }}</span>
+      <span>{{ gameTitleInitial() }}</span>
     </app-game-image-preview>
     <app-game-mechanisms-select [mechanisms]="gameMechanisms()" [selectedIds]="gameFormData().mechanismIds"
       (selectedIdsChange)="onGameFormPatch({ mechanismIds: $event })" />

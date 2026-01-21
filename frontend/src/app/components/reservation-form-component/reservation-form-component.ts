@@ -1,14 +1,16 @@
-import { Component, inject, input, output, OnInit, SimpleChanges, effect, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ReservationCreatePayload, ReservationService } from '../../services/reservation.service';
 import { ReservantApiService } from '../../services/reservant-api';
 import { ReservantDto } from '../../types/reservant-dto';
 import { AuthService } from '@app/services/auth.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-reservation-form-component',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './reservation-form-component.html',
   styleUrls: ['./reservation-form-component.scss'],
@@ -19,13 +21,15 @@ import { AuthService } from '@app/services/auth.service';
 export class ReservationFormComponent {
 
   readonly authService = inject(AuthService);
-  readonly currentUser = this.authService.currentUser();
+  readonly currentUser = this.authService.currentUser;
+  private readonly destroyRef = inject(DestroyRef);
 
   // Inputs
   festivalName = input<string>();
   festivalId = input<number>();
   readOnly = computed(() => {
-    return this.currentUser?.role !== 'admin' && this.currentUser?.role !== 'super-organizer';
+    const user = this.currentUser();
+    return user?.role !== 'admin' && user?.role !== 'super-organizer';
   });
 
   // Outputs
@@ -68,18 +72,27 @@ export class ReservationFormComponent {
   // Préconditions : Le formulaire est cree.
   // Postconditions : Les changements de champs declenchent les mises a jour de visibilite/validation.
   private setupRepresentedEditorWatchers(): void {
-    this.reservationForm.get('reservant_type')?.valueChanges.subscribe(() => {
-      this.handleRepresentedEditorVisibility();
-    });
-    this.reservationForm.get('existing_reservant_id')?.valueChanges.subscribe(() => {
-      this.handleRepresentedEditorVisibility();
-    });
-    this.reservationForm.get('represent_editor')?.valueChanges.subscribe(() => {
-      this.updateRepresentedEditorValidators();
-      if (this.reservationForm.get('represent_editor')?.value === 'no') {
-        this.reservationForm.patchValue({ represented_editor_id: null }, { emitEvent: false });
-      }
-    });
+    this.reservationForm
+      .get('reservant_type')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.handleRepresentedEditorVisibility();
+      });
+    this.reservationForm
+      .get('existing_reservant_id')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.handleRepresentedEditorVisibility();
+      });
+    this.reservationForm
+      .get('represent_editor')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.updateRepresentedEditorValidators();
+        if (this.reservationForm.get('represent_editor')?.value === 'no') {
+          this.reservationForm.patchValue({ represented_editor_id: null }, { emitEvent: false });
+        }
+      });
   }
 
 

@@ -3,12 +3,10 @@ services:
     image: postgres:16-alpine
     container_name: secureapp_db_prodpol
     restart: unless-stopped
-    env_file:
-      - backend/.env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-secureapp}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secureapp}
-      POSTGRES_DB: ${POSTGRES_DB:-secureapp}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB required}
     volumes:
       - db_data_prodpol:/var/lib/postgresql/data
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
@@ -30,33 +28,31 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - backend/.env
     environment:
       NODE_ENV: production
-      PORT: ${BACKEND_PORT:-4000}
+      PORT: ${BACKEND_PORT:?BACKEND_PORT required}
       HOST: 0.0.0.0
-      HTTPS_ENABLED: ${HTTPS_ENABLED:-true}
+      HTTPS_ENABLED: ${HTTPS_ENABLED:?HTTPS_ENABLED required}
       CERTS_DIR: /app/certs
-      HTTPS_CERT_PATH: ${HTTPS_CERT_PATH:-/app/certs/prodpol.pem}
-      HTTPS_KEY_PATH: ${HTTPS_KEY_PATH:-/app/certs/prodpol-key.pem}
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-15m}
-      REFRESH_EXPIRATION: ${REFRESH_EXPIRATION:-7d}
-      FRONTEND_URL: ${FRONTEND_URL}
-      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@secureapp.com}
-      ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-adminadmin}
-      ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-Admin}
-      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-System}
-      ADMIN_AVATAR_URL: ${ADMIN_AVATAR_URL:-}
-      ADMIN_PHONE: ${ADMIN_PHONE:-}
+      HTTPS_CERT_PATH: ${HTTPS_CERT_PATH:?HTTPS_CERT_PATH required}
+      HTTPS_KEY_PATH: ${HTTPS_KEY_PATH:?HTTPS_KEY_PATH required}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:?JWT_EXPIRATION required}
+      REFRESH_EXPIRATION: ${REFRESH_EXPIRATION:?REFRESH_EXPIRATION required}
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL required}
+      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:?FRONTEND_ORIGINS required}
+      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST required}
+      SMTP_PORT: ${SMTP_PORT:?SMTP_PORT required}
+      SMTP_USER: ${SMTP_USER:?SMTP_USER required}
+      SMTP_PASS: ${SMTP_PASS:?SMTP_PASS required}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL required}
+      ADMIN_LOGIN: ${ADMIN_LOGIN:?ADMIN_LOGIN required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD required}
+      ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:?ADMIN_FIRST_NAME required}
+      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:?ADMIN_LAST_NAME required}
+      ADMIN_AVATAR_URL: ${ADMIN_AVATAR_URL:?ADMIN_AVATAR_URL required}
+      ADMIN_PHONE: ${ADMIN_PHONE:?ADMIN_PHONE required}
     ports:
       - "127.0.0.1:${BACKEND_PORT:-4000}:4000"
     volumes:
@@ -73,8 +69,6 @@ services:
     depends_on:
       backend:
         condition: service_started
-    env_file:
-      - backend/.env
     ports:
       - "80:80"
       - "443:443"

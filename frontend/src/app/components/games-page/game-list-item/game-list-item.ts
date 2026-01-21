@@ -23,6 +23,10 @@ export class GameListItemComponent {
   readonly edit = output<GameDto>();
   readonly delete = output<GameDto>();
   readonly safeImageUrl = computed(() => ensureHttpsUrl(this.game().image_url));
+  readonly titleInitial = computed(() => {
+    const title = this.game().title?.trim();
+    return title ? title.charAt(0) : '?';
+  });
 
   // Role : Ouvrir la vue detail du jeu.
   // Préconditions : `game` est defini.

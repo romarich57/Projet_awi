@@ -76,6 +76,10 @@ export class ReservantCardComponent {
   readonly editorGamesError = signal<string | null>(null);
 
   readonly gameFormData = this.gameCreateStore.formData;
+  readonly gameTitleInitial = computed(() => {
+    const title = this.gameFormData().title?.trim();
+    return title ? title.charAt(0) : '?';
+  });
   readonly gameEditors = this.gameCreateStore.editors;
   readonly gameMechanisms = this.gameCreateStore.mechanisms;
   readonly gameSaving = this.gameCreateStore.saving;

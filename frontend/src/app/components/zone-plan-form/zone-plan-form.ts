@@ -1,10 +1,13 @@
-import { Component, effect, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ZonePlanService } from '@app/services/zone-plan-service';
 import { ZonePlanDto } from '@app/types/zone-plan-dto';
+import type { ZoneTarifaireDto } from '@app/types/zone-tarifaire-dto';
 
 @Component({
   selector: 'app-zone-plan-form',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
   templateUrl: './zone-plan-form.html',
   styleUrl: './zone-plan-form.scss'
@@ -17,7 +20,7 @@ export class ZonePlanForm {
   private readonly zonePlanService = inject(ZonePlanService);
   
   festivalId = input.required<number>();
-  zoneTarifaires = input<any[]>([]);
+  zoneTarifaires = input<ZoneTarifaireDto[]>([]);
   tablesRestantes = input<Record<number, number>>({});
   zonePlanToEdit = input<ZonePlanDto | null>(null);
   

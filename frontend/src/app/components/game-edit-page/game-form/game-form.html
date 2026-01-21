@@ -13,7 +13,7 @@
         @if (safeImagePreview()) {
           <img [src]="safeImagePreview()" [alt]="localFormData().title" loading="lazy" />
         } @else {
-          <span>{{ localFormData().title.charAt(0) || '?' }}</span>
+          <span>{{ titleInitial() }}</span>
         }
       </div>
       <div class="muted">Aperçu de l'image (image_url)</div>

@@ -7,13 +7,25 @@ import { ADMIN_EMAIL, ADMIN_LOGIN } from '../config/env.js'
 // Postconditions : Le compte admin est cree ou mis a jour avec les valeurs definies.
 export async function ensureAdmin(): Promise<void> {
   const login = ADMIN_LOGIN
-  const password = process.env.ADMIN_PASSWORD ?? 'adminadmin'
   const role = 'admin'
   const firstName = process.env.ADMIN_FIRST_NAME ?? 'Admin'
   const lastName = process.env.ADMIN_LAST_NAME ?? 'Account'
   const phone = process.env.ADMIN_PHONE ?? null
   const avatarUrl = process.env.ADMIN_AVATAR_URL ?? null
   const email = ADMIN_EMAIL
+
+  const { rows } = await pool.query<{ id: number }>(
+    'SELECT id FROM users WHERE login = $1 LIMIT 1',
+    [login],
+  )
+  if (rows.length > 0) {
+    return
+  }
+
+  const password = process.env.ADMIN_PASSWORD
+  if (!password || password.trim().length === 0 || password === 'adminadmin') {
+    throw new Error('ADMIN_PASSWORD doit etre defini avec une valeur non par defaut')
+  }
 
   const passwordHash = await bcrypt.hash(password, 10)
 
@@ -33,17 +45,7 @@ export async function ensureAdmin(): Promise<void> {
       email_verification_expires_at
     )
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, NULL, NULL)
-    ON CONFLICT (login) DO UPDATE
-      SET password_hash = EXCLUDED.password_hash,
-          role = EXCLUDED.role,
-          first_name = EXCLUDED.first_name,
-          last_name = EXCLUDED.last_name,
-          email = EXCLUDED.email,
-          phone = EXCLUDED.phone,
-          avatar_url = EXCLUDED.avatar_url,
-          email_verified = TRUE,
-          email_verification_token = NULL,
-          email_verification_expires_at = NULL
+    ON CONFLICT (login) DO NOTHING
     `,
     [login, passwordHash, role, firstName, lastName, email, phone, avatarUrl],
   )

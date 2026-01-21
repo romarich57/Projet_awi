@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReservationService, ReservationWithZones } from '@app/services/reservation.service';
@@ -19,6 +19,8 @@ interface ZoneSelection {
 
 @Component({
   selector: 'app-reservation-detail-component',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   templateUrl: './reservation-detail-component.html',
   styleUrl: './reservation-detail-component.scss'

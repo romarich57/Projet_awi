@@ -48,6 +48,10 @@ export class GameFormComponent {
   readonly imageUploadError = input<string | null>(null);
   readonly isUploadingImage = input(false);
   readonly safeImagePreview = computed(() => ensureHttpsUrl(this.imagePreview()));
+  readonly titleInitial = computed(() => {
+    const title = this.localFormData().title?.trim();
+    return title ? title.charAt(0) : '?';
+  });
 
   readonly formDataChanged = output<GameFormModel>();
   readonly submitClicked = output<void>();

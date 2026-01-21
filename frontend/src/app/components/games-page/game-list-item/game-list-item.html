@@ -5,7 +5,7 @@
       @if (safeImageUrl()) {
         <img [src]="safeImageUrl()" [alt]="game().title" loading="lazy" />
       } @else {
-        <span>{{ game().title.charAt(0) || '?' }}</span>
+        <span>{{ titleInitial() }}</span>
       }
     </div>
     <div class="title-block">

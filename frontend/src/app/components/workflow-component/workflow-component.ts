@@ -1,4 +1,14 @@
-import { Component, computed, effect, inject, input, OnDestroy, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  OnDestroy,
+  output,
+  signal,
+} from '@angular/core';
 import { WorkflowService } from '@app/services/workflow-service';
 import { CommonModule } from '@angular/common';
 import { WorkflowDto } from '@app/types/workflow-dto';
@@ -6,6 +16,8 @@ import { AuthService } from '@app/services/auth.service';
 
 @Component({
   selector: 'app-workflow-component',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   templateUrl: './workflow-component.html',
   styleUrl: './workflow-component.scss'
@@ -19,11 +31,12 @@ export class WorkflowComponent implements OnDestroy {
 
 
   readonly authService = inject(AuthService);
-  readonly currentUser = this.authService.currentUser();
+  readonly currentUser = this.authService.currentUser;
 
   // Inputs
   readOnly = computed(() => {
-    return this.currentUser?.role !== 'admin' && this.currentUser?.role !== 'super-organizer';
+    const user = this.currentUser();
+    return user?.role !== 'admin' && user?.role !== 'super-organizer';
   });
 
   reservationId = input.required<number | null>();

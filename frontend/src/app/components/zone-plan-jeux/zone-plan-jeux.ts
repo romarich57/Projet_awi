@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { ZonePlanAllocationSummary, ZonePlanService, AllocatedGameWithReservant, ZonePlanReservationAllocation, ZonePlanSimpleAllocation } from '@app/services/zone-plan-service';
 import { ZoneTarifaireService } from '@app/services/zone-tarifaire.service';
 import { ReservationService } from '@app/services/reservation.service';
@@ -22,6 +22,8 @@ interface ZonePlanAvecJeux extends ZonePlanDto {
 
 @Component({
   selector: 'app-zone-plan-jeux',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ZonePlanForm, CommonModule, FormsModule],
   templateUrl: './zone-plan-jeux.html',
   styleUrl: './zone-plan-jeux.scss'

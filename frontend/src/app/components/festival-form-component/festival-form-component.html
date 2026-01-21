@@ -80,7 +80,7 @@
           ➕ Ajouter une zone
         </button>
       </div>
-      @for(zone of zonesFormArray.controls; track $index) {
+      @for(zone of zonesFormArray.controls; track zone) {
         <div [formGroupName]="$index" class="zone-tarifaire">
           <div class="zone-header">
             <h4>Zone {{ $index + 1 }}</h4>

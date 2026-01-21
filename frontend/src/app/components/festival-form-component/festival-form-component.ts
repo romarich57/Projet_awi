@@ -1,4 +1,4 @@
-import { Component, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FestivalDto } from '../../types/festival-dto';
 import { FestivalService } from '@services/festival-service';
@@ -7,6 +7,7 @@ import { ZoneTarifaireDto } from '../../types/zone-tarifaire-dto';
 @Component({
   selector: 'app-festival-form-component',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
   templateUrl: './festival-form-component.html',
   styleUrl: './festival-form-component.scss',

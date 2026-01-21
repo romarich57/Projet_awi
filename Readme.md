@@ -1,42 +1,158 @@
-# SecureApp — Lancement en production (Docker)
+# SecureApp — Application de Gestion de Festivals de Jeux
 
-## Démarrage
-Depuis la racine du projet :
+Application web fullstack pour la gestion de festivals de jeux de société : réservations, gestion des réservants (éditeurs, boutiques, particuliers), allocation des jeux sur les zones du festival, et planification des espaces.
+
+## 🛠️ Stack Technique
+
+| Couche | Technologies |
+|--------|--------------|
+| **Frontend** | Angular 20, Signals, RxJS, SCSS |
+| **Backend** | Node.js, Express 5, TypeScript |
+| **Base de données** | PostgreSQL 16 |
+| **Auth** | JWT (HTTP-only cookies), bcrypt |
+| **Infrastructure** | Docker, Docker Compose, Nginx |
+| **Email** | Nodemailer (SMTP) |
+
+## 🚀 Démarrage rapide
+
+### Prérequis
+- Docker & Docker Compose
+- Node.js 22+ (pour développement local)
+
+### Développement (Docker)
 ```bash
+# Démarrer l'environnement de dev
 docker compose -f docker-compose.dev.yml up -d --build
-docker compose -f docker-compose.prod.yml ps
+
+# Vérifier le statut
+docker compose -f docker-compose.dev.yml ps
 ```
 
-## Identifiants de connexion
-- **Utilisateur** : login `user` / mot de passe : user
-- **Admin** : login `admin` / mot de passe `admin`
+**Accès :**
+- Frontend : http://localhost:8080
+- Backend API : http://localhost:4000
+- Adminer (DB) : http://localhost:8081
 
-## Arrêt / Nettoyage
+### Production
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+## 🔐 Identifiants par défaut
+
+| Rôle | Login | Mot de passe |
+|------|-------|--------------|
+| Admin | `admin` | `admin` |
+| Utilisateur | `user` | `user` |
+
+## 📁 Structure du projet
+
+```
+secure-app/
+├── backend/                 # API Express + TypeScript
+│   ├── src/
+│   │   ├── routes/          # Endpoints REST
+│   │   ├── middleware/      # Auth, validation
+│   │   ├── services/        # Logique métier (email, etc.)
+│   │   └── db/              # Connexion DB, migrations
+│   └── db/                  # Scripts SQL, migrations
+├── frontend/                # Application Angular
+│   └── src/app/
+│       ├── components/      # Composants UI
+│       ├── services/        # Services HTTP
+│       ├── stores/          # État (Signals)
+│       ├── guards/          # Protection routes
+│       └── types/           # DTOs TypeScript
+├── docker-compose.*.yml     # Configs Docker (dev, prod, prodpol)
+└── docs/                    # Documentation
+```
+
+## 🔄 Migrations
+
+Les migrations s'appliquent automatiquement au démarrage du backend via `runMigrations()`.
+
+Pour exécuter manuellement :
+```bash
+npm --prefix backend run build && node dist/db/migrations.js
+```
+
+## 📊 Import des données (Seed)
+
+Import des jeux et éditeurs depuis les fichiers CSV :
+```bash
+npm --prefix backend run seed:uc-r4
+```
+
+## 🧪 Tests
+
+```bash
+# Frontend (354 tests)
+npm --prefix frontend test
+
+# Backend
+npm --prefix backend test
+```
+
+## 📡 API Endpoints principaux
+
+### Authentification
+- `POST /api/auth/register` — Inscription
+- `POST /api/auth/login` — Connexion
+- `POST /api/auth/logout` — Déconnexion
+- `POST /api/auth/refresh` — Rafraîchir le token
+- `GET /api/auth/verify-email` — Vérification email
+
+### Festivals
+- `GET /api/festivals` — Liste des festivals
+- `POST /api/festivals` — Créer un festival
+- `GET /api/festivals/:id` — Détail d'un festival
+
+### Réservants
+- `GET /api/festivals/:festivalId/reservants` — Liste des réservants
+- `POST /api/festivals/:festivalId/reservants` — Créer un réservant
+- `DELETE /api/reservants/:id` — Supprimer avec résumé
+
+### Jeux
+- `GET /api/games` — Catalogue (filtres: title, type, editor_id, min_age)
+- `POST /api/games` — Créer un jeu
+- `DELETE /api/games/:id` — Supprimer (409 si utilisé)
+
+### Zones & Plan
+- `GET /api/festivals/:id/zones-plan` — Zones du festival
+- `POST /api/zones-plan` — Créer une zone
+- `PATCH /api/zones-plan/:id/allocate` — Allouer des jeux
+
+## 🌐 Environnements
+
+| Environnement | Fichier | URL |
+|---------------|---------|-----|
+| Dev | `docker-compose.dev.yml` | localhost:8080 |
+| Prod | `docker-compose.prod.yml` | awi.romdev.cloud |
+| Prod Pol | `docker-compose.prodpol.yml` | awi.romeric.cloud |
+
+## ⚙️ Variables d'environnement
+
+Copier `backend/.env.example` vers `backend/.env` et configurer :
+
+```env
+DATABASE_URL=postgresql://user:pass@db:5432/secureapp
+JWT_SECRET=your-secret-key
+FRONTEND_URL=https://your-domain.com
+SMTP_HOST=smtp.gmail.com
+SMTP_USER=your-email
+SMTP_PASS=your-app-password
+```
+
+## 🛑 Arrêt / Nettoyage
+
 ```bash
 # Arrêter les conteneurs
-docker compose -f docker-compose.prod.yml down --remove-orphans
+docker compose -f docker-compose.dev.yml down
+
+# Supprimer les volumes (⚠️ perte de données)
+docker compose -f docker-compose.dev.yml down -v
 ```
 
-## UC-R4 : Jeux et mécanismes
+## 👥 Équipe
 
-### Migrations
-- Le schéma Postgres inclut désormais les colonnes `logo_url`, `is_exhibitor`, `is_distributor` sur `editor` et les champs étendus sur `games` (`min_players`, `max_players`, `prototype`, `duration_minutes`, `theme`, `description`, `image_url`, `rules_video_url`).
-- Nouvelles tables : `mechanism`, `game_mechanism` et contrainte `UNIQUE (reservation_id, game_id)` sur `jeux_alloues` avec `ON DELETE RESTRICT` sur `game_id`.
-- Au démarrage, `runMigrations()` applique ces changements ; pour lancer manuellement : `npm --prefix backend run build && node dist/db/migrations.js` ou exécuter les fichiers SQL de `backend/db/migrations`.
-
-### Seed CSV
-- Les CSV du client sont importés via `npm --prefix backend run seed:uc-r4` (idempotent, corrige les séquences).
-- Les IDs fournis sont conservés (`idEditeur` → `editor.id`, `idJeu` → `games.id`).
-- Les emails éditeurs sont générés en `slug@dummy-editor.local`.
-
-### Endpoints principaux
-- `GET /api/games` (+filtres `title`, `type`, `editor_id`, `min_age`), `GET /api/games/:id`
-- `POST /api/games`, `PATCH /api/games/:id`, `DELETE /api/games/:id` (erreur 409 si jeu utilisé)
-- `GET /api/mechanisms`, `GET /api/games/:id/mechanisms`
-- `GET|POST /api/festivals/:festivalId/reservants/:reservantId/games`
-- `PATCH|DELETE /api/jeux_alloues/:id`
-- `GET /api/editors` pour alimenter les formulaires de jeux
-
-### Frontend
-- Nouvelle page `/games` : catalogue des jeux avec filtres, création/édition, gestion des mécanismes et suppression sécurisée.
-- Nouvelle section “Jeux de ce réservant” dans la fiche réservant : charger un festival via son ID, ajouter/modifier/supprimer les jeux alloués (pas de notion de festival courant automatique).
+Projet AWI — IG4 Polytech Montpellier

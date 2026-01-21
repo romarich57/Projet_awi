@@ -1,4 +1,4 @@
-import { Component, effect, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ReservationDetailComponent } from '../reservation-detail-component/reservation-detail-component';
 import { WorkflowComponent } from '../workflow-component/workflow-component';
@@ -10,6 +10,8 @@ import type { ReservantDto } from '@app/types/reservant-dto';
 
 @Component({
   selector: 'app-reservation-details-page',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, ReservationDetailComponent, WorkflowComponent, ZonePlanJeux],
   templateUrl: './reservation-details-page.html',
   styleUrl: './reservation-details-page.scss'
