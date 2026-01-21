@@ -69,15 +69,13 @@
           <div>
             <div class="contact-name">{{ contact.name }}</div>
             <div class="contact-meta">
-              {{ displayValue(contact.email) }} · {{ displayValue(contact.phone_number) }} · Priorite
-              {{ contact.priority }}
+              {{ displayValue(contact.email) }} · {{ displayValue(contact.phone_number) }} · {{ contact.job_title }} ·
+              {{
+              priorityLabel(contact.priority) }}
             </div>
           </div>
           @if (contact.id != null) {
-          <button
-            type="button"
-            class="danger"
-            [disabled]="isDeletingContact(contact.id)"
+          <button type="button" class="danger" [disabled]="isDeletingContact(contact.id)"
             (click)="deleteContact(contact.id)">
             Supprimer
           </button>
@@ -118,27 +116,15 @@
     <p class="muted">Aucun jeu enregistre pour cet editeur.</p>
     }
   </section>
-  <app-game-create-form
-    [formData]="gameFormData()"
-    [editors]="gameEditors()"
-    [saving]="gameSaving()"
-    [error]="gameError()"
-    [imageSource]="gameImageSource()"
-    [imageUploadError]="gameImageUploadError()"
-    [isUploadingImage]="gameIsUploadingImage()"
-    [lockEditor]="true"
-    [lockedEditorName]="reservantData.name"
-    (patch)="onGameFormPatch($event)"
-    (imageSourceChanged)="onGameImageSourceChanged($event)"
-    (imageFileSelected)="onGameImageFileSelected($event)"
-    (submit)="onGameSubmit()"
-    (cancelClicked)="onGameCancel()">
+  <app-game-create-form [formData]="gameFormData()" [editors]="gameEditors()" [saving]="gameSaving()"
+    [error]="gameError()" [imageSource]="gameImageSource()" [imageUploadError]="gameImageUploadError()"
+    [isUploadingImage]="gameIsUploadingImage()" [lockEditor]="true" [lockedEditorName]="reservantData.name"
+    (patch)="onGameFormPatch($event)" (imageSourceChanged)="onGameImageSourceChanged($event)"
+    (imageFileSelected)="onGameImageFileSelected($event)" (submit)="onGameSubmit()" (cancelClicked)="onGameCancel()">
     <app-game-image-preview [imageUrl]="gameImagePreview()">
       <span>{{ gameFormData().title.charAt(0) || '?' }}</span>
     </app-game-image-preview>
-    <app-game-mechanisms-select
-      [mechanisms]="gameMechanisms()"
-      [selectedIds]="gameFormData().mechanismIds"
+    <app-game-mechanisms-select [mechanisms]="gameMechanisms()" [selectedIds]="gameFormData().mechanismIds"
       (selectedIdsChange)="onGameFormPatch({ mechanismIds: $event })" />
   </app-game-create-form>
   } @else {
