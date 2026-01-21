@@ -3,42 +3,39 @@
  
     
     @if (festivalId()) {
-        @if(!isReadOnly()) {
         
-        
-
-            @if (isGameMode()) {
-                <!-- Section des jeux non alloués -->
-                <div class="jeux-non-alloues">
-                    <h4>🎮 Jeux non alloués ({{ jeuxNonAlloues().length }})</h4>
-                    @if (jeuxNonAlloues().length > 0) {
-                        <div class="jeux-list compact">
-                            @for (jeu of jeuxNonAlloues(); track jeu.allocation_id) {
-                                <div class="jeu-item non-alloue">
-                                    <div class="jeu-info">
-                                        <span class="jeu-title">{{ jeu.title }}</span>
-                                        <span class="jeu-reservant">{{ jeu.reservant_name }}</span>
-                                    </div>
+        @if (isGameMode()) {
+            <!-- Section des jeux non alloués -->
+            <div class="jeux-non-alloues">
+                <h4>🎮 Jeux non alloués ({{ jeuxNonAlloues().length }})</h4>
+                @if (jeuxNonAlloues().length > 0) {
+                    <div class="jeux-list compact">
+                        @for (jeu of jeuxNonAlloues(); track jeu.allocation_id) {
+                            <div class="jeu-item non-alloue">
+                                <div class="jeu-info">
+                                    <span class="jeu-title">{{ jeu.title }}</span>
+                                    <span class="jeu-reservant">{{ jeu.reservant_name }}</span>
                                 </div>
-                            }
-                        </div>
-                    } @else {
-                        <p class="empty-message">✅ Tous les jeux sont alloués à une zone.</p>
-                    }
-                </div>
-
-                <hr class="section-divider">
-            }
-
-            
-            <div class="chaises-stock-global">
-                <span class="chaises-label">🪑 Stock chaises festival :</span>
-                <span class="chaises-count" [class.low-stock]="chaisesStock().available <= 10">
-                    {{ chaisesStock().available }} disponibles / {{ chaisesStock().total }} total
-                </span>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <p class="empty-message">✅ Tous les jeux sont alloués à une zone.</p>
+                }
             </div>
 
+            <hr class="section-divider">
         }
+
+        
+        <div class="chaises-stock-global">
+            <span class="chaises-label">🪑 Stock chaises festival :</span>
+            <span class="chaises-count" [class.low-stock]="chaisesStock().available <= 10">
+                {{ chaisesStock().available }} disponibles / {{ chaisesStock().total }} total
+            </span>
+        </div>
+
+        
         
     
         
