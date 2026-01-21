@@ -391,6 +391,18 @@ export async function runMigrations() {
     `);
     console.log('✅ Tables mechanism et game_mechanism vérifiées/créées');
 
+    // Migration 008: Ajout de nb_chaises à jeux_alloues
+    await client.query(`
+      ALTER TABLE jeux_alloues ADD COLUMN IF NOT EXISTS nb_chaises INTEGER DEFAULT 0;
+    `);
+    console.log('✅ Colonne nb_chaises ajoutée à jeux_alloues');
+
+    // Migration 009: Ajout de prix_prises à festival
+    await client.query(`
+      ALTER TABLE festival ADD COLUMN IF NOT EXISTS prix_prises NUMERIC(10,2) DEFAULT 0;
+    `);
+    console.log('✅ Colonne prix_prises ajoutée à festival');
+
     console.log('✅ Toutes les migrations ont été appliquées avec succès');
   } catch (error) {
     console.error('❌ Erreur lors de l\'exécution des migrations:', error);
