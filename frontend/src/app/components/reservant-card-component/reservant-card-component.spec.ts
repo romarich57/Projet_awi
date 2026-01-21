@@ -24,12 +24,15 @@ class ReservantStoreMock {
 
   loadById = jasmine.createSpy('loadById');
   contacts = signal([]);
+  contactError = signal<string | null>(null);
   contactTimeline = signal([]);
   loadContacts = jasmine.createSpy('loadContacts');
   loadContactTimeline = jasmine.createSpy('loadContactTimeline');
   changeWorkflowState = jasmine.createSpy('changeWorkflowState');
   updateWorkflowFlags = jasmine.createSpy('updateWorkflowFlags');
   addContactEvent = jasmine.createSpy('addContactEvent');
+  deleteContact = jasmine.createSpy('deleteContact');
+  createContact = jasmine.createSpy('createContact');
 }
 
 describe('ReservantCardComponent', () => {
@@ -64,5 +67,46 @@ describe('ReservantCardComponent', () => {
 
   it('should call loadById with id from route', () => {
     expect(store.loadById).toHaveBeenCalledWith(5);
+  });
+
+  it('should display reservant information', () => {
+    const compiled = fixture.nativeElement;
+    expect(compiled.textContent).toContain('Test');
+  });
+
+  it('should display type label correctly', () => {
+    expect(component.typeLabel('editeur')).toBe('Éditeur');
+    expect(component.typeLabel('boutique')).toBe('Boutique');
+  });
+
+  it('should handle null values', () => {
+    expect(component.displayValue(null)).toBe('-');
+    expect(component.displayValue('test')).toBe('test');
+  });
+
+  it('should normalize contact priority to 0 or 1', () => {
+    component.contactForm = {
+      name: 'Test',
+      email: 'contact@test.com',
+      phone_number: '0123456789',
+      job_title: 'Chef',
+      priority: 1
+    };
+    component.createContact();
+    expect(store.createContact).toHaveBeenCalledWith(
+      5,
+      jasmine.objectContaining({ priority: 1 })
+    );
+
+    component.contactForm = {
+      name: 'Test 2',
+      email: 'contact2@test.com',
+      phone_number: '0123456789',
+      job_title: 'Chef',
+      priority: 3
+    };
+    component.createContact();
+    const lastCall = store.createContact.calls.mostRecent().args[1];
+    expect(lastCall.priority).toBe(0);
   });
 });

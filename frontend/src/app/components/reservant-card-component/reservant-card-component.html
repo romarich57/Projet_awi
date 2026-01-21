@@ -57,17 +57,31 @@
         Ajouter le contact
       </button>
     </div>
+    @if (contactError()) {
+    <p class="error">{{ contactError() }}</p>
+    }
     @if (contacts().length > 0) {
     <div class="contact-list">
       <h3>Contacts existants</h3>
       <ul>
         @for (contact of contacts(); track contact.id ?? contact.email) {
-        <li>
-          <div class="contact-name">{{ contact.name }}</div>
-          <div class="contact-meta">
-            {{ displayValue(contact.email) }} · {{ displayValue(contact.phone_number) }} · Priorite
-            {{ contact.priority }}
+        <li class="contact-item">
+          <div>
+            <div class="contact-name">{{ contact.name }}</div>
+            <div class="contact-meta">
+              {{ displayValue(contact.email) }} · {{ displayValue(contact.phone_number) }} · Priorite
+              {{ contact.priority }}
+            </div>
           </div>
+          @if (contact.id != null) {
+          <button
+            type="button"
+            class="danger"
+            [disabled]="isDeletingContact(contact.id)"
+            (click)="deleteContact(contact.id)">
+            Supprimer
+          </button>
+          }
         </li>
         }
       </ul>

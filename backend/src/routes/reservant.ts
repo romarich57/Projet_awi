@@ -170,14 +170,37 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { name, email, type, editor_id, phone_number, address, siret, notes } = req.body;
+    const reservantId = Number(id);
+
+    if (!Number.isFinite(reservantId)) {
+        return res.status(400).json({ error: 'Identifiant de réservant invalide' });
+    }
 
     try {
+        const { rows: conflictRows } = await pool.query(
+            'SELECT id, name, email FROM reservant WHERE (name = $1 OR email = $2) AND id <> $3',
+            [name, email, reservantId],
+        );
+        if (conflictRows.length > 0) {
+            const nameTaken = conflictRows.some((row) => row.name === name);
+            const emailTaken = conflictRows.some((row) => row.email === email);
+            if (nameTaken && emailTaken) {
+                return res.status(409).json({ error: 'Nom et email déjà utilisés' });
+            }
+            if (nameTaken) {
+                return res.status(409).json({ error: 'Nom déjà utilisé' });
+            }
+            if (emailTaken) {
+                return res.status(409).json({ error: 'Un réservant avec cet email existe déjà' });
+            }
+        }
+
         const { rows, rowCount } = await pool.query(
             `UPDATE reservant
              SET name = $1, email = $2, type = $3, editor_id = $4, phone_number = $5, address = $6, siret = $7, notes = $8
              WHERE id = $9
              RETURNING id, name, email, type, editor_id, phone_number, address, siret, notes`,
-            [name, email, type, editor_id || null, phone_number || null, address || null, siret || null, notes || null, id]
+            [name, email, type, editor_id || null, phone_number || null, address || null, siret || null, notes || null, reservantId]
         );
 
         if (rowCount === 0) {
