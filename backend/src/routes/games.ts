@@ -85,6 +85,45 @@ function parseMechanismIds(value: unknown): number[] | undefined {
   return Array.from(new Set(ids))
 }
 
+// Role : Normaliser les erreurs Postgres vers des reponses HTTP propres.
+// Preconditions : err est une erreur issue d'une requete pg.
+// Postconditions : Retourne une reponse HTTP ou null si non geree.
+type DatabaseErrorResponse = { status: number; body: { error: string; details?: string } }
+
+function mapDatabaseError(err: any): DatabaseErrorResponse | null {
+  const code = err?.code as string | undefined
+  const constraint = err?.constraint as string | undefined
+  const detail = err?.detail as string | undefined
+  const withDetails = (error: string, details?: string): DatabaseErrorResponse => ({
+    status: 400,
+    body: details ? { error, details } : { error },
+  })
+
+  if (code === '23505') {
+    if (constraint === 'games_title_key') {
+      return { status: 409, body: { error: 'Titre déjà utilisé' } }
+    }
+    return { status: 409, body: detail ? { error: 'Conflit de duplication', details: detail } : { error: 'Conflit de duplication' } }
+  }
+  if (code === '23503') {
+    if (constraint === 'games_editor_id_fkey') {
+      return { status: 400, body: { error: "Éditeur inexistant" } }
+    }
+    return { status: 400, body: detail ? { error: 'Référence inexistante', details: detail } : { error: 'Référence inexistante' } }
+  }
+  if (code === '23502') {
+    return withDetails('Champ requis manquant', detail)
+  }
+  if (code === '23514') {
+    return withDetails('Violation de contrainte', detail)
+  }
+  if (code === '22P02') {
+    return withDetails('Format invalide', detail)
+  }
+
+  return null
+}
+
 // Role : Valider et normaliser le payload de jeu.
 // Preconditions : body est l'objet req.body.
 // Postconditions : Retourne les donnees nettoyees et la liste d'erreurs.
@@ -378,6 +417,10 @@ router.post('/', async (req, res) => {
     if (typeof err.message === 'string' && err.message.startsWith('MISSING_MECHANISMS')) {
       return res.status(400).json({ error: 'Mécanisme inexistant', details: err.message })
     }
+    const mappedError = mapDatabaseError(err)
+    if (mappedError) {
+      return res.status(mappedError.status).json(mappedError.body)
+    }
     console.error('Erreur lors de la création du jeu', err)
     res.status(500).json({ error: 'Erreur serveur' })
   } finally {
@@ -506,6 +549,10 @@ async function updateGame(req: any, res: any) {
     }
     if (typeof err.message === 'string' && err.message.startsWith('MISSING_MECHANISMS')) {
       return res.status(400).json({ error: 'Mécanisme inexistant', details: err.message })
+    }
+    const mappedError = mapDatabaseError(err)
+    if (mappedError) {
+      return res.status(mappedError.status).json(mappedError.body)
     }
     console.error('Erreur lors de la mise à jour du jeu', err)
     res.status(500).json({ error: 'Erreur serveur' })

@@ -78,6 +78,9 @@ export class GameCreateFormComponent {
   // Préconditions : Le parent ecoute `submit`.
   // Postconditions : L'evenement de soumission est emis.
   submitForm(): void {
+    if (this.saving() || this.isUploadingImage()) {
+      return;
+    }
     this.submit.emit();
   }
 

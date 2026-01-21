@@ -84,6 +84,9 @@ export class GameCreatePageContainerComponent {
   // Préconditions : Le store a un formulaire valide.
   // Postconditions : Le jeu est cree et la navigation est lancee.
   onSubmit(): void {
+    if (this.saving() || this.isUploadingImage()) {
+      return;
+    }
     this.store.save().subscribe({
       next: () => this.router.navigate(['/games']),
     });

@@ -10,6 +10,13 @@
     </button>
   </div>
 
+  @if (flashMessageText()) {
+    <p class="status" [class.status--success]="flashMessageType() === 'success'"
+      [class.status--error]="flashMessageType() === 'error'">
+      {{ flashMessageText() }}
+    </p>
+  }
+
   <app-games-filters-panel
     [filters]="filters()"
     [types]="types()"

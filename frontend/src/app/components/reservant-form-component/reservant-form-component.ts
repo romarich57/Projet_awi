@@ -21,6 +21,7 @@ export class ReservantFormComponent {
   private readonly location = inject(Location);
   private readonly fb = inject(FormBuilder);
   readonly reservantStore = inject(ReservantStore);
+  readonly error = this.reservantStore.error;
 
   readonly reservantIdParam = input<string | null>(null, { alias: 'id' });
   readonly reservantId = computed(() => {
@@ -50,6 +51,18 @@ export class ReservantFormComponent {
     return this.reservantStore.reservants().find((r) => r.id === id) ?? null;
   });
 
+  readonly isEditContext = computed(() => this.reservantId() !== null);
+  readonly headerEyebrow = computed(() => (this.isEditContext() ? 'Edition' : 'Creation'));
+  readonly headerTitle = computed(() =>
+    this.isEditContext() ? 'Modifier le reservant' : 'Creer un reservant',
+  );
+  readonly headerSubtitle = computed(() =>
+    this.isEditContext()
+      ? "Mettre a jour les informations de contact et d'identite."
+      : "Renseigner les informations de contact et d'identite.",
+  );
+  readonly submitLabel = computed(() => (this.isEditContext() ? 'Sauvegarder' : 'Creer'));
+
   constructor() {
     effect(() => {
       const id = this.reservantId();
@@ -72,10 +85,6 @@ export class ReservantFormComponent {
         });
       }
     });
-  }
-
-  get isEditContext(): boolean {
-    return this.reservantId() !== null;
   }
 
   // Role : Soumettre le formulaire en creation ou en edition.
@@ -103,9 +112,10 @@ export class ReservantFormComponent {
         workflow_state: 'Pas_de_contact' // Default workflow state for new reservants
       };
 
-      this.reservantStore.create(payload as ReservantDto);
-      // Navigate to list after creation
-      this.router.navigate(['/reservants']);
+      this.reservantStore.create(payload as ReservantDto).subscribe({
+        next: () => this.router.navigate(['/reservants']),
+        error: () => null,
+      });
       return;
     }
 
@@ -125,7 +135,7 @@ export class ReservantFormComponent {
 
     this.reservantStore.update(payload).subscribe({
       next: () => this.router.navigate(['/reservants', reservantId]),
-      error: (error) => console.error('Error updating reservant', error),
+      error: () => null,
     });
   }
 

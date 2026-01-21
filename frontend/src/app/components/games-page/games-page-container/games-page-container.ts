@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { GamesFiltersPanelComponent } from '../games-filters-panel/games-filters-panel';
 import { GamesResultsListComponent } from '../games-results-list/games-results-list';
 import { GamesStore } from '@app/stores/games-store';
+import { FlashMessageService } from '@app/services/flash-message.service';
 import type { GameDto } from '../../../types/game-dto';
 import type { GamesFilters, GamesVisibleColumns } from '@app/types/games-page.types';
 
@@ -22,6 +23,7 @@ import type { GamesFilters, GamesVisibleColumns } from '@app/types/games-page.ty
 export class GamesPageContainerComponent {
   private readonly router = inject(Router);
   readonly store = inject(GamesStore);
+  private readonly flashMessage = inject(FlashMessageService);
 
   readonly games = this.store.games;
   readonly editors = this.store.editors;
@@ -32,6 +34,8 @@ export class GamesPageContainerComponent {
   readonly visibleColumns = this.store.visibleColumns;
   readonly columnOptions = this.store.columnOptions;
   readonly types = this.store.types;
+  readonly flashMessageText = this.flashMessage.message;
+  readonly flashMessageType = this.flashMessage.type;
   readonly pendingDelete = signal<GameDto | null>(null);
   readonly deletePrompt = computed(() => {
     const game = this.pendingDelete();

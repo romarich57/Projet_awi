@@ -6,16 +6,19 @@ import { GameCreateStore } from './game-create.store';
 import { GameApiService } from '../services/game-api';
 import { EditorApiService } from '../services/editor-api';
 import { UploadService } from '../services/upload.service';
+import { FlashMessageService } from '../services/flash-message.service';
 
 describe('GameCreateStore', () => {
   let store: GameCreateStore;
   let gameApiSpy: jasmine.SpyObj<GameApiService>;
   let editorApiSpy: jasmine.SpyObj<EditorApiService>;
   let uploadServiceMock: { isUploading: any; uploadError: any; uploadGameImage: jasmine.Spy };
+  let flashMessageSpy: jasmine.SpyObj<FlashMessageService>;
 
   beforeEach(() => {
     gameApiSpy = jasmine.createSpyObj('GameApiService', ['listMechanisms', 'create']);
     editorApiSpy = jasmine.createSpyObj('EditorApiService', ['list']);
+    flashMessageSpy = jasmine.createSpyObj('FlashMessageService', ['showSuccess', 'showError', 'clear']);
 
     gameApiSpy.listMechanisms.and.returnValue(of([]));
     gameApiSpy.create.and.returnValue(of({} as any));
@@ -32,6 +35,7 @@ describe('GameCreateStore', () => {
         { provide: GameApiService, useValue: gameApiSpy },
         { provide: EditorApiService, useValue: editorApiSpy },
         { provide: UploadService, useValue: uploadServiceMock },
+        { provide: FlashMessageService, useValue: flashMessageSpy },
       ],
     });
 
@@ -50,7 +54,9 @@ describe('GameCreateStore', () => {
 
     store.save();
 
-    expect(store.error()).toBe('Merci de remplir les champs requis');
+    expect(store.error()).toBe(
+      "Le titre est requis · Le type est requis · Les auteurs sont requis · L'éditeur est requis",
+    );
     expect(gameApiSpy.create).not.toHaveBeenCalled();
   });
 

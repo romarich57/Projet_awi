@@ -27,6 +27,24 @@
   color: #b91c1c;
 }
 
+.status {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+  background: rgba(11, 87, 208, 0.1);
+  color: #0b57d0;
+}
+
+.status--success {
+  background: rgba(2, 122, 72, 0.12);
+  color: #027a48;
+}
+
+.status--error {
+  background: rgba(185, 28, 28, 0.12);
+  color: #b91c1c;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
