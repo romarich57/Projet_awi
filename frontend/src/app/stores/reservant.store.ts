@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { ReservantApiService } from "../services/reservant-api";
 import { ReservantDto, ReservantWorkflowState } from "../types/reservant-dto";
+import { ReservantDeleteSummaryDto } from "../types/reservant-delete-summary-dto";
 import { catchError, finalize, map, switchMap, tap, throwError, type Observable } from "rxjs";
 import { ReservantWorkflowApi } from "../services/reservant-workflow-api";
 import { ReservantWorkflowFlagsDto } from "../types/reservant-workflow-flags-dto";
@@ -24,6 +25,9 @@ export class ReservantStore {
     private readonly _loading = signal(false);
     private readonly _error = signal<string | null>(null);
     private readonly _contactError = signal<string | null>(null);
+    private readonly _deleteSummary = signal<ReservantDeleteSummaryDto | null>(null);
+    private readonly _deleteSummaryLoading = signal(false);
+    private readonly _deleteSummaryError = signal<string | null>(null);
 
     public readonly reservants = this._reservants.asReadonly();
     public readonly contacts = this._contacts.asReadonly();
@@ -32,6 +36,9 @@ export class ReservantStore {
     public readonly loading = this._loading.asReadonly();
     public readonly error = this._error.asReadonly();
     public readonly contactError = this._contactError.asReadonly();
+    public readonly deleteSummary = this._deleteSummary.asReadonly();
+    public readonly deleteSummaryLoading = this._deleteSummaryLoading.asReadonly();
+    public readonly deleteSummaryError = this._deleteSummaryError.asReadonly();
 
     // Role : Definir le festival courant pour filtrer les reservants.
     // Preconditions : Aucune.
@@ -149,6 +156,35 @@ export class ReservantStore {
                 this._error.set(this.extractErrorMessage(error) || 'Erreur lors de la suppression');
             },
         });
+    }
+
+    // Role : Charger le resume des dependances supprimees.
+    // Preconditions : reservantId est valide.
+    // Postconditions : Les signaux deleteSummary* sont mis a jour.
+    loadDeleteSummary(reservantId: number): void {
+        this._deleteSummaryLoading.set(true);
+        this._deleteSummaryError.set(null);
+        this._deleteSummary.set(null);
+        this.api.getDeleteSummary(reservantId).pipe(
+            finalize(() => this._deleteSummaryLoading.set(false)),
+        ).subscribe({
+            next: (summary) => this._deleteSummary.set(summary),
+            error: (error) => {
+                console.error('Error loading delete summary:', error);
+                this._deleteSummaryError.set(
+                    this.extractErrorMessage(error) || 'Erreur lors du chargement du résumé',
+                );
+            },
+        });
+    }
+
+    // Role : Reinitialiser le resume de suppression.
+    // Preconditions : Aucune.
+    // Postconditions : Les signaux deleteSummary* sont reinitialises.
+    clearDeleteSummary(): void {
+        this._deleteSummary.set(null);
+        this._deleteSummaryError.set(null);
+        this._deleteSummaryLoading.set(false);
     }
 
     // Role : Verifier si une transition de workflow est autorisee.

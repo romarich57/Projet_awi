@@ -23,10 +23,15 @@ describe('ReservantsListComponent', () => {
       'loadByFestival',
       'setFestival',
       'delete',
+      'loadDeleteSummary',
+      'clearDeleteSummary',
     ]);
     storeMock.reservants = signal(mockReservants);
     storeMock.loading = signal(false);
     storeMock.error = signal(null);
+    storeMock.deleteSummary = signal(null);
+    storeMock.deleteSummaryLoading = signal(false);
+    storeMock.deleteSummaryError = signal(null);
     authMock = { isSuperOrganizer: signal(true) };
 
     await TestBed.configureTestingModule({
@@ -99,6 +104,7 @@ describe('ReservantsListComponent', () => {
     component.requestDelete(mockReservants[0]);
     expect(component.pendingDelete()).toEqual(mockReservants[0]);
     expect(component.deletePrompt()).toContain(mockReservants[0].name);
+    expect(storeMock.loadDeleteSummary).toHaveBeenCalledWith(mockReservants[0].id);
   });
 
   it('should call store delete on confirm', () => {
@@ -106,11 +112,13 @@ describe('ReservantsListComponent', () => {
     component.confirmDelete();
     expect(storeMock.delete).toHaveBeenCalledWith(mockReservants[0]);
     expect(component.pendingDelete()).toBeNull();
+    expect(storeMock.clearDeleteSummary).toHaveBeenCalled();
   });
 
   it('should block delete when user is not authorized', () => {
     authMock.isSuperOrganizer.set(false);
     component.requestDelete(mockReservants[0]);
     expect(component.pendingDelete()).toBeNull();
+    expect(storeMock.loadDeleteSummary).not.toHaveBeenCalled();
   });
 });

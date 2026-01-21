@@ -374,6 +374,71 @@ export async function runMigrations() {
     `);
     console.log('✅ Table reservation_zone_plan vérifiée/créée');
 
+    // Cascades de suppression pour les entites liees aux reservants.
+    await client.query(`
+      ALTER TABLE contact
+        DROP CONSTRAINT IF EXISTS contact_reservant_id_fkey;
+      ALTER TABLE contact
+        ADD CONSTRAINT contact_reservant_id_fkey
+        FOREIGN KEY (reservant_id) REFERENCES reservant(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
+      ALTER TABLE suivi_workflow
+        DROP CONSTRAINT IF EXISTS suivi_workflow_reservant_id_fkey;
+      ALTER TABLE suivi_workflow
+        ADD CONSTRAINT suivi_workflow_reservant_id_fkey
+        FOREIGN KEY (reservant_id) REFERENCES reservant(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
+      ALTER TABLE suivi_contact
+        DROP CONSTRAINT IF EXISTS suivi_contact_contact_id_fkey;
+      ALTER TABLE suivi_contact
+        ADD CONSTRAINT suivi_contact_contact_id_fkey
+        FOREIGN KEY (contact_id) REFERENCES contact(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
+      ALTER TABLE suivi_contact
+        DROP CONSTRAINT IF EXISTS suivi_contact_workflow_id_fkey;
+      ALTER TABLE suivi_contact
+        ADD CONSTRAINT suivi_contact_workflow_id_fkey
+        FOREIGN KEY (workflow_id) REFERENCES suivi_workflow(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
+      ALTER TABLE reservation
+        DROP CONSTRAINT IF EXISTS reservation_reservant_id_fkey;
+      ALTER TABLE reservation
+        ADD CONSTRAINT reservation_reservant_id_fkey
+        FOREIGN KEY (reservant_id) REFERENCES reservant(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
+      ALTER TABLE reservation
+        DROP CONSTRAINT IF EXISTS reservation_workflow_id_fkey;
+      ALTER TABLE reservation
+        ADD CONSTRAINT reservation_workflow_id_fkey
+        FOREIGN KEY (workflow_id) REFERENCES suivi_workflow(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
+      ALTER TABLE reservation
+        DROP CONSTRAINT IF EXISTS reservation_represented_editor_id_fkey;
+      ALTER TABLE reservation
+        ADD CONSTRAINT reservation_represented_editor_id_fkey
+        FOREIGN KEY (represented_editor_id) REFERENCES reservant(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
+      ALTER TABLE reservation_zones_tarifaires
+        DROP CONSTRAINT IF EXISTS reservation_zones_tarifaires_reservation_id_fkey;
+      ALTER TABLE reservation_zones_tarifaires
+        ADD CONSTRAINT reservation_zones_tarifaires_reservation_id_fkey
+        FOREIGN KEY (reservation_id) REFERENCES reservation(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
+      ALTER TABLE jeux_alloues
+        DROP CONSTRAINT IF EXISTS jeux_alloues_reservation_id_fkey;
+      ALTER TABLE jeux_alloues
+        ADD CONSTRAINT jeux_alloues_reservation_id_fkey
+        FOREIGN KEY (reservation_id) REFERENCES reservation(id) ON DELETE CASCADE;
+    `);
+
     // Mécanismes et liaisons
     await client.query(`
       CREATE TABLE IF NOT EXISTS mechanism(

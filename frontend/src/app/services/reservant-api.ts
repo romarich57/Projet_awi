@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ReservantDto } from '../types/reservant-dto';
+import { ReservantDeleteSummaryDto } from '../types/reservant-delete-summary-dto';
 import { Observable } from 'rxjs';
 import { inject } from '@angular/core';
 import { environment } from '../../environments/environment';
@@ -43,6 +44,16 @@ export class ReservantApiService {
   // Postconditions : Retourne un Observable du reservant supprime.
   delete(reservant: ReservantDto): Observable<ReservantDto> {
     return this.http.delete<ReservantDto>(this.reservantApiUrl + '/' + reservant.id, { withCredentials: true });
+  }
+
+  // Role : Recuperer le resume de suppression d'un reservant.
+  // Preconditions : reservantId est valide.
+  // Postconditions : Retourne les dependances qui seront supprimees.
+  getDeleteSummary(reservantId: number): Observable<ReservantDeleteSummaryDto> {
+    return this.http.get<ReservantDeleteSummaryDto>(
+      `${this.reservantApiUrl}/${reservantId}/delete-summary`,
+      { withCredentials: true },
+    );
   }
 
 }
