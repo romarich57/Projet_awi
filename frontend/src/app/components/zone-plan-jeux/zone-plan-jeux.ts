@@ -40,7 +40,7 @@ export class ZonePlanJeux {
   private readonly _zoneTarifaireService = inject(ZoneTarifaireService);
   private readonly _reservationService = inject(ReservationService);
   private readonly _authService = inject(AuthService);
-  
+
   readonly zonePlans = this._zonePlanService.zonePlans;
   readonly zoneTarifaires = signal<ZoneTarifaireDto[]>([]);
   readonly showForm = signal(false);
@@ -52,7 +52,7 @@ export class ZonePlanJeux {
     }
     return this._authService.isOrganizer();
   });
-  
+
   // Nouvelles propriétés pour l'allocation des jeux
   readonly zonesAvecJeux = signal<ZonePlanAvecJeux[]>([]);
   readonly jeuxNonAlloues = signal<AllocatedGameWithReservant[]>([]);
@@ -72,10 +72,10 @@ export class ZonePlanJeux {
   readonly loading = signal(false);
   readonly allocationsSimple = signal<ZonePlanAllocationSummary[]>([]);
   readonly reservationAllocations = signal<ZonePlanReservationAllocation[]>([]);
-  
+
   // Stock de tables par type pour la zone sélectionnée
   readonly stockTables = signal<TableStockByType[]>([]);
-  
+
   // Stock de chaises pour le festival (total et disponible)
   readonly chaisesStock = signal<{ total: number; available: number }>({ total: 0, available: 0 });
 
@@ -150,7 +150,7 @@ export class ZonePlanJeux {
     const result: Record<number, number> = {};
     const zonePlans = this.zonePlans();
     const reservation = this.reservation();
-    
+
     // 1. Récupérer les tables "simples" 
     const simpleAllocations = this.tablesAlloueesParZoneReservation();
 
@@ -164,12 +164,12 @@ export class ZonePlanJeux {
       // Compter les tables prises par les JEUX de ce réservant
       // On cherche la zone chargée avec ses jeux
       const zoneAvecJeux = zonesCompletes.find(z => z.id === zone.id);
-      
+
       const nbJeux = zoneAvecJeux && reservation
         ? zoneAvecJeux.jeuxAlloues
-            .filter(j => j.reservation_id === reservation.id) // Uniquement les jeux de CE client
-            // Additionne leurs tables
-            .reduce((sum, j) => sum + Number(j.nb_tables_occupees), 0) //reduce prend une liste d'éléments et la transforme en une seule valeur (ici, un nombre total)
+          .filter(j => j.reservation_id === reservation.id) // Uniquement les jeux de CE client
+          // Additionne leurs tables
+          .reduce((sum, j) => sum + Number(j.nb_tables_occupees), 0) //reduce prend une liste d'éléments et la transforme en une seule valeur (ici, un nombre total)
         : 0;
 
       // Total consommé dans cette salle
@@ -189,15 +189,30 @@ export class ZonePlanJeux {
   });
 
   // Filtrer les jeux disponibles pour la zone sélectionnée
-  // Un jeu n'est disponible que si son réservant a réservé des tables dans la zone tarifaire de la zone de plan
+  // Propose TOUS les jeux du réservant (non alloués + déjà alloués)
   readonly jeuxDisponiblesPourZone = computed(() => {
     const zone = this.selectedZone();
-    const jeux = this.jeuxNonAlloues();
-    
-    if (!zone) return [];
-    
+    const reservation = this.reservation();
+    const jeuxNonAlloues = this.jeuxNonAlloues();
+    const zones = this.zonesAvecJeux();
+
+    if (!zone || !reservation) return [];
+
+    // Récupérer les jeux déjà alloués par ce réservant (dans toutes les zones)
+    const jeuxDejaAlloues: AllocatedGameWithReservant[] = [];
+    for (const z of zones) {
+      for (const jeu of z.jeuxAlloues) {
+        if (jeu.reservation_id === reservation.id) {
+          jeuxDejaAlloues.push(jeu);
+        }
+      }
+    }
+
+    // Combiner les jeux non alloués et les jeux déjà alloués
+    const tousLesJeux = [...jeuxNonAlloues, ...jeuxDejaAlloues];
+
     // Filtrer les jeux dont le réservant a réservé dans cette zone tarifaire
-    return jeux.filter(jeu => {
+    return tousLesJeux.filter(jeu => {
       // Si zones_tarifaires_reservees est défini, vérifier que la zone tarifaire de la zone de plan est incluse
       if (jeu.zones_tarifaires_reservees && jeu.zones_tarifaires_reservees.length > 0) {
         return jeu.zones_tarifaires_reservees.includes(zone.id_zone_tarifaire);
@@ -230,12 +245,12 @@ export class ZonePlanJeux {
   readonly tablesUtiliseesParZoneTarifaire = computed(() => {
     const zonePlans = this.zonePlans();
     const result: Record<number, number> = {}; //record c'est un objet avec des clés de type number et des valeurs de type number
-    
+
     for (const zp of zonePlans) { //pour chaque zone de plan, on récupère son id de zone tarifaire
       const ztId = zp.id_zone_tarifaire;
       result[ztId] = (result[ztId] || 0) + zp.nb_tables;
     }
-    
+
     return result;
   });
 
@@ -244,16 +259,16 @@ export class ZonePlanJeux {
     const zoneTarifaires = this.zoneTarifaires();
     const utilisees = this.tablesUtiliseesParZoneTarifaire();
     const result: Record<number, number> = {};
-    
+
     for (const zt of zoneTarifaires) {
       const used = utilisees[zt.id] || 0;
       result[zt.id] = zt.nb_tables - used;
     }
-    
+
     return result;
   });
 
-  constructor() { 
+  constructor() {
     effect(() => {
       const id = this.festivalId();
       if (id !== null) {
@@ -361,7 +376,7 @@ export class ZonePlanJeux {
   // Role : Charger le stock de chaises pour le festival.
   // Préconditions : `festivalId` est valide.
   // Postconditions : `chaisesStock` est mis a jour si des donnees sont presentes.
-private loadChaisesStock(festivalId: number): void {
+  private loadChaisesStock(festivalId: number): void {
     this._reservationService.getStockChaises(festivalId).subscribe({
       next: (data) => {
         // La structure de la réponse correspond à ce qu'on a défini dans le back
@@ -390,7 +405,7 @@ private loadChaisesStock(festivalId: number): void {
     for (const zone of zonesAvec) {
       this._zonePlanService.getJeuxAlloues(zone.id).subscribe({
         next: (jeux) => {
-          this.zonesAvecJeux.update(current => 
+          this.zonesAvecJeux.update(current =>
             current.map(z => z.id === zone.id ? { ...z, jeuxAlloues: jeux } : z)
           );
         },
@@ -413,12 +428,12 @@ private loadChaisesStock(festivalId: number): void {
     const zones = this.zonesAvecJeux();
     const simples = this.tablesSimplesParZone();
     const result: Record<number, number> = {};
-    
+
     for (const zone of zones) {
       const tablesJeux = zone.jeuxAlloues.reduce((sum, jeu) => sum + Number(jeu.nb_tables_occupees), 0);
       result[zone.id] = tablesJeux + (simples[zone.id] || 0);
     }
-    
+
     return result;
   });
 
@@ -429,10 +444,10 @@ private loadChaisesStock(festivalId: number): void {
     const ztId = zone.id_zone_tarifaire;
     const totalReserve = this.tablesReserveesParZoneTarifaire()[ztId] || 0;
     const totalPlace = this.tablesAlloueesParZoneTarifaireReservation()[ztId] || 0;
-    
+
     // Si on modifie un jeu déjà placé dans cette zone tarifaire, on ne doit pas compter ses tables actuelles comme "utilisées"
     // Mais ici, on part du principe que tu alloues un jeu depuis la liste des "Non Alloués".
-    
+
     return Math.max(0, totalReserve - totalPlace);
   }
 
@@ -441,11 +456,11 @@ private loadChaisesStock(festivalId: number): void {
     const zones = this.zonesAvecJeux();
     const utilisees = this.tablesUtiliseesParZone();
     const result: Record<number, number> = {};
-    
+
     for (const zone of zones) {
       result[zone.id] = zone.nb_tables - (utilisees[zone.id] || 0);
     }
-    
+
     return result;
   });
 
@@ -496,7 +511,7 @@ private loadChaisesStock(festivalId: number): void {
     this.nbExemplairesInput.set(1);
     this.tailleTableInput.set('standard');
     this.chaisesInput.set(0);
-    
+
     this.gameTablesInput.set(1);
     this.gameM2Input.set(tablesToM2(1));
     this.showAllocationModal.set(true);
@@ -649,8 +664,8 @@ private loadChaisesStock(festivalId: number): void {
     this.gameTablesInput.set(nbTables);
     this.gameM2Input.set(tablesToM2(nbTables));
     this.tailleTableInput.set(game.taille_table_requise || 'standard');
-    
-  this.chaisesInput.set(nbChaises);
+
+    this.chaisesInput.set(nbChaises);
   }
 
   // Allouer le jeu sélectionné à la zone
@@ -667,9 +682,9 @@ private loadChaisesStock(festivalId: number): void {
     const nbExemplaires = this.nbExemplairesInput();
     const tailleTable = this.tailleTableInput();
     const nbChaises = this.chaisesInput();
-    
+
     if (!zone || !game) return;
-    
+
     // Vérifier que les tables ne dépassent pas la capacité
     const tablesRestantes = this.tablesRestantesParZone()[zone.id] || 0;
     if (nbTables > tablesRestantes) {
@@ -685,7 +700,7 @@ private loadChaisesStock(festivalId: number): void {
       alert(`Pas assez de chaises disponibles. Disponibles: ${chaisesDisponibles}, Demandées: ${nbChaises}`);
       return;
     }
-    
+
     this.loading.set(true);
     this._zonePlanService.assignerJeuAZone(game.allocation_id, zone.id, nbTables, nbExemplaires, tailleTable, nbChaises).subscribe({
       next: () => {
@@ -784,7 +799,7 @@ private loadChaisesStock(festivalId: number): void {
   // Postconditions : L'allocation du jeu est mise a jour.
   updateNbTables(game: AllocatedGameWithReservant, nbTables: number): void {
     if (nbTables <= 0) return;
-    
+
     this._zonePlanService.assignerJeuAZone(game.allocation_id, game.zone_plan_id, nbTables).subscribe({
       next: () => {
         this.refreshData();

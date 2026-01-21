@@ -18,7 +18,7 @@ export class FestivalFormComponent {
 
   private readonly festivalService = inject(FestivalService);
   festivalSubmit = output<FestivalDto>(); //on envoie a festivalList le festival créé
-  zoneSubmit = output<any>(); //on envoie a festivalList la zone créée
+  zoneSubmit = output<ZoneTarifaireDto>(); //on envoie a festivalList la zone créée
 
 
   readonly festivalForm = new FormGroup({
@@ -101,7 +101,7 @@ export class FestivalFormComponent {
   // Postconditions : Le festival est cree, les zones sont creees, et le formulaire est reinitialise.
   submit(): void {
     if (this.festivalForm.valid) {
-      const formValue = this.festivalForm.value as any;
+      const formValue = this.festivalForm.getRawValue();
       const festivalName = String(formValue.name || '').trim();
       const normalizedName = festivalName.toLowerCase();
       const nameExists = this.festivalService
@@ -127,8 +127,8 @@ export class FestivalFormComponent {
       };
 
       // Créer les zones tarifaires (sans festival_id pour l'instant)
-      const zones: Partial<ZoneTarifaireDto>[] = this.zonesFormArray.value.map((zone: any) => ({
-        name: zone.name || '',
+      const zones: Partial<ZoneTarifaireDto>[] = this.zonesFormArray.value.map((zone: { name: string, nb_tables: number, price_per_table: number, m2_price: number }) => ({
+        name: zone.name,
         nb_tables: Number(zone.nb_tables) || 0,
         price_per_table: Number(zone.price_per_table) || 0,
         m2_price: Number(zone.m2_price) || 0,

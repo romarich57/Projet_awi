@@ -67,6 +67,10 @@ export class ReservantCardComponent {
     priority: 0,
   };
 
+
+
+
+
   readonly editorGames = signal<GameDto[]>([]);
   readonly editorGamesLoading = signal(false);
   readonly editorGamesError = signal<string | null>(null);
@@ -302,4 +306,10 @@ export class ReservantCardComponent {
     return trimmed && trimmed.length > 0 ? trimmed : '-';
   }
 
+  // Role : Convertir la priorite numerique en libelle lisible.
+  // Préconditions : priority est 0 ou 1.
+  // Postconditions : Retourne 'Prioritaire' ou 'Normal'.
+  priorityLabel(priority: number): string {
+    return priority === 1 ? 'Prioritaire' : 'Normal';
+  }
 }
