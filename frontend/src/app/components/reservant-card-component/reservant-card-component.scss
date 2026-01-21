@@ -170,6 +170,13 @@
   border: 1px solid #e2e8f0;
 }
 
+.contact-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .contact-name,
 .game-title {
   font-weight: 700;
@@ -232,6 +239,16 @@ button:disabled {
 .error {
   color: #b91c1c;
   font-weight: 700;
+}
+
+.danger {
+  border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 @media (max-width: 720px) {

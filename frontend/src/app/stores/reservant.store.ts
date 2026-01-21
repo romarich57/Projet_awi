@@ -23,6 +23,7 @@ export class ReservantStore {
     private readonly _currentFestivalId = signal<number | null>(null);
     private readonly _loading = signal(false);
     private readonly _error = signal<string | null>(null);
+    private readonly _contactError = signal<string | null>(null);
 
     public readonly reservants = this._reservants.asReadonly();
     public readonly contacts = this._contacts.asReadonly();
@@ -30,6 +31,7 @@ export class ReservantStore {
     public readonly currentFestivalId = this._currentFestivalId.asReadonly();
     public readonly loading = this._loading.asReadonly();
     public readonly error = this._error.asReadonly();
+    public readonly contactError = this._contactError.asReadonly();
 
     // Role : Definir le festival courant pour filtrer les reservants.
     // Preconditions : Aucune.
@@ -210,9 +212,13 @@ export class ReservantStore {
     // Preconditions : reservantId est valide.
     // Postconditions : Le signal _contacts est mis a jour.
     loadContacts(reservantId: number): void {
+        this._contactError.set(null);
         this.contactApi.listContacts(reservantId).subscribe({
             next: (contacts) => this._contacts.set(contacts),
-            error: (error) => console.error('Error loading contacts:', error),
+            error: (error) => {
+                console.error('Error loading contacts:', error);
+                this._contactError.set(this.extractErrorMessage(error) || 'Erreur lors du chargement des contacts');
+            },
         });
     }
 
@@ -244,25 +250,34 @@ export class ReservantStore {
     // Postconditions : Le contact est ajoute dans le signal _contacts.
     createContact(reservantId: number, contact: ContactDto): void {
         this._loading.set(true);
+        this._contactError.set(null);
         this.contactApi.addContact(reservantId, contact).pipe(
             finalize(() => this._loading.set(false)),
         ).subscribe({
             next: (c) => this._contacts.set([...this._contacts(), c]),
-            error: (error) => console.error('Error creating contact:', error),
+            error: (error) => {
+                console.error('Error creating contact:', error);
+                this._contactError.set(this.extractErrorMessage(error) || 'Erreur lors de la création du contact');
+            },
         });
     }
 
     // Role : Supprimer un contact d'un reservant.
     // Preconditions : reservantId et contactId sont valides.
     // Postconditions : Le contact est retire du signal _contacts.
-    deleteContact(reservantId: number, contactId: number): void {
+    deleteContact(reservantId: number, contactId: number): Observable<void> {
         this._loading.set(true);
-        this.contactApi.deleteContact(reservantId, contactId).pipe(
+        this._contactError.set(null);
+        return this.contactApi.deleteContact(reservantId, contactId).pipe(
+            tap(() => this._contacts.set(this._contacts().filter(c => c.id !== contactId))),
+            map(() => undefined),
+            catchError((error) => {
+                console.error('Error deleting contact:', error);
+                this._contactError.set(this.extractErrorMessage(error) || 'Erreur lors de la suppression du contact');
+                return throwError(() => error);
+            }),
             finalize(() => this._loading.set(false)),
-        ).subscribe({
-            next: () => this._contacts.set(this._contacts().filter(c => c.id !== contactId)),
-            error: (error) => console.error('Error deleting contact:', error),
-        });
+        );
     }
 
     // Role : Supprimer un evenement de contact d'un reservant.
@@ -312,7 +327,7 @@ export class ReservantStore {
             return error.message;
         }
         if (error?.status === 409) {
-            return 'Un reservant avec ce nom ou cet email existe deja';
+            return 'Un réservant avec ce nom ou cet email existe déjà';
         }
         return null;
     }

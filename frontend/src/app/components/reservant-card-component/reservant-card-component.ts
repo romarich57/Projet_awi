@@ -56,6 +56,9 @@ export class ReservantCardComponent {
     return this.reservantStore.reservants().find((r) => r.id === id) ?? null;
   });
   readonly contacts = computed(() => this.reservantStore.contacts());
+  readonly contactError = this.reservantStore.contactError;
+  readonly deletingContactIds = signal<readonly number[]>([]);
+  readonly deletingContactIdsSet = computed(() => new Set(this.deletingContactIds()));
   contactForm = {
     name: '',
     email: '',
@@ -171,6 +174,46 @@ export class ReservantCardComponent {
       priority,
     });
     this.contactForm = { name: '', email: '', phone_number: '', job_title: '', priority: 0 };
+  }
+
+  // Role : Supprimer un contact existant.
+  // Préconditions : contactId et reservantId sont valides.
+  // Postconditions : Le contact est supprime de la liste locale.
+  deleteContact(contactId: number): void {
+    const reservantId = this.reservant()?.id ?? this.reservantId();
+    if (reservantId == null || !Number.isFinite(contactId)) {
+      return;
+    }
+    if (this.isDeletingContact(contactId)) {
+      return;
+    }
+    this.setDeletingContact(contactId, true);
+    this.reservantStore
+      .deleteContact(reservantId, contactId)
+      .subscribe({
+        error: () => null,
+      })
+      .add(() => this.setDeletingContact(contactId, false));
+  }
+
+  // Role : Verifier si une suppression est en cours pour un contact.
+  // Préconditions : contactId est fourni.
+  // Postconditions : Retourne true si suppression en cours.
+  isDeletingContact(contactId: number): boolean {
+    return this.deletingContactIdsSet().has(contactId);
+  }
+
+  private setDeletingContact(contactId: number, isDeleting: boolean): void {
+    const current = this.deletingContactIds();
+    if (isDeleting) {
+      if (!current.includes(contactId)) {
+        this.deletingContactIds.set([...current, contactId]);
+      }
+      return;
+    }
+    if (current.includes(contactId)) {
+      this.deletingContactIds.set(current.filter((id) => id !== contactId));
+    }
   }
 
   // Role : Charger la liste des jeux associes a un editeur.
