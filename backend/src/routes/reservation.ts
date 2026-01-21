@@ -1,8 +1,10 @@
 // Role : Gerer les routes des reservations et du stock.
 import { Router } from 'express'
 import pool from '../db/database.js'
+import { requireRole } from '../middleware/require-role.js'
 
 const router = Router();
+const RESERVATION_DELETE_ROLES = ['admin', 'super-organizer'];
 
 // Role : Consulter le stock disponible d'un festival.
 // Preconditions : festivalId est valide.
@@ -601,11 +603,83 @@ router.put('/reservation/:id', async (req, res) => {
     }
 });
 
+// Role : Prévisualiser les dependances supprimees lors d'une suppression.
+// Preconditions : id est valide.
+// Postconditions : Retourne la liste des elements supprimes par cascade.
+router.get('/reservation/:id/delete-summary', requireRole(RESERVATION_DELETE_ROLES), async (req, res) => {
+    const reservationId = Number(req.params.id);
+    if (!Number.isFinite(reservationId)) {
+        return res.status(400).json({ error: 'Identifiant de réservation invalide' });
+    }
+
+    try {
+        const { rowCount } = await pool.query(
+            'SELECT 1 FROM reservation WHERE id = $1',
+            [reservationId],
+        );
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Réservation introuvable' });
+        }
+
+        const zonesTarifairesResult = await pool.query(
+            `SELECT rzt.zone_tarifaire_id,
+                    zt.name AS zone_name,
+                    rzt.nb_tables_reservees,
+                    rzt.nb_chaises_reservees
+             FROM reservation_zones_tarifaires rzt
+             JOIN zone_tarifaire zt ON zt.id = rzt.zone_tarifaire_id
+             WHERE rzt.reservation_id = $1
+             ORDER BY zt.name ASC`,
+            [reservationId],
+        );
+
+        const zonePlanAllocationsResult = await pool.query(
+            `SELECT rzp.zone_plan_id,
+                    zp.name AS zone_plan_name,
+                    rzp.nb_tables,
+                    rzp.nb_chaises
+             FROM reservation_zone_plan rzp
+             JOIN zone_plan zp ON zp.id = rzp.zone_plan_id
+             WHERE rzp.reservation_id = $1
+             ORDER BY zp.name ASC`,
+            [reservationId],
+        );
+
+        const gamesAllocationsResult = await pool.query(
+            `SELECT ja.id,
+                    ja.game_id,
+                    g.title AS game_title,
+                    ja.nb_tables_occupees,
+                    ja.nb_exemplaires,
+                    COALESCE(ja.nb_chaises, 0) AS nb_chaises,
+                    ja.zone_plan_id
+             FROM jeux_alloues ja
+             JOIN games g ON g.id = ja.game_id
+             WHERE ja.reservation_id = $1
+             ORDER BY g.title ASC`,
+            [reservationId],
+        );
+
+        res.json({
+            reservation_id: reservationId,
+            zones_tarifaires: zonesTarifairesResult.rows,
+            zone_plan_allocations: zonePlanAllocationsResult.rows,
+            games_allocations: gamesAllocationsResult.rows,
+        });
+    } catch (err) {
+        console.error('Erreur lors du chargement du résumé de suppression:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 // Role : Supprimer une reservation et restaurer les stocks.
 // Preconditions : id est valide.
 // Postconditions : Supprime la reservation et restaure les stocks.
-router.delete('/reservation/:id', async (req, res) => {
-    const { id } = req.params;
+router.delete('/reservation/:id', requireRole(RESERVATION_DELETE_ROLES), async (req, res) => {
+    const reservationId = Number(req.params.id);
+    if (!Number.isFinite(reservationId)) {
+        return res.status(400).json({ error: 'Identifiant de réservation invalide' });
+    }
 
     const client = await pool.connect();
     try {
@@ -614,10 +688,11 @@ router.delete('/reservation/:id', async (req, res) => {
         // 1. Récupérer le festival_id de la réservation
         const reservationInfo = await client.query(
             `SELECT festival_id FROM reservation WHERE id = $1`,
-            [id]
+            [reservationId]
         );
         if (reservationInfo.rows.length === 0) {
-            throw new Error('Réservation introuvable');
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Réservation introuvable' });
         }
         const festivalId = reservationInfo.rows[0].festival_id;
 
@@ -626,7 +701,7 @@ router.delete('/reservation/:id', async (req, res) => {
             `SELECT zone_tarifaire_id, nb_tables_reservees, nb_chaises_reservees 
              FROM reservation_zones_tarifaires 
              WHERE reservation_id = $1`,
-            [id]
+            [reservationId]
         );
 
         // 3. Restaurer le stock des zones tarifaires et calculer les chaises
@@ -654,17 +729,18 @@ router.delete('/reservation/:id', async (req, res) => {
         // 4. Supprimer les associations zones tarifaires
         await client.query(
             `DELETE FROM reservation_zones_tarifaires WHERE reservation_id = $1`,
-            [id]
+            [reservationId]
         );
 
         // 5. Supprimer la réservation
         const deleteResult = await client.query(
             `DELETE FROM reservation WHERE id = $1 RETURNING *`,
-            [id]
+            [reservationId]
         );
 
         if (deleteResult.rows.length === 0) {
-            throw new Error('Réservation introuvable');
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Réservation introuvable' });
         }
 
         await client.query('COMMIT');

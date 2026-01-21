@@ -432,6 +432,13 @@ export async function runMigrations() {
         FOREIGN KEY (reservation_id) REFERENCES reservation(id) ON DELETE CASCADE;
     `);
     await client.query(`
+      ALTER TABLE reservation_zone_plan
+        DROP CONSTRAINT IF EXISTS reservation_zone_plan_reservation_id_fkey;
+      ALTER TABLE reservation_zone_plan
+        ADD CONSTRAINT reservation_zone_plan_reservation_id_fkey
+        FOREIGN KEY (reservation_id) REFERENCES reservation(id) ON DELETE CASCADE;
+    `);
+    await client.query(`
       ALTER TABLE jeux_alloues
         DROP CONSTRAINT IF EXISTS jeux_alloues_reservation_id_fkey;
       ALTER TABLE jeux_alloues
