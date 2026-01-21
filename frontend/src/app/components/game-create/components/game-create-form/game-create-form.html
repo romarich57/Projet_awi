@@ -177,7 +177,7 @@
     </label>
 
     <div class="actions full">
-      <button type="submit" class="primary strong" [disabled]="saving()">
+      <button type="submit" class="primary strong" [disabled]="saving() || isUploadingImage()">
         Créer le jeu
       </button>
       <a class="ghost" href="/games" (click)="onCancel($event)">Annuler</a>

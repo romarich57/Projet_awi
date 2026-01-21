@@ -3,18 +3,22 @@
 
   <header class="page-header">
     <div>
-      <p class="eyebrow">Edition</p>
-      <h1>Modifier le reservant</h1>
-      <p class="subtitle">Mettre a jour les informations de contact et d'identite.</p>
+      <p class="eyebrow">{{ headerEyebrow() }}</p>
+      <h1>{{ headerTitle() }}</h1>
+      <p class="subtitle">{{ headerSubtitle() }}</p>
     </div>
     <div class="header-actions">
       <button type="button" class="ghost" (click)="cancel()">Annuler</button>
-      <button type="submit" class="primary" (click)="onSubmit()">Sauvegarder</button>
+      <button type="submit" class="primary" (click)="onSubmit()">{{ submitLabel() }}</button>
     </div>
   </header>
 
+  @if (error()) {
+    <p class="status status--error">{{ error() }}</p>
+  }
+
   <!-- Bloc conditionnel principal -->
-  @if (reservant() || !isEditContext) {
+  @if (reservant() || !isEditContext()) {
     <form class="form-card" [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="grid">
         <label class="field">
@@ -74,7 +78,7 @@
 
       <div class="form-actions">
         <button type="button" class="ghost" (click)="cancel()">Annuler</button>
-        <button type="submit" class="primary">Sauvegarder</button>
+        <button type="submit" class="primary">{{ submitLabel() }}</button>
       </div>
     </form>
   } @else {

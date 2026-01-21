@@ -1,11 +1,8 @@
-import { Injectable } from "@angular/core";
-import { signal } from "@angular/core";
-import { inject } from "@angular/core";
+import { Injectable, inject, signal } from "@angular/core";
 import { ReservantApiService } from "../services/reservant-api";
-import { ReservantDto } from "../types/reservant-dto";
-import { finalize, switchMap, tap, type Observable } from "rxjs";
+import { ReservantDto, ReservantWorkflowState } from "../types/reservant-dto";
+import { catchError, finalize, map, switchMap, tap, throwError, type Observable } from "rxjs";
 import { ReservantWorkflowApi } from "../services/reservant-workflow-api";
-import { ReservantWorkflowState } from "../types/reservant-dto";
 import { ReservantWorkflowFlagsDto } from "../types/reservant-workflow-flags-dto";
 import { ReservantContactApi } from "../services/reservant-contact-api";
 import { ReservantContactDto } from "../types/reservant-contact-dto";
@@ -99,27 +96,38 @@ export class ReservantStore {
     // Role : Creer un reservant et l'ajouter a la liste locale.
     // Preconditions : Un objet ReservantDto valide est fourni.
     // Postconditions : Le reservant est ajoute et les etats loading/error sont mis a jour.
-    create(reservant: ReservantDto): void {
+    create(reservant: ReservantDto): Observable<void> {
         this._loading.set(true);
         this._error.set(null);
-        this.api.create(reservant).pipe(
+        return this.api.create(reservant).pipe(
             switchMap(() => this.fetchReservantsAfterMutation()),
             tap((reservants) => this._reservants.set(reservants)),
+            map(() => undefined),
+            catchError((error) => {
+                if (error?.status !== 409) {
+                    console.error('Error creating reservant:', error);
+                }
+                this._error.set(this.extractErrorMessage(error) || 'Erreur lors de la création');
+                return throwError(() => error);
+            }),
             finalize(() => this._loading.set(false)),
-        ).subscribe({
-            error: (error) => {
-                console.error('Error creating reservant:', error);
-                this._error.set(error.message || 'Erreur lors de la création');
-            },
-        });
+        );
     }
     // Role : Mettre a jour un reservant.
     // Preconditions : Un objet ReservantDto valide est fourni.
     // Postconditions : Le signal _reservants est mis a jour avec la version modifiee.
-    update(reservant: ReservantDto) {
+    update(reservant: ReservantDto): Observable<ReservantDto> {
         this._loading.set(true);
+        this._error.set(null);
         return this.api.update(reservant).pipe(
             tap((updated) => this._reservants.set([updated])),
+            catchError((error) => {
+                if (error?.status !== 409) {
+                    console.error('Error updating reservant:', error);
+                }
+                this._error.set(this.extractErrorMessage(error) || 'Erreur lors de la mise a jour');
+                return throwError(() => error);
+            }),
             finalize(() => this._loading.set(false)),
         );
     }
@@ -278,5 +286,34 @@ export class ReservantStore {
         return festivalId !== null
             ? this.reservationService.getReservantsByFestival(festivalId)
             : this.api.list();
+    }
+
+    // Role : Normaliser les erreurs API pour l'affichage.
+    // Preconditions : error est l'erreur renvoyee par HttpClient.
+    // Postconditions : Retourne un message utilisateur ou null.
+    private extractErrorMessage(error: any): string | null {
+        const apiError = error?.error;
+        if (typeof apiError === 'string' && apiError.trim().length > 0) {
+            return apiError;
+        }
+        if (apiError) {
+            const details = apiError.details;
+            if (Array.isArray(details) && details.length > 0) {
+                return details.join(' · ');
+            }
+            if (typeof details === 'string' && details.trim().length > 0) {
+                return apiError.error ? `${apiError.error} · ${details}` : details;
+            }
+            if (typeof apiError.error === 'string' && apiError.error.trim().length > 0) {
+                return apiError.error;
+            }
+        }
+        if (typeof error?.message === 'string' && error.message.trim().length > 0) {
+            return error.message;
+        }
+        if (error?.status === 409) {
+            return 'Un reservant avec ce nom ou cet email existe deja';
+        }
+        return null;
     }
 }

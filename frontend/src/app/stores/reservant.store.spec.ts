@@ -245,7 +245,9 @@ describe('ReservantStore', () => {
             apiMock.create.and.returnValue(of(newReservant));
             apiMock.list.and.returnValue(of(refreshedList));
 
-            store.create(newReservant);
+            store.create(newReservant).subscribe({
+                error: () => null,
+            });
 
             setTimeout(() => {
                 expect(store.reservants()).toEqual(refreshedList);
@@ -258,7 +260,9 @@ describe('ReservantStore', () => {
             apiMock.create.and.returnValue(of(newReservant));
             apiMock.list.and.returnValue(of([newReservant]));
 
-            store.create(newReservant);
+            store.create(newReservant).subscribe({
+                error: () => null,
+            });
 
             setTimeout(() => {
                 expect(apiMock.list).toHaveBeenCalled();
@@ -269,7 +273,9 @@ describe('ReservantStore', () => {
         it('should set loading=true during create()', () => {
             apiMock.create.and.returnValue(of(newReservant).pipe(delay(1)));
 
-            store.create(newReservant);
+            store.create(newReservant).subscribe({
+                error: () => null,
+            });
 
             expect(store.loading()).toBe(true);
         });
@@ -277,7 +283,9 @@ describe('ReservantStore', () => {
         it('should set loading=false after create() completes', (done) => {
             apiMock.create.and.returnValue(of(newReservant));
 
-            store.create(newReservant);
+            store.create(newReservant).subscribe({
+                error: () => null,
+            });
 
             setTimeout(() => {
                 expect(store.loading()).toBe(false);
@@ -289,7 +297,9 @@ describe('ReservantStore', () => {
             (store as any)._error.set('Previous error');
             apiMock.create.and.returnValue(of(newReservant));
 
-            store.create(newReservant);
+            store.create(newReservant).subscribe({
+                error: () => null,
+            });
 
             expect(store.error()).toBeNull();
         });
@@ -298,7 +308,10 @@ describe('ReservantStore', () => {
             const error = { message: 'Creation failed' };
             apiMock.create.and.returnValue(throwError(() => error));
 
-            store.create(newReservant);
+            store.create(newReservant).subscribe({
+                next: () => fail('Should have errored'),
+                error: () => null,
+            });
 
             setTimeout(() => {
                 expect(store.error()).toBe('Creation failed');
@@ -309,7 +322,9 @@ describe('ReservantStore', () => {
         it('should call api.create() with correct payload', () => {
             apiMock.create.and.returnValue(of(newReservant));
 
-            store.create(newReservant);
+            store.create(newReservant).subscribe({
+                error: () => null,
+            });
 
             expect(apiMock.create).toHaveBeenCalledWith(newReservant);
         });
@@ -319,7 +334,10 @@ describe('ReservantStore', () => {
             const networkError = new Error('Network error');
             apiMock.create.and.returnValue(throwError(() => networkError));
 
-            store.create(newReservant);
+            store.create(newReservant).subscribe({
+                next: () => fail('Should have errored'),
+                error: () => null,
+            });
 
             setTimeout(() => {
                 expect(consoleErrorSpy).toHaveBeenCalledWith('Error creating reservant:', networkError);

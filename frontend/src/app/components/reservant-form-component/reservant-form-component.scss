@@ -26,6 +26,20 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
 }
 
+.status {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+  background: rgba(185, 28, 28, 0.12);
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.status--error {
+  background: rgba(185, 28, 28, 0.12);
+  color: #b91c1c;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;

@@ -4,6 +4,47 @@ import pool from '../db/database.js'
 
 const router = Router();
 
+type DatabaseErrorResponse = { status: number; body: { error: string; details?: string } }
+
+const buildErrorBody = (error: string, details?: string) =>
+    details ? { error, details } : { error };
+
+// Role : Normaliser les erreurs Postgres vers des reponses HTTP propres.
+// Preconditions : err est une erreur issue d'une requete pg.
+// Postconditions : Retourne une reponse HTTP ou null si non geree.
+function mapReservantDbError(err: any): DatabaseErrorResponse | null {
+    const code = err?.code as string | undefined;
+    const constraint = err?.constraint as string | undefined;
+    const detail = err?.detail as string | undefined;
+
+    if (code === '23505') {
+        if (constraint === 'reservant_email_key') {
+            return { status: 409, body: { error: 'Un réservant avec cet email existe déjà' } };
+        }
+        if (constraint === 'reservant_name_key') {
+            return { status: 409, body: { error: 'Un réservant avec ce nom existe déjà' } };
+        }
+        return { status: 409, body: buildErrorBody('Conflit de duplication', detail) };
+    }
+    if (code === '23503') {
+        if (constraint === 'reservant_editor_id_fkey') {
+            return { status: 400, body: { error: "Éditeur inexistant" } };
+        }
+        return { status: 400, body: buildErrorBody('Référence inexistante', detail) };
+    }
+    if (code === '23502') {
+        return { status: 400, body: buildErrorBody('Champ requis manquant', detail) };
+    }
+    if (code === '23514') {
+        return { status: 400, body: buildErrorBody('Violation de contrainte', detail) };
+    }
+    if (code === '22P02') {
+        return { status: 400, body: buildErrorBody('Format invalide', detail) };
+    }
+
+    return null;
+}
+
 // Role : Garantir l'existence d'un workflow pour un reservant.
 // Preconditions : reservantId est valide, festivalId est optionnel.
 // Postconditions : Retourne l'id du workflow existant ou cree.
@@ -88,6 +129,24 @@ router.post('/', async (req, res) => {
     }
 
     try {
+        const { rows: conflictRows } = await pool.query(
+            'SELECT name, email FROM reservant WHERE name = $1 OR email = $2',
+            [name, email],
+        );
+        if (conflictRows.length > 0) {
+            const nameTaken = conflictRows.some((row) => row.name === name);
+            const emailTaken = conflictRows.some((row) => row.email === email);
+            if (nameTaken && emailTaken) {
+                return res.status(409).json({ error: 'Nom et email déjà utilisés' });
+            }
+            if (nameTaken) {
+                return res.status(409).json({ error: 'Nom déjà utilisé' });
+            }
+            if (emailTaken) {
+                return res.status(409).json({ error: 'Un réservant avec cet email existe déjà' });
+            }
+        }
+
         const { rows } = await pool.query(
             `INSERT INTO reservant (name, email, type, editor_id, phone_number, address, siret, notes)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -96,12 +155,12 @@ router.post('/', async (req, res) => {
         );
         res.status(201).json(rows[0]);
     } catch (err: any) {
-        console.error('Erreur lors de la création du réservant:', err);
-        // Gestion de l'erreur d'email unique
-        if (err.code === '23505' && err.constraint === 'reservant_email_key') {
-            return res.status(409).json({ error: 'Un réservant avec cet email existe déjà' });
+        const mappedError = mapReservantDbError(err);
+        if (mappedError) {
+            return res.status(mappedError.status).json(mappedError.body);
         }
-        res.status(500).json({ error: 'Erreur serveur', details: err.message });
+        console.error('Erreur lors de la création du réservant:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
@@ -127,12 +186,12 @@ router.put('/:id', async (req, res) => {
 
         res.json(rows[0]);
     } catch (err: any) {
-        console.error('Erreur lors de la mise à jour du réservant:', err);
-        // Gestion de l'erreur d'email unique
-        if (err.code === '23505' && err.constraint === 'reservant_email_key') {
-            return res.status(409).json({ error: 'Un réservant avec cet email existe déjà' });
+        const mappedError = mapReservantDbError(err);
+        if (mappedError) {
+            return res.status(mappedError.status).json(mappedError.body);
         }
-        res.status(500).json({ error: 'Erreur serveur', details: err.message });
+        console.error('Erreur lors de la mise à jour du réservant:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
