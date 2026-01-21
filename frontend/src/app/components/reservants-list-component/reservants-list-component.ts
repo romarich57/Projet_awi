@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { ReservantStore } from '../../stores/reservant.store';
 import { ReservantDto } from '../../types/reservant-dto';
 import { FestivalState } from '../../stores/festival-state';
+import { AuthService } from '../../services/auth.service';
 
 
 @Component({
@@ -20,9 +21,17 @@ import { FestivalState } from '../../stores/festival-state';
 export class ReservantsListComponent {
   readonly reservantStore = inject(ReservantStore);
   private readonly festivalState = inject(FestivalState);
+  private readonly authService = inject(AuthService);
   readonly typeFilter = signal<'all' | ReservantDto['type']>('all');
   readonly sortKey = signal<'name-asc' | 'name-desc'>('name-asc');
   readonly searchQuery = signal(''); //recherche par nom
+  readonly error = this.reservantStore.error;
+  readonly canDeleteReservant = this.authService.isSuperOrganizer;
+  readonly pendingDelete = signal<ReservantDto | null>(null);
+  readonly deletePrompt = computed(() => {
+    const reservant = this.pendingDelete();
+    return reservant ? `Supprimer "${reservant.name}" ?` : '';
+  });
 
 
 readonly reservantsView = computed(() => {
@@ -94,5 +103,34 @@ readonly reservantsView = computed(() => {
   // Postconditions : `searchQuery` est mis a jour.
   setSearchQuery(value: string): void {
     this.searchQuery.set(value);
+  }
+
+  // Role : Demander la suppression d'un reservant.
+  // Préconditions : `reservant` est valide et l'utilisateur est autorise.
+  // Postconditions : Le modal de confirmation est ouvert.
+  requestDelete(reservant: ReservantDto): void {
+    if (!reservant || !this.canDeleteReservant()) {
+      return;
+    }
+    this.pendingDelete.set(reservant);
+  }
+
+  // Role : Annuler la suppression en cours.
+  // Préconditions : Une suppression est en attente.
+  // Postconditions : Le modal est ferme.
+  cancelDelete(): void {
+    this.pendingDelete.set(null);
+  }
+
+  // Role : Confirmer la suppression d'un reservant.
+  // Préconditions : Un reservant est en attente de suppression.
+  // Postconditions : Le reservant est supprime via le store.
+  confirmDelete(): void {
+    const reservant = this.pendingDelete();
+    if (!reservant || !this.canDeleteReservant()) {
+      return;
+    }
+    this.pendingDelete.set(null);
+    this.reservantStore.delete(reservant);
   }
 }

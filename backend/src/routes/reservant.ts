@@ -1,8 +1,10 @@
 // Role : Gerer les routes liees aux reservants et contacts.
 import { Router } from 'express'
 import pool from '../db/database.js'
+import { requireRole } from '../middleware/require-role.js'
 
 const router = Router();
+const RESERVANT_DELETE_ROLES = ['admin', 'super-organizer'];
 
 type DatabaseErrorResponse = { status: number; body: { error: string; details?: string } }
 
@@ -221,7 +223,7 @@ router.put('/:id', async (req, res) => {
 // Role : Supprimer un reservant.
 // Preconditions : id est valide.
 // Postconditions : Supprime le reservant ou retourne une erreur.
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireRole(RESERVANT_DELETE_ROLES), async (req, res) => {
     const { id } = req.params;
 
     try {

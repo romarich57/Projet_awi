@@ -146,7 +146,7 @@ export class ReservantStore {
         ).subscribe({
             error: (error) => {
                 console.error('Error deleting reservant:', error);
-                this._error.set(error.message || 'Erreur lors de la suppression');
+                this._error.set(this.extractErrorMessage(error) || 'Erreur lors de la suppression');
             },
         });
     }

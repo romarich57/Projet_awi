@@ -153,6 +153,15 @@
   text-align: right;
 }
 
+.error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.muted {
+  color: #475569;
+}
+
 .primary {
   background: #f97316;
   color: #ffffff;
@@ -187,6 +196,26 @@
   border-color: #0b4f6c;
 }
 
+.ghost.danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.ghost.danger:hover {
+  background: #b91c1c;
+  color: #ffffff;
+  border-color: #b91c1c;
+}
+
+.danger {
+  background: #b91c1c;
+  color: #fff;
+  border: none;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+
 .empty-state {
   border: 1px dashed #cbd5e1;
   border-radius: 12px;
@@ -196,6 +225,35 @@
   color: #475569;
   display: grid;
   gap: 0.75rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 20;
+}
+
+.modal-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 420px);
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+  padding: 1.4rem 1.5rem;
+  z-index: 21;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
 }
 
 @media (max-width: 900px) {

@@ -4,11 +4,13 @@ import { ReservantStore } from '../../stores/reservant.store';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { FestivalState } from '../../stores/festival-state';
+import { AuthService } from '../../services/auth.service';
 
 describe('ReservantsListComponent', () => {
   let component: ReservantsListComponent;
   let fixture: ComponentFixture<ReservantsListComponent>;
   let storeMock: any;
+  let authMock: { isSuperOrganizer: ReturnType<typeof signal> };
 
   const mockReservants = [
     { id: 1, name: 'Test A', email: 'a@test.com', type: 'editeur' as const, workflow_state: 'Pas_de_contact' as const },
@@ -25,11 +27,13 @@ describe('ReservantsListComponent', () => {
     storeMock.reservants = signal(mockReservants);
     storeMock.loading = signal(false);
     storeMock.error = signal(null);
+    authMock = { isSuperOrganizer: signal(true) };
 
     await TestBed.configureTestingModule({
       imports: [ReservantsListComponent],
       providers: [
         { provide: ReservantStore, useValue: storeMock },
+        { provide: AuthService, useValue: authMock },
         FestivalState,
         provideRouter([])
       ]
@@ -91,14 +95,22 @@ describe('ReservantsListComponent', () => {
     expect(contacted.length).toBe(1);
   });
 
-  it('should handle delete confirmation', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    const confirmed = window.confirm('Delete?');
-    expect(confirmed).toBe(true);
+  it('should open delete modal when authorized', () => {
+    component.requestDelete(mockReservants[0]);
+    expect(component.pendingDelete()).toEqual(mockReservants[0]);
+    expect(component.deletePrompt()).toContain(mockReservants[0].name);
   });
 
-  it('should update after delete', () => {
-    storeMock.delete(1);
-    expect(storeMock.delete).toHaveBeenCalledWith(1);
+  it('should call store delete on confirm', () => {
+    component.requestDelete(mockReservants[0]);
+    component.confirmDelete();
+    expect(storeMock.delete).toHaveBeenCalledWith(mockReservants[0]);
+    expect(component.pendingDelete()).toBeNull();
+  });
+
+  it('should block delete when user is not authorized', () => {
+    authMock.isSuperOrganizer.set(false);
+    component.requestDelete(mockReservants[0]);
+    expect(component.pendingDelete()).toBeNull();
   });
 });
