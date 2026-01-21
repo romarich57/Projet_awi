@@ -73,7 +73,7 @@ export class FestivalFormComponent {
   private createZoneFormGroup(): FormGroup {
     return new FormGroup({
       name: new FormControl('', [Validators.required]),
-      nb_tables: new FormControl(0, [Validators.required, Validators.min(1)]),
+      nb_tables: new FormControl(1, [Validators.required, Validators.min(1)]),
       price_per_table: new FormControl(0, [Validators.required, Validators.min(0)]),
     });
   }
@@ -111,7 +111,7 @@ export class FestivalFormComponent {
         alert('Un festival avec ce nom existe deja.');
         return;
       }
-      
+
       // Créer le festival avec les bonnes conversions
       const startDate = String(formValue.start_date || new Date().toISOString().split('T')[0]);
       const endDate = String(formValue.end_date || new Date().toISOString().split('T')[0]);
@@ -125,7 +125,7 @@ export class FestivalFormComponent {
         start_date: startDate,
         end_date: endDate,
       };
-      
+
       // Créer les zones tarifaires (sans festival_id pour l'instant)
       const zones: Partial<ZoneTarifaireDto>[] = this.zonesFormArray.value.map((zone: any) => ({
         name: zone.name || '',
@@ -139,10 +139,10 @@ export class FestivalFormComponent {
         next: (festivalResponse) => {
           console.log('Festival créé avec succès:', festivalResponse.festival);
           const festivalId = festivalResponse.festival.id;
-          
+
           // Émettre l'événement festival
           this.festivalSubmit.emit(festivalResponse.festival);
-          
+
           // Ensuite créer chaque zone avec l'ID du festival
           zones.forEach(zone => {
             this.festivalService.addZoneTarifaire(zone, festivalId).subscribe({
@@ -154,10 +154,10 @@ export class FestivalFormComponent {
               }
             });
           });
-          
+
           // Réinitialiser le formulaire
           this.festivalForm.reset();
-          
+
           // Réinitialiser les zones (garder une zone vide)
           while (this.zonesFormArray.length > 1) {
             this.zonesFormArray.removeAt(1);
