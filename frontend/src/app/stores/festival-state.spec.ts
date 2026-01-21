@@ -17,7 +17,8 @@ describe('FestivalState', () => {
     stock_tables_standard: 10,
     stock_tables_grande: 5,
     stock_tables_mairie: 3,
-    stock_chaises: 100
+    stock_chaises: 100,
+    prix_prises: 5,
   };
 
   const mockFestivalList: FestivalDto[] = [
@@ -30,7 +31,8 @@ describe('FestivalState', () => {
       stock_tables_standard: 8,
       stock_tables_grande: 4,
       stock_tables_mairie: 2,
-      stock_chaises: 80
+      stock_chaises: 80,
+      prix_prises: 5,
     }
   ];
 
@@ -52,7 +54,7 @@ describe('FestivalState', () => {
     state = TestBed.inject(FestivalState);
   });
 
- 
+
 
   describe('Initialization', () => {
     it('should be created', () => {
@@ -126,7 +128,8 @@ describe('FestivalState', () => {
         stock_tables_standard: 15,
         stock_tables_grande: 8,
         stock_tables_mairie: 5,
-        stock_chaises: 150
+        stock_chaises: 150,
+        prix_prises: 5,
       };
 
       state.setCurrentFestival(festival);
@@ -233,7 +236,8 @@ describe('FestivalState', () => {
         stock_tables_standard: 0,
         stock_tables_grande: 0,
         stock_tables_mairie: 0,
-        stock_chaises: 0
+        stock_chaises: 0,
+        prix_prises: 0,
       };
 
       state.setCurrentFestival(minimalFestival);
@@ -251,7 +255,8 @@ describe('FestivalState', () => {
         stock_tables_standard: 1000,
         stock_tables_grande: 500,
         stock_tables_mairie: 100,
-        stock_chaises: 10000
+        stock_chaises: 10000,
+        prix_prises: 10,
       };
 
       state.setCurrentFestival(largeFestival);
@@ -294,7 +299,8 @@ describe('FestivalState', () => {
         stock_tables_standard: 5,
         stock_tables_grande: 3,
         stock_tables_mairie: 2,
-        stock_chaises: 50
+        stock_chaises: 50,
+        prix_prises: 5,
       };
 
       state.setCurrentFestival(datesFestival);

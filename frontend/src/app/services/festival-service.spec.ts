@@ -17,7 +17,8 @@ describe('FestivalService', () => {
     stock_tables_standard: 10,
     stock_tables_grande: 5,
     stock_tables_mairie: 3,
-    stock_chaises: 100
+    stock_chaises: 100,
+    prix_prises: 5,
   };
 
   beforeEach(() => {

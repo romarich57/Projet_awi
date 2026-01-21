@@ -14,7 +14,7 @@ describe('FestivalCardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [FestivalCardComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(FestivalCardComponent);
     component = fixture.componentInstance;
@@ -28,6 +28,7 @@ describe('FestivalCardComponent', () => {
       stock_tables_grande: 5,
       stock_tables_mairie: 2,
       stock_chaises: 50,
+      prix_prises: 5,
     };
     fixture.componentRef.setInput('festival', mockFestival);
     fixture.detectChanges();

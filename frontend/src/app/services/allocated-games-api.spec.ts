@@ -37,6 +37,7 @@ describe('AllocatedGamesApiService', () => {
         min_age: 8,
         authors: 'Auteur',
         prototype: false,
+        nb_chaises: 4,
       },
     ];
 
