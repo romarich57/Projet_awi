@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '@env/environment';
 import { ReservantDto } from '../types/reservant-dto';
-import { ReservationDetailDto } from '../types/reservation-detail-dto';
+import type { ReservationDashboardRowDto } from '../types/reservation-dashboard-row-dto';
+import type { ReservationDeleteSummaryDto } from '../types/reservation-delete-summary-dto';
 import { ZoneTarifaireDto } from '../types/zone-tarifaire-dto';
 import { ReservationDto } from '../types/reservation-dto';
 import { Observable } from 'rxjs';
@@ -85,8 +86,8 @@ export class ReservationService {
   // Role : Lister les reservations completes d'un festival.
   // Preconditions : festivalId est valide.
   // Postconditions : Retourne un Observable des reservations detaillees.
-  getReservationsByFestival(festivalId: number): Observable<ReservationDetailDto[]> {
-    return this.http.get<ReservationDetailDto[]>(`${environment.apiUrl}/reservation/reservations/${festivalId}`,
+  getReservationsByFestival(festivalId: number): Observable<ReservationDashboardRowDto[]> {
+    return this.http.get<ReservationDashboardRowDto[]>(`${environment.apiUrl}/reservation/reservations/${festivalId}`,
       { withCredentials: true });
   }
 
@@ -144,6 +145,26 @@ export class ReservationService {
       `${environment.apiUrl}/reservation/reservation/${reservationId}`,
       data,
       { withCredentials: true }
+    );
+  }
+
+  // Role : Supprimer une reservation.
+  // Preconditions : reservationId est valide.
+  // Postconditions : Retourne un message de suppression.
+  deleteReservation(reservationId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${environment.apiUrl}/reservation/reservation/${reservationId}`,
+      { withCredentials: true }
+    );
+  }
+
+  // Role : Recuperer le resume de suppression d'une reservation.
+  // Preconditions : reservationId est valide.
+  // Postconditions : Retourne les dependances qui seront supprimees.
+  getReservationDeleteSummary(reservationId: number): Observable<ReservationDeleteSummaryDto> {
+    return this.http.get<ReservationDeleteSummaryDto>(
+      `${environment.apiUrl}/reservation/reservation/${reservationId}/delete-summary`,
+      { withCredentials: true },
     );
   }
 

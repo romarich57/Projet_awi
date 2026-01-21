@@ -86,12 +86,22 @@
 
 
     <section class="reservation-table card">
+      @if (loading()) {
+        <p class="muted">Chargement...</p>
+      }
+      @if (loadError()) {
+        <p class="error">{{ loadError() }}</p>
+      }
+      @if (deleteError()) {
+        <p class="error">{{ deleteError() }}</p>
+      }
+
       @if (reservationsView().length > 0) {
         <div class="table-head">
           <span>Reservant</span>
           <span>Type</span>
           <span>Statut de la Réservation</span>
-          <span>Voir Détails</span>
+          <span>Actions</span>
         </div>
 
         @for(reservation of reservationsView(); track reservation.id) {
@@ -101,15 +111,90 @@
             <div class="cell" data-label="Statut">
               <span class="status-pill">{{ reservation.workflow_state }}</span>
             </div>
-            <div class="cell actions" data-label="Détails">
+            <div class="cell actions" data-label="Actions">
               <button class="action-btn" (click)="viewReservationDetails(reservation.id)">Voir Détails</button>
+              @if (canDeleteReservation()) {
+                <button class="action-btn danger" (click)="requestDelete(reservation)">Supprimer</button>
+              }
             </div>
           </div>
         }
-      } @else {
+      } @else if (!loading()) {
         <p class="empty-state">Aucune réservation trouvée pour ce festival.</p>
       }
     </section>
+
+    @if (pendingDelete()) {
+      <div class="modal-backdrop" (click)="cancelDelete()"></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+        <h3 id="delete-title">Confirmation</h3>
+        <p class="muted">{{ deletePrompt() }}</p>
+        <p class="warning">
+          Cette suppression entrainera la suppression des donnees liees a la reservation.
+        </p>
+
+        @if (deleteSummaryLoading()) {
+          <p class="muted">Chargement des dependances...</p>
+        }
+
+        @if (deleteSummaryError()) {
+          <p class="error">{{ deleteSummaryError() }}</p>
+        }
+        @if (deleteError()) {
+          <p class="error">{{ deleteError() }}</p>
+        }
+
+        @if (deleteSummaryForPending(); as summary) {
+          <div class="delete-summary">
+            <div class="summary-section">
+              <h4>Zones tarifaires ({{ summary.zones_tarifaires.length }})</h4>
+              @if (summary.zones_tarifaires.length === 0) {
+                <p class="muted">Aucune zone tarifaire associee.</p>
+              } @else {
+                <div class="summary-list">
+                  @for (zone of summary.zones_tarifaires; track zone.zone_tarifaire_id) {
+                    <p>{{ zone.zone_name }} · {{ zone.nb_tables_reservees }} tables</p>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="summary-section">
+              <h4>Zones plan ({{ summary.zone_plan_allocations.length }})</h4>
+              @if (summary.zone_plan_allocations.length === 0) {
+                <p class="muted">Aucune zone plan associee.</p>
+              } @else {
+                <div class="summary-list">
+                  @for (zone of summary.zone_plan_allocations; track zone.zone_plan_id) {
+                    <p>{{ zone.zone_plan_name }} · {{ zone.nb_tables }} tables</p>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="summary-section">
+              <h4>Jeux alloues ({{ summary.games_allocations.length }})</h4>
+              @if (summary.games_allocations.length === 0) {
+                <p class="muted">Aucun jeu alloue.</p>
+              } @else {
+                <div class="summary-list">
+                  @for (game of summary.games_allocations; track game.id) {
+                    <p>{{ game.game_title }} · {{ game.nb_tables_occupees }} tables</p>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="ghost" (click)="cancelDelete()">Annuler</button>
+          <button type="button" class="danger" (click)="confirmDelete()" [disabled]="isDeleting()">
+            Supprimer
+          </button>
+        </div>
+      </div>
+    }
   }
   @else {
     <div class="no-festival card">
