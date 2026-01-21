@@ -94,6 +94,71 @@ router.get('/', async (_req, res) => {
     }
 });
 
+// Role : Prévisualiser les dependances supprimees lors d'une suppression.
+// Preconditions : id est valide.
+// Postconditions : Retourne la liste des elements supprimes par cascade.
+router.get('/:id/delete-summary', async (req, res) => {
+    const { id } = req.params;
+    const reservantId = Number(id);
+
+    if (!Number.isFinite(reservantId)) {
+        return res.status(400).json({ error: 'Identifiant de réservant invalide' });
+    }
+
+    try {
+        const { rowCount } = await pool.query(
+            'SELECT 1 FROM reservant WHERE id = $1',
+            [reservantId],
+        );
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Réservant non trouvé' });
+        }
+
+        const contactsResult = await pool.query(
+            `SELECT id, name, email
+             FROM contact
+             WHERE reservant_id = $1
+             ORDER BY priority ASC, name ASC`,
+            [reservantId],
+        );
+
+        const workflowsResult = await pool.query(
+            `SELECT sw.id, sw.festival_id, sw.state, f.name AS festival_name
+             FROM suivi_workflow sw
+             LEFT JOIN festival f ON f.id = sw.festival_id
+             WHERE sw.reservant_id = $1
+             ORDER BY sw.id DESC`,
+            [reservantId],
+        );
+
+        const reservationsResult = await pool.query(
+            `SELECT r.id,
+                    r.festival_id,
+                    r.statut_paiement,
+                    f.name AS festival_name,
+                    CASE
+                      WHEN r.reservant_id = $1 THEN 'reservant'
+                      ELSE 'represented_editor'
+                    END AS relation
+             FROM reservation r
+             LEFT JOIN festival f ON f.id = r.festival_id
+             WHERE r.reservant_id = $1 OR r.represented_editor_id = $1
+             ORDER BY r.id DESC`,
+            [reservantId],
+        );
+
+        res.json({
+            reservant_id: reservantId,
+            contacts: contactsResult.rows,
+            workflows: workflowsResult.rows,
+            reservations: reservationsResult.rows,
+        });
+    } catch (err) {
+        console.error('Erreur lors du chargement du résumé de suppression:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 // Role : Obtenir le detail d'un reservant.
 // Preconditions : id est valide.
 // Postconditions : Retourne le reservant ou une erreur.

@@ -26,11 +26,22 @@ export class ReservantsListComponent {
   readonly sortKey = signal<'name-asc' | 'name-desc'>('name-asc');
   readonly searchQuery = signal(''); //recherche par nom
   readonly error = this.reservantStore.error;
+  readonly deleteSummary = this.reservantStore.deleteSummary;
+  readonly deleteSummaryLoading = this.reservantStore.deleteSummaryLoading;
+  readonly deleteSummaryError = this.reservantStore.deleteSummaryError;
   readonly canDeleteReservant = this.authService.isSuperOrganizer;
   readonly pendingDelete = signal<ReservantDto | null>(null);
   readonly deletePrompt = computed(() => {
     const reservant = this.pendingDelete();
     return reservant ? `Supprimer "${reservant.name}" ?` : '';
+  });
+  readonly deleteSummaryForPending = computed(() => {
+    const summary = this.deleteSummary();
+    const reservant = this.pendingDelete();
+    if (!summary || !reservant || summary.reservant_id !== reservant.id) {
+      return null;
+    }
+    return summary;
   });
 
 
@@ -113,6 +124,7 @@ readonly reservantsView = computed(() => {
       return;
     }
     this.pendingDelete.set(reservant);
+    this.reservantStore.loadDeleteSummary(reservant.id);
   }
 
   // Role : Annuler la suppression en cours.
@@ -120,6 +132,7 @@ readonly reservantsView = computed(() => {
   // Postconditions : Le modal est ferme.
   cancelDelete(): void {
     this.pendingDelete.set(null);
+    this.reservantStore.clearDeleteSummary();
   }
 
   // Role : Confirmer la suppression d'un reservant.
@@ -132,5 +145,6 @@ readonly reservantsView = computed(() => {
     }
     this.pendingDelete.set(null);
     this.reservantStore.delete(reservant);
+    this.reservantStore.clearDeleteSummary();
   }
 }

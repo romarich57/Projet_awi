@@ -90,6 +90,71 @@
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
       <h3 id="delete-title">Confirmation</h3>
       <p class="muted">{{ deletePrompt() }}</p>
+      <p class="muted warning">
+        Cette suppression entrainera la suppression des donnees liees au reservant.
+      </p>
+
+      @if (deleteSummaryLoading()) {
+        <p class="muted">Chargement des dependances...</p>
+      }
+
+      @if (deleteSummaryError()) {
+        <p class="error">{{ deleteSummaryError() }}</p>
+      }
+
+      @if (deleteSummaryForPending(); as summary) {
+        <div class="delete-summary">
+          <div class="summary-section">
+            <h4>Contacts ({{ summary.contacts.length }})</h4>
+            @if (summary.contacts.length === 0) {
+              <p class="muted">Aucun contact associe.</p>
+            } @else {
+              <div class="summary-list">
+                @for (contact of summary.contacts; track contact.id) {
+                  <p>{{ contact.name }} · {{ contact.email }}</p>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="summary-section">
+            <h4>Reservations ({{ summary.reservations.length }})</h4>
+            @if (summary.reservations.length === 0) {
+              <p class="muted">Aucune reservation associee.</p>
+            } @else {
+              <div class="summary-list">
+                @for (reservation of summary.reservations; track reservation.id) {
+                  <p>
+                    #{{ reservation.id }}
+                    @if (reservation.festival_name) { · {{ reservation.festival_name }} }
+                    · {{ reservation.relation === 'represented_editor' ? 'Editeur represente' : 'Reservant principal' }}
+                  </p>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="summary-section">
+            <h4>Workflows ({{ summary.workflows.length }})</h4>
+            @if (summary.workflows.length === 0) {
+              <p class="muted">Aucun workflow associe.</p>
+            } @else {
+              <div class="summary-list">
+                @for (workflow of summary.workflows; track workflow.id) {
+                  <p>
+                    #{{ workflow.id }}
+                    @if (workflow.festival_name) { · {{ workflow.festival_name }} }
+                  </p>
+                }
+              </div>
+            }
+          </div>
+
+          <p class="muted">
+            Les allocations liees aux reservations (jeux alloues, zones tarifaires, zones plan) seront aussi supprimees.
+          </p>
+        </div>
+      }
       <div class="modal-actions">
         <button type="button" class="ghost" (click)="cancelDelete()">Annuler</button>
         <button type="button" class="danger" (click)="confirmDelete()">Supprimer</button>
