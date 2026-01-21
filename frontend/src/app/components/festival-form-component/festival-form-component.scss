@@ -111,6 +111,17 @@ button.primary {
   border-radius: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #9ca3af;
+  }
 }
 
 .add-zone {
