@@ -22,6 +22,22 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
 }
 
+.search-box {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.8rem;
+
+
+  input {
+    flex: 1;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 0.7rem;
+    font-size: 1rem;
+    color: var(--text);
+  }
+}
+
 .titles h1 {
   margin: 0.15rem 0 0.35rem;
   font-size: 1.75rem;

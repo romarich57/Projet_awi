@@ -22,20 +22,38 @@ export class ReservantsListComponent {
   private readonly festivalState = inject(FestivalState);
   readonly typeFilter = signal<'all' | ReservantDto['type']>('all');
   readonly sortKey = signal<'name-asc' | 'name-desc'>('name-asc');
+  readonly searchQuery = signal(''); //recherche par nom
 
-  readonly reservantsView = computed(() => {
-    const filtered =
-      this.typeFilter() === 'all'
-        ? this.reservantStore.reservants()
-        : this.reservantStore.reservants().filter((r) => r.type === this.typeFilter());
 
+readonly reservantsView = computed(() => {
+    // 1. On récupère la liste initiale
+    let filtered = this.reservantStore.reservants();
+
+    // 2. Filtre par TYPE
+    if (this.typeFilter() !== 'all') {
+        filtered = filtered.filter((r) => r.type === this.typeFilter());
+    }
+
+    // 3. NOUVEAU : Filtre par NOM (Recherche)
+    const query = this.searchQuery().toLowerCase().trim();
+    if (query) {
+        filtered = filtered.filter((r) => 
+            r.name?.toLowerCase().includes(query)
+        );
+    }
+
+    // 4. Tri (Sort)
     return [...filtered].sort((a, b) => {
-      if (this.sortKey() === 'name-desc') {
-        return b.name.localeCompare(a.name);
-      }
-      return a.name.localeCompare(b.name);
+        // Protection au cas où le nom serait vide
+        const nameA = a.name || '';
+        const nameB = b.name || '';
+
+        if (this.sortKey() === 'name-desc') {
+            return nameB.localeCompare(nameA);
+        }
+        return nameA.localeCompare(nameB);
     });
-  });
+});
 
   constructor() {
     effect(() => {
@@ -69,5 +87,12 @@ export class ReservantsListComponent {
   contactInfo(reservant: ReservantDto): string {
     const contacts = [reservant.email, reservant.phone_number].filter(Boolean);
     return contacts.length > 0 ? contacts.join(' / ') : 'Contact non renseigné';
+  }
+
+  // Role : Appliquer la requete de recherche par nom.
+  // Préconditions : `value` est une chaine de caracteres.
+  // Postconditions : `searchQuery` est mis a jour.
+  setSearchQuery(value: string): void {
+    this.searchQuery.set(value);
   }
 }

@@ -9,6 +9,19 @@
   </header>
 
   <section class="toolbar">
+
+      <label class="field">
+        <span>Nom du réservant: </span>
+        <div class="search-box">  
+          <input 
+            type="text" 
+            placeholder="Rechercher un réservant..." 
+            (input)="setSearchQuery($any($event.target).value)"
+            class="search-input"
+          >
+        </div>
+      </label>
+
     <label class="field">
       <span>Type</span>
       <select [value]="typeFilter()" (change)="setTypeFilter($any($event.target).value)">
