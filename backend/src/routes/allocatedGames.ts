@@ -12,6 +12,7 @@ const allocationSelect = `
         ja.game_id,
         ja.nb_tables_occupees,
         ja.nb_exemplaires,
+        ja.nb_chaises,
         ja.zone_plan_id,
         ja.taille_table_requise,
         g.title,
@@ -65,6 +66,16 @@ function parseUpdate(body: any): { errors: string[]; sets: string[]; params: any
     } else {
       params.push(value)
       sets.push(`nb_tables_occupees = $${params.length}`)
+    }
+  }
+
+  if (body.nb_chaises !== undefined) {
+    const value = Number(body.nb_chaises)
+    if (!Number.isFinite(value) || value < 0) {
+      errors.push('nb_chaises doit être un nombre positif ou nul')
+    } else {
+      params.push(value)
+      sets.push(`nb_chaises = $${params.length}`)
     }
   }
 
@@ -122,7 +133,7 @@ router.patch('/:id', async (req, res) => {
       `${allocationSelect} WHERE ja.id = $1
        GROUP BY
          ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires,
-         ja.zone_plan_id, ja.taille_table_requise,
+         ja.nb_chaises, ja.zone_plan_id, ja.taille_table_requise,
          g.id, g.title, g.type, g.editor_id, e.name, g.min_age, g.authors,
          g.min_players, g.max_players, g.prototype, g.duration_minutes, g.theme,
          g.description, g.image_url, g.rules_video_url`,

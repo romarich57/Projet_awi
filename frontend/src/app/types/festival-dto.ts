@@ -8,4 +8,5 @@ export interface FestivalDto {
     stock_tables_grande: number;
     stock_tables_mairie: number;
     stock_chaises: number;
+    prix_prises: number;
 }

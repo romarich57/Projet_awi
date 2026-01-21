@@ -81,20 +81,37 @@ export class ReservationDashbordComponent {
     }
   }
   
-  readonly typeFilter = signal<'all' | string>('all');
-  readonly sortKey = signal<'name-asc' | 'name-desc'>('name-asc');
+  readonly typeFilter = signal<'all' | string>('all'); // Filtre par type de reservant
+  readonly sortKey = signal<'name-asc' | 'name-desc'>('name-asc'); // Tri par nom par defaut
+  readonly searchQuery = signal(''); //recherche par nom
 
   readonly reservationsView = computed(() => {
-    const filtered =
-      this.typeFilter() === 'all'
-        ? this.reservations()
-        : this.reservations().filter((r) => r.reservant_type === this.typeFilter());
+    //On part de la liste complète
+    let filtered = this.reservations();
 
+    //Filtre par TYPE
+    if (this.typeFilter() !== 'all') {
+      filtered = filtered.filter((r) => r.reservant_type === this.typeFilter());
+    }
+
+    // Filtre par NOM (Recherche)
+    const query = this.searchQuery().toLowerCase().trim();
+    if (query) {
+      filtered = filtered.filter((r) => 
+        r.reservant_name?.toLowerCase().includes(query)
+      );
+    }
+
+    // 4. Tri
     return [...filtered].sort((a, b) => {
+      // Protection contre les valeurs nulles
+      const nameA = a.reservant_name || '';
+      const nameB = b.reservant_name || '';
+
       if (this.sortKey() === 'name-desc') {
-        return b.reservant_name.localeCompare(a.reservant_name);
+        return nameB.localeCompare(nameA);
       }
-      return a.reservant_name.localeCompare(b.reservant_name);
+      return nameA.localeCompare(nameB);
     });
   });
 
@@ -125,4 +142,10 @@ export class ReservationDashbordComponent {
     this.showReservationForm.set(false);
   }
 
+  // Role : Appliquer la requete de recherche par nom.
+  // Préconditions : `value` est une chaine de caracteres.
+  // Postconditions : `searchQuery` est mis a jour.
+  setSearchQuery(value: string): void {
+    this.searchQuery.set(value);
+  }
 }

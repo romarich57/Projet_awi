@@ -73,10 +73,21 @@ router.put('/reservation/:reservation_id/allocations/:zone_plan_id', async (req,
         const totalChaises = Number(festivalRows[0]?.stock_chaises || 0);
 
         const { rows: alloueesRows } = await pool.query(
-            `SELECT COALESCE(SUM(rzp.nb_chaises), 0) as total_allouees
-             FROM reservation_zone_plan rzp
-             JOIN zone_plan zp ON rzp.zone_plan_id = zp.id
-             WHERE zp.festival_id = $1`,
+            `SELECT (
+                COALESCE((
+                    SELECT SUM(rzp.nb_chaises)
+                    FROM reservation_zone_plan rzp
+                    JOIN zone_plan zp ON rzp.zone_plan_id = zp.id
+                    WHERE zp.festival_id = $1
+                ), 0)
+                +
+                COALESCE((
+                    SELECT SUM(ja.nb_chaises)
+                    FROM jeux_alloues ja
+                    JOIN reservation r ON ja.reservation_id = r.id
+                    WHERE r.festival_id = $1 AND ja.zone_plan_id IS NOT NULL
+                ), 0)
+            ) as total_allouees`,
             [festivalId]
         );
 
@@ -405,6 +416,7 @@ router.get('/:id/jeux-alloues', async (req, res) => {
                 ja.game_id,
                 ja.nb_tables_occupees,
                 ja.nb_exemplaires,
+                ja.nb_chaises,
                 ja.zone_plan_id,
                 ja.taille_table_requise,
                 g.title,
@@ -437,7 +449,7 @@ router.get('/:id/jeux-alloues', async (req, res) => {
             LEFT JOIN reservant res ON res.id = r.reservant_id
             WHERE ja.zone_plan_id = $1
             GROUP BY
-                ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires,
+                ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires, ja.nb_chaises,
                 ja.zone_plan_id, ja.taille_table_requise,
                 g.id, g.title, g.type, g.editor_id, e.name, g.min_age, g.authors,
                 g.min_players, g.max_players, g.prototype, g.duration_minutes, g.theme,
@@ -478,6 +490,7 @@ router.get('/festival/:festival_id/jeux-non-alloues', async (req, res) => {
                 ja.game_id,
                 ja.nb_tables_occupees,
                 ja.nb_exemplaires,
+                ja.nb_chaises,
                 ja.zone_plan_id,
                 ja.taille_table_requise,
                 g.title,
@@ -517,7 +530,7 @@ router.get('/festival/:festival_id/jeux-non-alloues', async (req, res) => {
             WHERE r.festival_id = $1 AND ja.zone_plan_id IS NULL
             ${reservationFilter}
             GROUP BY
-                ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires,
+                ja.id, ja.reservation_id, ja.game_id, ja.nb_tables_occupees, ja.nb_exemplaires, ja.nb_chaises,
                 ja.zone_plan_id, ja.taille_table_requise,
                 g.id, g.title, g.type, g.editor_id, e.name, g.min_age, g.authors,
                 g.min_players, g.max_players, g.prototype, g.duration_minutes, g.theme,

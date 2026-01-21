@@ -6,6 +6,7 @@ import { ReservationDetailDto } from '../types/reservation-detail-dto';
 import { ZoneTarifaireDto } from '../types/zone-tarifaire-dto';
 import { ReservationDto } from '../types/reservation-dto';
 import { Observable } from 'rxjs';
+import { FestivalDto } from '@app/types/festival-dto';
 
 export interface ZoneStock {
   id: number;
@@ -105,6 +106,28 @@ export class ReservationService {
       { withCredentials: true });
   }
 
+
+  // Role : Recuperer les details d'un festival par son ID.
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne un Observable du festival.
+  getFestival(festivalId: number): Observable<FestivalDto> {
+    return this.http.get<FestivalDto>(
+      `${environment.apiUrl}/festivals/${festivalId}`,
+      { withCredentials: true }
+    );
+  }
+
+  // Role : Recuperer uniquement le stock de chaises (avec le calcul corrigé des jeux).
+  // Preconditions : festivalId est valide.
+  // Postconditions : Retourne le stock total et disponible.
+  getStockChaises(festivalId: number): Observable<{ chaises: { total: number; available: number } }> {
+
+    return this.http.get<{ chaises: { total: number; available: number } }>(
+      `${environment.apiUrl}/festivals/${festivalId}/stock-chaises`,
+      { withCredentials: true }
+    );
+  }
+
   // Role : Mettre a jour une reservation.
   // Preconditions : reservationId est valide et data contient les champs a modifier.
   // Postconditions : Retourne un Observable de la reservation mise a jour.
@@ -133,6 +156,10 @@ export class ReservationService {
       { withCredentials: true }
     );
   }
+
+
+
+
 
 }
 

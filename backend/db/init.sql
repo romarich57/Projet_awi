@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS festival (
     stock_tables_grande INTEGER NOT NULL DEFAULT 0,
     stock_tables_mairie INTEGER NOT NULL DEFAULT 0,
     stock_chaises INTEGER NOT NULL DEFAULT 0,
-    stock_chaises_available INTEGER NOT NULL DEFAULT 0
+    stock_chaises_available INTEGER NOT NULL DEFAULT 0,
+    prix_prises NUMERIC NOT NULL DEFAULT 0
 );
 
 -- // Table des Editeurs (createurs de jeux)
@@ -131,7 +132,7 @@ WHERE nb_tables_available IS NULL;
 
 CREATE TABLE IF NOT EXISTS zone_plan (
     id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
     festival_id INTEGER REFERENCES festival(id),
     id_zone_tarifaire INTEGER REFERENCES zone_tarifaire(id),
     nb_tables INTEGER NOT NULL
@@ -182,6 +183,7 @@ CREATE TABLE IF NOT EXISTS jeux_alloues (
     zone_plan_id INTEGER REFERENCES zone_plan(id),
     nb_tables_occupees NUMERIC NOT NULL,
     nb_exemplaires NUMERIC NOT NULL,
+    nb_chaises INTEGER NOT NULL DEFAULT 0,
     taille_table_requise table_type_enum NOT NULL DEFAULT 'standard',
     UNIQUE (reservation_id, game_id)
 );

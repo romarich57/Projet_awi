@@ -20,36 +20,40 @@ export class FestivalFormComponent {
   festivalSubmit = output<FestivalDto>(); //on envoie a festivalList le festival créé
   zoneSubmit = output<any>(); //on envoie a festivalList la zone créée
 
+
   readonly festivalForm = new FormGroup({
-
-    name: new FormControl('', 
-      {nonNullable:  true, 
-      validators: [Validators.required, Validators.minLength(2), Validators.maxLength(100)]}),
-    
-    stock_tables_standard: new FormControl(0, 
-      {nonNullable: true,
-      validators: [Validators.required, Validators.min(0)]}),
-    
-    stock_tables_grande: new FormControl(0, 
-      {nonNullable: true,
-      validators: [Validators.required, Validators.min(0)]}),
-    
-    stock_tables_mairie: new FormControl(0, 
-      {nonNullable: true,
-      validators: [Validators.required, Validators.min(0)]}),
-    
-    stock_chaises: new FormControl(0, 
-      {nonNullable: true,
-      validators: [Validators.required, Validators.min(0)]}),
-    
-    start_date: new FormControl('', 
-      {nonNullable: true,
-      validators: [Validators.required]}),
-    
-    end_date: new FormControl('', 
-      {nonNullable: true,
-      validators: [Validators.required]}),
-
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(2), Validators.maxLength(100)]
+    }),
+    stock_tables_standard: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)]
+    }),
+    stock_tables_grande: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)]
+    }),
+    stock_tables_mairie: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)]
+    }),
+    stock_chaises: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)]
+    }),
+    prix_prises: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)]
+    }),
+    start_date: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required]
+    }),
+    end_date: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required]
+    }),
     // FormArray pour gérer plusieurs zones tarifaires
     zones_tarifaires: new FormArray([
       this.createZoneFormGroup()
@@ -117,6 +121,7 @@ export class FestivalFormComponent {
         stock_tables_grande: Number(formValue.stock_tables_grande) || 0,
         stock_tables_mairie: Number(formValue.stock_tables_mairie) || 0,
         stock_chaises: Number(formValue.stock_chaises) || 0,
+        prix_prises: Number(formValue.prix_prises) || 0,
         start_date: startDate,
         end_date: endDate,
       };

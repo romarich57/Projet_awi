@@ -29,10 +29,10 @@ export class ZonePlanForm {
     effect(() => {
       const zone = this.zonePlanToEdit();
       if (zone) {
-        this.zonePlanForm.patchValue({
+        this.zonePlanForm.patchValue({ //patchValue permet de ne pas toucher aux autres champs non specifiés
           name: zone.name,
           nb_tables: zone.nb_tables,
-          id_zone_tarifaire: zone.id_zone_tarifaire
+          id_zone_tarifaire: zone.id_zone_tarifaire //
         });
       } else {
         this.zonePlanForm.reset();

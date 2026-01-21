@@ -61,8 +61,8 @@ export class ReservationDetailComponent {
   loading = signal<boolean>(false);
   saving = signal<boolean>(false);
 
-  // Prix par prise (constant pour le moment)
-  readonly prixParPrise = 5;
+  // Prix par prise 
+  prixParPrise = signal<number>(0);
   
   // Constante de conversion m² par table
   readonly M2_PER_TABLE = M2_PER_TABLE;
@@ -74,7 +74,7 @@ export class ReservationDetailComponent {
     const zonesTotal = this.zones().reduce((sum, zone) => {
       return sum + (zone.nb_tables_reservees * zone.price_per_table);
     }, 0);
-    const prisesTotal = this.nbPrises() * this.prixParPrise;
+    const prisesTotal = this.nbPrises() * this.prixParPrise();
     return zonesTotal + prisesTotal;
   });
 
@@ -134,6 +134,13 @@ export class ReservationDetailComponent {
         this.tableDiscountOffered.set(reservation.table_discount_offered || 0);
         this.directDiscount.set(reservation.direct_discount || 0);
         this.note.set(reservation.note || '');
+
+        this.reservationService.getFestival(reservation.festival_id).subscribe({
+          next: (festival) => {
+            this.prixParPrise.set(Number(festival.prix_prises) || 0);
+          },
+          error: (err) => console.error('Erreur chargement infos festival', err)
+        });
         
         // Charger le stock disponible pour le festival
         this.reservationService.getStockByFestival(reservation.festival_id).subscribe({
@@ -227,8 +234,8 @@ export class ReservationDetailComponent {
   // Préconditions : `zoneId` reference une zone chargee.
   // Postconditions : Le mode de saisie est inverse pour la zone cible.
   toggleInputMode(zoneId: number) {
-    this.zones.update(zones => 
-      zones.map(z => {
+    this.zones.update(zones =>  //update permet de modifier le signal zones
+      zones.map(z => { //map permet de parcourir chaque zones
         if (z.zone_tarifaire_id === zoneId) {
           return { 
             ...z, 

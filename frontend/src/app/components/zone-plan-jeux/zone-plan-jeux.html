@@ -1,6 +1,9 @@
 <div class="zone-plan-jeux-container">
     <!-- Bloc conditionnel principal -->
+ 
+    
     @if (festivalId()) {
+        
         @if (isGameMode()) {
             <!-- Section des jeux non alloués -->
             <div class="jeux-non-alloues">
@@ -31,6 +34,10 @@
                 {{ chaisesStock().available }} disponibles / {{ chaisesStock().total }} total
             </span>
         </div>
+
+        
+        
+    
         
 
         <!-- Liste des zones de plan -->
@@ -109,8 +116,8 @@
                                                 </td>
                                                 <td>{{ jeu.nb_exemplaires }}</td>
                                                 <td>{{ jeu.taille_table_requise }}</td>
-                                                <td>{{ chaisesPourReservation(zone, jeu.reservation_id) }}</td>
-                                                <td>
+                                                <td>{{ jeu.nb_chaises || 0 }}</td> 
+                                                <td>                                               
                                                     @if (jeu.reservation_id === reservation()?.id) {
                                                         <button class="btn-remove" (click)="removeGameFromZone(jeu)">Retirer</button>
                                                     }
@@ -221,11 +228,11 @@
 
                                         @if (gameInputMode() === 'tables') {
                                             <label>
-                                                Place occupée (tables) :
+                                                Place occupée (tables par exemplaire) :
                                                 <input type="number" 
                                                        [ngModel]="gameTablesInput()" 
                                                        (ngModelChange)="onGameTablesInputChange($event)"
-                                                       min="0" 
+                                                       min="0.5" 
                                                        step="0.5">
                                             </label>
                                         } @else {
@@ -234,8 +241,8 @@
                                                 <input type="number" 
                                                        [ngModel]="gameM2Input()" 
                                                        (ngModelChange)="onGameM2InputChange($event)"
-                                                       min="0" 
-                                                       step="0.5">
+                                                       min="2.25" 
+                                                       step="0.25">
                                                 <small class="hint-text">= {{ gameTablesInput() }} table(s)</small>
                                             </label>
                                         }
@@ -291,6 +298,10 @@
                                             💡 Tables disponibles dans cette zone : {{ tablesRestantesParZone()[selectedZone()!.id] }}
                                         </p>
                                         
+                                        <p class="hint" [class.warning]="selectedZone() && tablesCalculees() > quotaRestantPourZone(selectedZone()!)">
+                                            Tables restantes dans la réservation ({{ selectedZone()?.zone_tarifaire_name }}) : 
+                                            <strong>{{ selectedZone() ? quotaRestantPourZone(selectedZone()!) : 0 }}</strong>
+                                        </p>
                                         @if (stockInsuffisant()) {
                                             <p class="error">⚠️ Stock insuffisant pour ce type de table ({{ stockPourTailleSelectionnee() }} restantes)</p>
                                         }
@@ -379,7 +390,10 @@
                         @if (isGameMode()) {
                             <button class="btn-confirm" 
                                     (click)="allocateGame()" 
-                                    [disabled]="!selectedGame() || loading() || tablesCalculees() > tablesRestantesParZone()[selectedZone()!.id] || stockInsuffisant()">
+                                    [disabled]="!selectedGame() || loading() || 
+                                        tablesCalculees() > tablesRestantesParZone()[selectedZone()!.id] || 
+                                        (selectedZone() && tablesCalculees() > quotaRestantPourZone(selectedZone()!)) || 
+                                        stockInsuffisant()">
                                 {{ loading() ? 'Allocation...' : 'Allouer le jeu' }}
                             </button>
                         } @else {
