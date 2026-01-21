@@ -25,6 +25,7 @@ import { ReservationDetailComponent } from './components/reservation-detail-comp
 import { ReservationDetailsPage } from './components/reservation-details-page/reservation-details-page';
 import { UserProfilePageComponent } from './components/User_profils/user-profile-page/user-profile-page';
 import { roleGuard } from './guards/role-guard';
+import { ZonePlanPageComponent } from './components/zone-plan-page/zone-plan-page';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Connexion' },
@@ -148,6 +149,13 @@ export const routes: Routes = [
     component: ReservationDetailsPage,
     canActivate: [authGuard],
     title: 'Détails de la réservation'
+  },
+  {
+    path: 'ZonePlanJeux/:id',
+    component: ZonePlanPageComponent,
+    canActivate: [authGuard],
+    data: { isReadOnly: true },
+    title: 'Plan'
   },
   { path: '', pathMatch: 'full', redirectTo: 'home' },
   { path: '**', redirectTo: 'home' },

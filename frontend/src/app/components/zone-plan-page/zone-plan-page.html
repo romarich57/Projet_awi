@@ -1,0 +1,22 @@
+<section class="plan-page">
+  <a class="back-link" routerLink="/dashboard">← Retour au dashboard</a>
+
+  <header class="page-header">
+    <p class="eyebrow">Plan</p>
+    <h1>Plan du festival</h1>
+    @if (festivalName()) {
+      <p class="subtitle">{{ festivalName() }}</p>
+    } @else if (festivalId()) {
+      <p class="subtitle">Festival #{{ festivalId() }}</p>
+    }
+  </header>
+
+  @if (festivalId(); as id) {
+    <app-zone-plan-jeux [festivalId]="id" [isReadOnly]="isReadOnly()" />
+  } @else {
+    <div class="empty-state">
+      <p>Veuillez sélectionner un festival pour accéder au plan.</p>
+      <a routerLink="/festivals">Voir les festivals</a>
+    </div>
+  }
+</section>

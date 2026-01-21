@@ -5,6 +5,9 @@
       <a routerLink="/festivals" routerLinkActive="active">Festivals</a>
 
       @if (isLoggedIn()) {
+        @if (currentFestivalId()) {
+          <a [routerLink]="['/ZonePlanJeux', currentFestivalId()]" routerLinkActive="active">Plan</a>
+        }
         @if (isOrganizer()) {
           <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
           <a routerLink="/reservants" routerLinkActive="active">Réservants</a>        

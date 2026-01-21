@@ -3,12 +3,16 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { AuthService } from '@services/auth.service';
 import { createAuthServiceMock } from '@testing/mocks/auth-service.mock';
 import { AppComponent } from './app';
+import { FestivalState } from './stores/festival-state';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent, RouterTestingModule],
-      providers: [{ provide: AuthService, useValue: createAuthServiceMock() }],
+      providers: [
+        { provide: AuthService, useValue: createAuthServiceMock() },
+        FestivalState,
+      ],
     }).compileComponents();
   });
 

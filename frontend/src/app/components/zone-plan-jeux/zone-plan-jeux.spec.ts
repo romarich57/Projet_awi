@@ -3,6 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { ZonePlanJeux } from './zone-plan-jeux';
+import { AuthService } from '@services/auth.service';
+import { createAuthServiceMock } from '@testing/mocks/auth-service.mock';
 
 describe('ZonePlanJeux', () => {
   let component: ZonePlanJeux;
@@ -14,6 +16,7 @@ describe('ZonePlanJeux', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        { provide: AuthService, useValue: createAuthServiceMock() },
       ],
     }).compileComponents();
 
