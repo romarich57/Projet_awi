@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { GameEditStore } from './game-edit-store';
 import { GameApiService } from '@app/services/game-api';
@@ -111,5 +111,32 @@ describe('GameEditStore', () => {
       rules_video_url: 'https://video',
       mechanismIds: [2, 3],
     });
+  }));
+
+  it('should expose a friendly error message on conflict', fakeAsync(() => {
+    const conflictError = { status: 409, error: { error: 'Titre déjà utilisé' } };
+    const form: GameFormModel = {
+      title: 'Existing Game',
+      type: 'Board',
+      editor_id: '3',
+      min_age: 10,
+      authors: 'John Doe',
+      min_players: 1,
+      max_players: 4,
+      prototype: false,
+      duration_minutes: 30,
+      theme: 'Theme',
+      description: 'Description',
+      image_url: '',
+      rules_video_url: '',
+      mechanismIds: [],
+    };
+
+    gameApiSpy.update.and.returnValue(throwError(() => conflictError));
+    store.setFormData(form);
+    store.save(42).subscribe();
+    tick();
+
+    expect(store.error()).toBe('Titre déjà utilisé');
   }));
 });

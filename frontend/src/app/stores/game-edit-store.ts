@@ -122,14 +122,18 @@ export class GameEditStore {
   // Preconditions : gameId est valide et le formulaire contient les champs requis.
   // Postconditions : L'API est appelee et l'etat de sauvegarde est mis a jour.
   save(gameId: number): Observable<void> {
+    if (this._saving()) {
+      return EMPTY;
+    }
     if (!Number.isFinite(gameId)) {
       this._error.set('Identifiant de jeu invalide');
       return EMPTY;
     }
 
     const payload = this.buildPayload();
-    if (!payload.title || !payload.type || payload.editor_id === null) {
-      this._error.set('Merci de remplir les champs requis');
+    const validationErrors = this.getValidationErrors(payload);
+    if (validationErrors.length > 0) {
+      this._error.set(validationErrors.join(' · '));
       return EMPTY;
     }
 
@@ -138,7 +142,10 @@ export class GameEditStore {
     return this.gameApi.update(gameId, payload).pipe(
       map(() => undefined as void),
       catchError((err) => {
-        this._error.set(err.message || "Erreur lors de l'enregistrement");
+        if (err?.status !== 409) {
+          console.error('Erreur lors de la mise a jour du jeu', err);
+        }
+        this._error.set(this.extractErrorMessage(err) || "Erreur lors de l'enregistrement");
         return EMPTY;
       }),
       finalize(() => this._saving.set(false)),
@@ -208,8 +215,12 @@ export class GameEditStore {
   // Postconditions : Renvoie un GamePayload formate pour l'API.
   private buildPayload(): GamePayload {
     const form = this._formData();
-    const toNumber = (value: number | null) =>
-      value === null || Number.isNaN(value) ? null : Number(value);
+    const toNumber = (value: number | string | null | undefined) => {
+      if (value === null || value === undefined) return null;
+      if (typeof value === 'string' && value.trim().length === 0) return null;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
 
     const imageUrl = ensureHttpsUrl(form.image_url);
 
@@ -229,5 +240,79 @@ export class GameEditStore {
       rules_video_url: form.rules_video_url.trim() || undefined,
       mechanismIds: form.mechanismIds,
     };
+  }
+
+  // Role : Verifier la validite du payload avant l'appel API.
+  // Preconditions : payload est construit via buildPayload.
+  // Postconditions : Retourne la liste des erreurs de validation.
+  private getValidationErrors(payload: GamePayload): string[] {
+    const errors: string[] = [];
+
+    if (!payload.title) errors.push('Le titre est requis');
+    if (!payload.type) errors.push('Le type est requis');
+    if (!payload.authors) errors.push('Les auteurs sont requis');
+    if (payload.editor_id === null || payload.editor_id === undefined) {
+      errors.push("L'éditeur est requis");
+    }
+    if (payload.min_age === null || payload.min_age === undefined) {
+      errors.push("L'âge minimum est requis");
+    } else if (payload.min_age < 0) {
+      errors.push("L'âge minimum doit être positif");
+    }
+
+    if (payload.min_players !== null && payload.min_players !== undefined && payload.min_players < 1) {
+      errors.push('Le nombre de joueurs min doit être supérieur ou égal à 1');
+    }
+    if (payload.max_players !== null && payload.max_players !== undefined && payload.max_players < 1) {
+      errors.push('Le nombre de joueurs max doit être supérieur ou égal à 1');
+    }
+    if (
+      payload.min_players !== null &&
+      payload.min_players !== undefined &&
+      payload.max_players !== null &&
+      payload.max_players !== undefined &&
+      payload.min_players > payload.max_players
+    ) {
+      errors.push('Le nombre de joueurs min ne peut pas dépasser le max');
+    }
+
+    if (
+      payload.duration_minutes !== null &&
+      payload.duration_minutes !== undefined &&
+      payload.duration_minutes < 0
+    ) {
+      errors.push('La durée doit être positive');
+    }
+
+    return errors;
+  }
+
+  // Role : Normaliser les erreurs API pour l'affichage.
+  // Preconditions : err est l'erreur renvoyee par HttpClient.
+  // Postconditions : Retourne un message utilisateur ou null.
+  private extractErrorMessage(err: any): string | null {
+    const apiError = err?.error;
+    if (typeof apiError === 'string' && apiError.trim().length > 0) {
+      return apiError;
+    }
+    if (apiError) {
+      const details = apiError.details;
+      if (Array.isArray(details) && details.length > 0) {
+        return details.join(' · ');
+      }
+      if (typeof details === 'string' && details.trim().length > 0) {
+        return apiError.error ? `${apiError.error} · ${details}` : details;
+      }
+      if (typeof apiError.error === 'string' && apiError.error.trim().length > 0) {
+        return apiError.error;
+      }
+    }
+    if (typeof err?.message === 'string' && err.message.trim().length > 0) {
+      return err.message;
+    }
+    if (err?.status === 409) {
+      return 'Titre déjà utilisé';
+    }
+    return null;
   }
 }
