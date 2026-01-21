@@ -4,7 +4,7 @@
     
     @if (festivalId()) {
         
-        @if (isGameMode()) {
+        @if (isGameMode() && !isReadOnly()) {
             <!-- Section des jeux non alloués -->
             <div class="jeux-non-alloues">
                 <h4>🎮 Jeux non alloués ({{ jeuxNonAlloues().length }})</h4>
@@ -28,12 +28,14 @@
         }
 
         
-        <div class="chaises-stock-global">
-            <span class="chaises-label">🪑 Stock chaises festival :</span>
-            <span class="chaises-count" [class.low-stock]="chaisesStock().available <= 10">
-                {{ chaisesStock().available }} disponibles / {{ chaisesStock().total }} total
-            </span>
-        </div>
+        @if (!isReadOnly()) {
+            <div class="chaises-stock-global">
+                <span class="chaises-label">🪑 Stock chaises festival :</span>
+                <span class="chaises-count" [class.low-stock]="chaisesStock().available <= 10">
+                    {{ chaisesStock().available }} disponibles / {{ chaisesStock().total }} total
+                </span>
+            </div>
+        }
 
         
         
@@ -55,9 +57,9 @@
                                 📊 {{ tablesUtiliseesParZone()[zone.id] || 0 }} / {{ zone.nb_tables }} tables
                             </span>
                             <span class="tables-restantes"
-                                  [class.warning]="isGameMode() ? tablesRestantesParZone()[zone.id] <= 2 : tablesDisponiblesPourZone(zone) <= 2"
-                                  [class.danger]="isGameMode() ? tablesRestantesParZone()[zone.id] <= 0 : tablesDisponiblesPourZone(zone) <= 0">
-                                @if (isGameMode()) {
+                                  [class.warning]="(isGameMode() || isReadOnly()) ? tablesRestantesParZone()[zone.id] <= 2 : tablesDisponiblesPourZone(zone) <= 2"
+                                  [class.danger]="(isGameMode() || isReadOnly()) ? tablesRestantesParZone()[zone.id] <= 0 : tablesDisponiblesPourZone(zone) <= 0">
+                                @if (isGameMode() || isReadOnly()) {
                                     ({{ tablesRestantesParZone()[zone.id] }} restantes)
                                 } @else {
                                     ({{ tablesDisponiblesPourZone(zone) }} dispo pour ce réservant)
@@ -70,22 +72,24 @@
                             <span class="jeux-count">🎲 {{ zone.jeuxAlloues.length }} jeux</span>
                         </div>
                         <div class="zone-actions">
-                            <button class="btn-allocate"
-                                    (click)="openAllocationModal(zone); $event.stopPropagation();"
-                                    [disabled]="isGameMode() ? tablesRestantesParZone()[zone.id] <= 0 : !isZoneEligible(zone)">
-                                {{ isGameMode() ? '➕ Ajouter un jeu' : '➕ Affecter' }}
-                            </button>
-                            <button class="btn-edit" (click)="openEditForm(zone); $event.stopPropagation();">✏️</button>
-                            <button class="btn-delete"
-                                    (click)="deleteZonePlan(zone.id); $event.stopPropagation();"
-                                    [disabled]="zone.jeuxAlloues.length > 0 || (tablesSimplesParZone()[zone.id] || 0) > 0 || (chaisesAlloueesParZone()[zone.id] || 0) > 0">🗑️</button>
+                            @if (showActionButtons()) {
+                                <button class="btn-allocate"
+                                        (click)="openAllocationModal(zone); $event.stopPropagation();"
+                                        [disabled]="isGameMode() ? tablesRestantesParZone()[zone.id] <= 0 : !isZoneEligible(zone)">
+                                    {{ isGameMode() ? '➕ Ajouter un jeu' : '➕ Affecter' }}
+                                </button>
+                                <button class="btn-edit" (click)="openEditForm(zone); $event.stopPropagation();">✏️</button>
+                                <button class="btn-delete"
+                                        (click)="deleteZonePlan(zone.id); $event.stopPropagation();"
+                                        [disabled]="zone.jeuxAlloues.length > 0 || (tablesSimplesParZone()[zone.id] || 0) > 0 || (chaisesAlloueesParZone()[zone.id] || 0) > 0">🗑️</button>
+                            }
                             <span class="expand-icon">{{ zone.expanded ? '▼' : '▶' }}</span>
                         </div>
                     </div>
                     
                     @if (zone.expanded) {
                         <div class="zone-content">
-                            @if (!isGameMode() && !isZoneEligible(zone)) {
+                            @if (!isReadOnly() && !isGameMode() && !isZoneEligible(zone)) {
                                 <p class="empty-zone warning-message">
                                     ⚠️ Cette zone est liée à une zone tarifaire non réservée par ce réservant.
                                 </p>
@@ -118,7 +122,7 @@
                                                 <td>{{ jeu.taille_table_requise }}</td>
                                                 <td>{{ jeu.nb_chaises || 0 }}</td> 
                                                 <td>                                               
-                                                    @if (jeu.reservation_id === reservation()?.id) {
+                                                    @if (!isReadOnly() && jeu.reservation_id === reservation()?.id) {
                                                         <button class="btn-remove" (click)="removeGameFromZone(jeu)">Retirer</button>
                                                     }
                                                 </td>
@@ -133,7 +137,7 @@
                                                 <td>Aucun</td>
                                                 <td>{{ allocation.nb_chaises }}</td>
                                                 <td>
-                                                    @if (allocation.reservation_id === reservation()?.id) {
+                                                    @if (!isReadOnly() && allocation.reservation_id === reservation()?.id) {
                                                         <button class="btn-remove" (click)="removeSimpleAllocation(zone.id)">Retirer</button>
                                                     }
                                                 </td>
@@ -152,7 +156,9 @@
             }
         </div>
 
-        <button class="add-zone-button" (click)="openForm()">➕ Ajouter une zone</button>
+        @if (showAddZoneButton()) {
+            <button class="add-zone-button" (click)="openForm()">➕ Ajouter une zone</button>
+        }
 
         <!-- Modal de création/édition de zone -->
         @if (showForm()) {

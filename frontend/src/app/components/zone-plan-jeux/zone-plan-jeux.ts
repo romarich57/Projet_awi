@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import type { TableStockByType } from '@app/types/allocated-game-dto';
 import type { ReservationWithZones } from '@app/services/reservation.service';
 import { M2_PER_TABLE, m2ToTables, tablesToM2 } from '@app/shared/utils/table-conversion';
+import { AuthService } from '@app/services/auth.service';
 
 
 // Interface pour une zone avec ses jeux alloués
@@ -34,14 +35,23 @@ export class ZonePlanJeux {
   reservation = input<ReservationWithZones | null>(null);
   refreshToken = input<number>(0);
   hasGames = input<boolean>(true);
+  readonly isReadOnly = input<boolean>(false);
   private readonly _zonePlanService = inject(ZonePlanService);
   private readonly _zoneTarifaireService = inject(ZoneTarifaireService);
   private readonly _reservationService = inject(ReservationService);
+  private readonly _authService = inject(AuthService);
   
   readonly zonePlans = this._zonePlanService.zonePlans;
   readonly zoneTarifaires = signal<ZoneTarifaireDto[]>([]);
   readonly showForm = signal(false);
   readonly zonePlanToEdit = signal<ZonePlanDto | null>(null);
+  readonly showActionButtons = computed(() => !this.isReadOnly());
+  readonly showAddZoneButton = computed(() => {
+    if (!this.isReadOnly()) {
+      return true;
+    }
+    return this._authService.isOrganizer();
+  });
   
   // Nouvelles propriétés pour l'allocation des jeux
   readonly zonesAvecJeux = signal<ZonePlanAvecJeux[]>([]);
@@ -249,9 +259,11 @@ export class ZonePlanJeux {
       if (id !== null) {
         this._zonePlanService.getZonePlans(id);
         this.loadZoneTarifaires(id);
-        this.loadStockTablesFestival(id);
+        if (!this.isReadOnly()) {
+          this.loadStockTablesFestival(id);
+          this.loadChaisesStock(id);
+        }
         this.loadAllocationsSimple(id);
-        this.loadChaisesStock(id);
       }
     });
 
@@ -278,9 +290,11 @@ export class ZonePlanJeux {
       this._zonePlanService.getZonePlans(festivalId);
       this.loadZoneTarifaires(festivalId);
       this.loadJeuxNonAllouesForRefresh(festivalId);
-      this.loadStockTablesFestival(festivalId);
+      if (!this.isReadOnly()) {
+        this.loadStockTablesFestival(festivalId);
+        this.loadChaisesStock(festivalId);
+      }
       this.loadAllocationsSimple(festivalId);
-      this.loadChaisesStock(festivalId);
     });
   }
 
@@ -469,6 +483,9 @@ private loadChaisesStock(festivalId: number): void {
   // Préconditions : `zone` est valide.
   // Postconditions : Les signaux de selection et de saisie sont initialises.
   openAllocationModal(zone: ZonePlanAvecJeux): void {
+    if (this.isReadOnly()) {
+      return;
+    }
     if (!this.isGameMode()) {
       if (!this.isZoneEligible(zone)) return;
       this.openSimpleAllocationModal(zone);
@@ -641,6 +658,9 @@ private loadChaisesStock(festivalId: number): void {
   // Préconditions : Une zone et un jeu sont selectionnes.
   // Postconditions : L'allocation est envoyee et les donnees sont rafraichies.
   allocateGame(): void {
+    if (this.isReadOnly()) {
+      return;
+    }
     const zone = this.selectedZone();
     const game = this.selectedGame();
     const nbTables = this.tablesCalculees();
@@ -683,6 +703,9 @@ private loadChaisesStock(festivalId: number): void {
   // Préconditions : Une zone et une reservation sont selectionnees.
   // Postconditions : L'allocation est enregistree et les donnees sont rafraichies.
   saveSimpleAllocation(): void {
+    if (this.isReadOnly()) {
+      return;
+    }
     const zone = this.selectedZone();
     const reservation = this.reservation();
     if (!zone || !reservation) return;
@@ -715,6 +738,9 @@ private loadChaisesStock(festivalId: number): void {
   // Préconditions : Une reservation est chargee et une allocation existe.
   // Postconditions : L'allocation est supprimee et les donnees sont rafraichies.
   removeSimpleAllocation(zoneId: number): void {
+    if (this.isReadOnly()) {
+      return;
+    }
     const reservation = this.reservation();
     if (!reservation) return;
     const allocation = this.reservationAllocationsParZone()[zoneId];
@@ -737,6 +763,9 @@ private loadChaisesStock(festivalId: number): void {
   // Préconditions : `game` est valide.
   // Postconditions : Le jeu est desalloue et les donnees sont rafraichies.
   removeGameFromZone(game: AllocatedGameWithReservant): void {
+    if (this.isReadOnly()) {
+      return;
+    }
     this.loading.set(true);
     this._zonePlanService.assignerJeuAZone(game.allocation_id, null).subscribe({
       next: () => {
@@ -776,9 +805,11 @@ private loadChaisesStock(festivalId: number): void {
         this.loadJeuxNonAlloues(id, reservation.id);
         this.loadReservationAllocations(reservation.id);
       }
-      this.loadStockTablesFestival(id);
+      if (!this.isReadOnly()) {
+        this.loadStockTablesFestival(id);
+        this.loadChaisesStock(id);
+      }
       this.loadAllocationsSimple(id);
-      this.loadChaisesStock(id);
     }
     this.loading.set(false);
   }
@@ -835,6 +866,9 @@ private loadChaisesStock(festivalId: number): void {
   // Préconditions : Aucune.
   // Postconditions : Le formulaire est affiche et la zone a editer est remise a null.
   openForm(): void {
+    if (this.isReadOnly() && !this.showAddZoneButton()) {
+      return;
+    }
     this.zonePlanToEdit.set(null);
     this.showForm.set(true);
   }
@@ -843,6 +877,9 @@ private loadChaisesStock(festivalId: number): void {
   // Préconditions : `zone` est valide.
   // Postconditions : Le formulaire est affiche avec la zone selectionnee.
   openEditForm(zone: ZonePlanDto): void {
+    if (this.isReadOnly()) {
+      return;
+    }
     this.zonePlanToEdit.set(zone);
     this.showForm.set(true);
   }
@@ -869,6 +906,9 @@ private loadChaisesStock(festivalId: number): void {
   // Préconditions : `zonePlanId` et `festivalId` sont valides.
   // Postconditions : Le plan est supprime via le service.
   deleteZonePlan(zonePlanId: number): void {
+    if (this.isReadOnly()) {
+      return;
+    }
     const id = this.festivalId();
     if (id !== null) {
       this._zonePlanService.deleteZonePlan(zonePlanId, id);
