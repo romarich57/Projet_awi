@@ -29,9 +29,9 @@ docker compose -f docker-compose.dev.yml ps
 ```
 
 **Accès :**
-- Frontend : http://localhost:8080
-- Backend API : http://localhost:4000
-- Adminer (DB) : http://localhost:8081
+- Frontend : https://localhost:8080
+- Backend API : https://localhost:4000
+- Adminer (DB) : https://localhost:8081
 
 ### Production
 ```bash
@@ -122,13 +122,17 @@ npm --prefix backend test
 - `POST /api/zones-plan` — Créer une zone
 - `PATCH /api/zones-plan/:id/allocate` — Allouer des jeux
 
-## 🌐 Environnements
+## 🌐 Environnements & Accès Production
 
 | Environnement | Fichier | URL |
 |---------------|---------|-----|
-| Dev | `docker-compose.dev.yml` | localhost:8080 |
-| Prod | `docker-compose.prod.yml` | awi.romdev.cloud |
-| Prod Pol | `docker-compose.prodpol.yml` | awi.romeric.cloud |
+| Dev | `docker-compose.dev.yml` | https://localhost:8080 |
+| **VPS Romaric** | `docker-compose.prod.yml` | https://awi.romdev.cloud |
+| **VPS Polytech** | `docker-compose.prodpol.yml` | https://162.38.111.46 |
+
+**Accès direct aux sites déployés :**
+- 🌍 **VPS Romaric** : [https://awi.romdev.cloud](https://awi.romdev.cloud)
+- 🏫 **VPS Polytech** : [https://162.38.111.46](https://162.38.111.46)
 
 ## ⚙️ Variables d'environnement
 
